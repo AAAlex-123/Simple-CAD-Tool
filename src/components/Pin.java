@@ -1,53 +1,18 @@
 package components;
 
-@SuppressWarnings({ "javadoc", "unused" })
-public class Pin extends Component {
-
-	protected boolean active = false;
-	protected Component in, out;
+class Pin extends Component {
 
 	public Pin() {
-		in = null;
-		out = null;
-	}
-
-	public Pin(boolean active) {
-		in = null;
-		out = null;
-		this.active = active;
-	}
-
-	public void setActive(boolean active) {
-		this.active = active;
+		super(new Component[1], new Component[1]);
 	}
 
 	@Override
 	protected void wake_up() {
-		boolean lastActive = active;
-		if (in != null)
-			active = in.getActive();
-		if ((out != null))// && (lastActive != active))
-			out.wake_up();
-	}
+		boolean prevState = getActive();
 
-	@Override
-	public boolean getActive(int index) {
-		return active;
-	}
+		active[0] = getIn().getActive();
 
-	public void setIn(Component c) {
-		in = c;
-	}
-
-	public Component getIn() {
-		return in;
-	}
-
-	public void setOut(Component c) {
-		out = c;
-	}
-
-	public Component getOut() {
-		return out;
+		if (prevState != getActive())
+			getOut().wake_up();
 	}
 }
