@@ -1,38 +1,47 @@
 package components;
 
-@SuppressWarnings({ "javadoc" })
-public class Branch extends Component {
+import exceptions.MalformedComponentException;
+import exceptions.UnsupportedMethodException;
 
-	private boolean active;
-	private final Pin in, out;
+class Branch extends Component {
 
 	public Branch(Pin in, Pin out) {
-		this.in = in;
-		this.out = out;
+		super(new Pin[] { in }, new Pin[] { out });
+
+		if (getIn() == null)
+			throw new MalformedComponentException("Invalid Branch Input");
+		if (getOut() == null)
+			throw new MalformedComponentException("Invalid Branch Output");
+
 		in.setOut(this);
 		out.setIn(this);
 	}
 
 	@Override
 	protected void wake_up() {
-		boolean prevState = active;
-		active = in.getActive();
 
-		if (/* (prevState != active) && */(out != null))
-			out.wake_up();
+		boolean prevState = getActive();
+
+		active[0] = getIn().getActive();
+
+		if (prevState != getActive()) {
+			getOut().wake_up();
+		}
 	}
 
 	@Override
-	public boolean getActive(int index) {
-		if (index != 0)
-			throw new IllegalArgumentException("too early for exceptions...");
-		return active;
+	protected void setIn(Component c) {
+		throw new UnsupportedMethodException("Can't change input of Branch");
 	}
 
+	@Override
+	protected void setOut(Component c) {
+		throw new UnsupportedMethodException("Can't change output of Branch");
+	}
+}
 
 
-
-	/*
+/*
 	private final Gate g1, g2;
 	private int x1, y1, x2, y2;
 	private int w, h;
@@ -72,5 +81,4 @@ public class Branch extends Component {
 		g.drawLine(x1 < x2 ? 0 : w, y1 < y2 ? 0 : h, x1 < x2 ? w : 0, y1 < y2 ? h : 0);
 		System.out.printf("drawing branch: %d-%d, %d-%d%n", x1, y1, x2, y2);
 	}
-	 */
-}
+ */
