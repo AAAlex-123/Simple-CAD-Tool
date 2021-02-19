@@ -1,23 +1,30 @@
 package components;
 
-@SuppressWarnings("javadoc")
-public class InputPin extends Pin {
+import exceptions.UnsupportedMethodException;
+
+class InputPin extends Pin {
 
 	public InputPin() {
 		super();
 	}
 
-	public InputPin(boolean active) {
-		super(active);
+	@Override
+	protected void wake_up() {
+		getOut().wake_up();
 	}
 
-	@Override
-	public void wake_up() {
-		out.wake_up();
-	}
-
-	@Override
 	public void setActive(boolean active) {
-		this.active = active;
+		this.active[0] = active;
+		wake_up();
+	}
+
+	@Override
+	protected void setIn(Component c) {
+		throw new UnsupportedMethodException("Can't set input of InputPin");
+	}
+
+	@Override
+	protected Component getIn() {
+		throw new UnsupportedMethodException("Can't get input of InputPin");
 	}
 }
