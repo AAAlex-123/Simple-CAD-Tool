@@ -1,17 +1,17 @@
 package components;
 
-class GateAND extends PrimitiveGate {
+class GateOR extends PrimitiveGate {
 
-	public GateAND(int in) {
+	public GateOR(int in) {
 		super(in, 1);
 	}
 
 	@Override
 	protected boolean calculateOutput() {
-		boolean res = true;
+		boolean res = false;
 
 		for (int i = 0; i < innerIn.length; ++i) {
-			res &= in[i].getActive();
+			res |= in[i].getActive();
 		}
 
 		return res;
