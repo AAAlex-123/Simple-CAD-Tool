@@ -1,16 +1,17 @@
 
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
 import java.util.StringTokenizer;
 
 import components.ComponentFactory;
-import components.Drawable;
+import components.Component;
 
 @SuppressWarnings("javadoc")
 public class Playground {
 
-	private static final HashMap<String, Drawable> map = new HashMap<>();
+	private static final HashMap<String, Component> map = new HashMap<>();
 	private static final Scanner scanner = new Scanner(System.in);
 
 	public static void main(String[] args) {
@@ -41,7 +42,19 @@ public class Playground {
 						String name;
 						while ((!(name = tk.nextToken()).equals("/")))
 							map.put(name, ComponentFactory.createNOT());
-					} else {
+					} else if (component.equalsIgnoreCase("gate")) {
+						String name = tk.nextToken();
+						String pin;
+						ArrayList<Component> inputs = new ArrayList<>(), outputs = new ArrayList<>();
+
+						while (!(pin = tk.nextToken()).equals("/"))
+							inputs.add(map.get(pin));
+						while (!(pin = tk.nextToken()).equals("/"))
+							outputs.add(map.get(pin));
+						map.put(name, ComponentFactory.createGate((Component[]) inputs.toArray(),
+								(Component[]) outputs.toArray()));
+					}
+					else {
 						System.err.printf("'in', 'out', 'and', 'not', 'gate' only");
 					}
 				} else if (action.equalsIgnoreCase("connect")) {
@@ -50,20 +63,24 @@ public class Playground {
 						String gate = tk.nextToken();
 						String pin = tk.nextToken();
 						String index = tk.nextToken();
-						ComponentFactory.connectToGateInput(map.get(gate), map.get(pin),
-								Integer.parseInt(index));
+						String name = tk.nextToken();
+						map.put(name, ComponentFactory.connectToGateInput(map.get(gate), map.get(pin),
+								Integer.parseInt(index)));
 					} else if (type.equalsIgnoreCase("gto")) {
 						String gate = tk.nextToken();
 						String pin = tk.nextToken();
 						String index = tk.nextToken();
-						ComponentFactory.connectToGateOutput(map.get(gate), map.get(pin), Integer.parseInt(index));
+						String name = tk.nextToken();
+						map.put(name, ComponentFactory.connectToGateOutput(map.get(gate), map.get(pin),
+								Integer.parseInt(index)));
 					} else if (type.equalsIgnoreCase("gtg")) {
 						String gate1 = tk.nextToken();
 						String index1 = tk.nextToken();
 						String gate2 = tk.nextToken();
 						String index2 = tk.nextToken();
-						ComponentFactory.connectGates(map.get(gate1), Integer.parseInt(index1), map.get(gate2),
-								Integer.parseInt(index2));
+						String name = tk.nextToken();
+						map.put(name, ComponentFactory.connectGates(map.get(gate1), Integer.parseInt(index1),
+								map.get(gate2), Integer.parseInt(index2)));
 					} else {
 						System.err.printf("'gti', 'gto', 'gtg' only");
 					}
@@ -74,8 +91,11 @@ public class Playground {
 				} else if (action.equalsIgnoreCase("get")) {
 					String pin = tk.nextToken();
 					System.out.println(ComponentFactory.getActive(map.get(pin)));
+				} else if (action.equalsIgnoreCase("rb")) {
+					String branch = tk.nextToken();
+					ComponentFactory.deleteBranch(map.get(branch));
 				} else {
-					System.err.printf("'create' and 'connect' only");
+					System.err.printf("'create', 'connect', 'set', 'get', 'rb' only");
 				}
 			} catch (Exception e) {
 				System.err.printf("Exception %s occured.%n", e.getClass());
