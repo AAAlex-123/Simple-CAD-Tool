@@ -1,48 +1,55 @@
 package components;
 
-final class Branch extends Drawable {
+final class Branch extends Component {
 
-	private final Gate gateOut;
-	private final OutputPin pinOut;
-	private final int indexOut;
+	private final Component in, out;
+	private final int indexIn, indexOut;
 
-	private boolean hasGateAsOutput;
-
-	Branch(Gate in, int indexIn, Gate out, int gateIndexOut) {
-		gateOut = out;
-		pinOut = null;
+	Branch(Gate in, int gateIndexIn, Gate out, int gateIndexOut) {
+		this.in = in;
+		this.out = out;
+		indexIn = gateIndexIn;
 		indexOut = gateIndexOut;
-		hasGateAsOutput = true;
 
-		in.setOut(this, indexIn);
-		out.setIn(this, gateIndexOut);
+		in.addOut(this, indexIn);
+		out.setIn(this, indexOut);
+		wake_up(in.outputPins[indexIn].active, 0);
 	}
 
 	Branch(InputPin in, Gate out, int gateIndex) {
-		gateOut = out;
-		pinOut = null;
+		this.in = in;
+		this.out = out;
+		indexIn = 0;
 		indexOut = gateIndex;
-		hasGateAsOutput = true;
 
-		in.addOut(this);
-		out.setIn(this, gateIndex);
+		in.addOut(this, indexIn);
+		out.setIn(this, indexOut);
+		wake_up(in.active, 0);
 	}
 
 	Branch(Gate in, OutputPin out, int gateIndex) {
-		gateOut = null;
-		pinOut = out;
-		indexOut = gateIndex;
-		hasGateAsOutput = false;
+		this.in = in;
+		this.out = out;
+		indexIn = gateIndex;
+		indexOut = 0;
 
-		in.setOut(this, gateIndex);
-		out.in = this;
+		in.addOut(this, indexIn);
+		out.setIn(this, indexOut);
+		wake_up(in.outputPins[indexIn].active, 0);
 	}
 
-	void wake_up(boolean newActive) {
-		if ((active != newActive) && hasGateAsOutput)
-			gateOut.wake_up(active = newActive, indexOut);
+	@Override
+	void wake_up(boolean newActive, int index, boolean prevChangeable) {
+		checkIndex(index, 1);
+		changeable = prevChangeable;
+		if (active != newActive)
+			out.wake_up(active = newActive, indexOut);
+	}
 
-		else if ((active != newActive) && !hasGateAsOutput)
-			pinOut.wake_up(active = newActive);
+	void disconnect() {
+		checkChangeable();
+		out.wake_up(false, indexOut);
+		in.removeOut(this, indexOut);
+		out.removeIn(this, indexIn);
 	}
 }

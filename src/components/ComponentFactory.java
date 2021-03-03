@@ -12,16 +12,16 @@ final public class ComponentFactory {
 		return new OutputPin();
 	}
 
-	public static void setActive(Drawable d, boolean active) {
-		d.setActive(active);
+	public static void setActive(Component d, boolean active) {
+		((InputPin) d).setActive(active);
 	}
 
-	public static boolean getActive(Drawable d) {
-		return d.getActive();
+	public static boolean getActive(Component d) {
+		return ((OutputPin) d).getActive();
 	}
 
 	// CONNECTIONS
-	public static Branch connectGates(Drawable in, int indexIn, Drawable out, int indexOut) {
+	public static Branch connectGates(Component in, int indexIn, Component out, int indexOut) {
 		return connectGates((Gate) in, indexIn, (Gate) out, indexOut);
 	}
 
@@ -29,7 +29,7 @@ final public class ComponentFactory {
 		return new Branch(in, indexIn, out, indexOut);
 	}
 
-	public static Branch connectToGateInput(Drawable g, Drawable p, int index) {
+	public static Branch connectToGateInput(Component g, Component p, int index) {
 		return connectToGateInput((Gate) g, (InputPin) p, index);
 	}
 
@@ -37,7 +37,7 @@ final public class ComponentFactory {
 		return new Branch(p, g, index);
 	}
 
-	public static Branch connectToGateOutput(Drawable g, Drawable p, int index) {
+	public static Branch connectToGateOutput(Component g, Component p, int index) {
 		return connectToGateOutput((Gate) g, (OutputPin) p, index);
 	}
 
@@ -46,6 +46,9 @@ final public class ComponentFactory {
 	}
 
 	// GATES
+	public static Gate createGate(Component[] in, Component[] out) {
+		return createGate((InputPin[]) in, (OutputPin[]) out);
+	}
 	public static Gate createGate(InputPin[] in, OutputPin[] out) {
 		return new Gate(in, out);
 	}
@@ -60,7 +63,10 @@ final public class ComponentFactory {
 
 
 	// MISCELLANEOUS
-	//	public static void clearGate(Gate g) {
-	//		// g.clear();
-	//	}
+	public static void deleteBranch(Component b) {
+		deleteBranch((Branch) b);
+	}
+	public static void deleteBranch(Branch b) {
+		b.disconnect();
+	}
 }
