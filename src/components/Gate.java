@@ -4,10 +4,13 @@ import java.util.Vector;
 
 import exceptions.ComponentNotFoundException;
 
+// A Component that maps InputPins to OutputPins
 class Gate extends Component {
 
 	private final Branch[] inputBranches;
 	private final Vector<Vector<Branch>> outputBranches;
+
+	// inner pins
 	final InputPin[] inputPins;
 	final OutputPin[] outputPins;
 
@@ -28,6 +31,9 @@ class Gate extends Component {
 		}
 	}
 
+	// constructs a composite gate consisting of everything between the InputPins
+	// and the OutputPins, essentially packing that circuit into a gate, and
+	// behaves exactly as it would had it not been packed into a gate.
 	Gate(InputPin[] in, OutputPin[] out) {
 		inputBranches = new Branch[in.length];
 		outputBranches = new Vector<>(out.length);
@@ -36,7 +42,7 @@ class Gate extends Component {
 
 		for (int i = 0; i < inputPins.length; ++i) {
 			inputPins[i].setOuterGate(this, i);
-			wake_up(false, i);
+			inputPins[i].setActive(false);
 		}
 
 		for (int i = 0; i < outputPins.length; ++i) {
@@ -49,12 +55,16 @@ class Gate extends Component {
 	void wake_up(boolean newActive, int indexIn, boolean prevChangeable) {
 		checkIndex(indexIn, inputBranches.length);
 		changeable = prevChangeable;
+
+		// only propagate signal if all InputPins are connected
 		for (int i = 0; i < inputBranches.length; ++i)
 			if (inputBranches[i] == null)
 				return;
+
 		inputPins[indexIn].wake_up(newActive, false);
 	}
 
+	// informs this Gate that an OutputPin has changed value
 	void outputChanged(int index) {
 		checkIndex(index, outputPins.length);
 		for (Branch b : outputBranches.get(index))
