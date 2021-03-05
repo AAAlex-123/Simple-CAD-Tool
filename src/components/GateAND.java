@@ -1,5 +1,6 @@
 package components;
 
+// A Primitive Gate that maps the inputs to their logical and.
 final class GateAND extends PrimitiveGate {
 
 	GateAND(int in) {
