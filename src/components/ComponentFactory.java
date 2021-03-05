@@ -12,61 +12,42 @@ final public class ComponentFactory {
 		return new OutputPin();
 	}
 
-	public static void setActive(Component d, boolean active) {
-		((InputPin) d).setActive(active);
+	public static void setActive(Drawable inputPin, boolean active) {
+		((InputPin) inputPin).setActive(active);
 	}
 
-	public static boolean getActive(Component d) {
-		return ((OutputPin) d).getActive();
+	public static boolean getActive(Drawable outputPin) {
+		return ((OutputPin) outputPin).getActive();
 	}
 
 	// CONNECTIONS
-	public static Branch connectGates(Component in, int indexIn, Component out, int indexOut) {
-		return connectGates((Gate) in, indexIn, (Gate) out, indexOut);
+	public static Branch connectGates(Drawable gateIn, int indexIn, Drawable gateOut, int indexOut) {
+		return new Branch((Gate) gateIn, indexIn, (Gate) gateOut, indexOut);
 	}
 
-	public static Branch connectGates(Gate in, int indexIn, Gate out, int indexOut) {
-		return new Branch(in, indexIn, out, indexOut);
+	public static Branch connectToGateInput(Drawable gate, Drawable inputPin, int index) {
+		return new Branch((InputPin) inputPin, (Gate) gate, index);
 	}
 
-	public static Branch connectToGateInput(Component g, Component p, int index) {
-		return connectToGateInput((Gate) g, (InputPin) p, index);
-	}
-
-	public static Branch connectToGateInput(Gate g, InputPin p, int index) {
-		return new Branch(p, g, index);
-	}
-
-	public static Branch connectToGateOutput(Component g, Component p, int index) {
-		return connectToGateOutput((Gate) g, (OutputPin) p, index);
-	}
-
-	public static Branch connectToGateOutput(Gate g, OutputPin p, int index) {
-		return new Branch(g, p, index);
+	public static Branch connectToGateOutput(Drawable gate, Drawable outputPin, int index) {
+		return new Branch((Gate) gate, (OutputPin) outputPin, index);
 	}
 
 	// GATES
-	public static Gate createGate(Component[] in, Component[] out) {
-		return createGate((InputPin[]) in, (OutputPin[]) out);
-	}
-	public static Gate createGate(InputPin[] in, OutputPin[] out) {
-		return new Gate(in, out);
+	public static Gate createGate(Drawable[] inputPins, Drawable[] outputPins) {
+		return new Gate((InputPin[]) inputPins, (OutputPin[]) outputPins);
 	}
 
-	public static Gate createAND(int in) {
-		return new GateAND(in);
+	public static Gate createAND(int inCount) {
+		return new GateAND(inCount);
 	}
 
 	public static Gate createNOT() {
 		return new GateNOT();
 	}
 
-
 	// MISCELLANEOUS
-	public static void deleteBranch(Component b) {
-		deleteBranch((Branch) b);
-	}
-	public static void deleteBranch(Branch b) {
-		b.disconnect();
+	public static void deleteBranch(Drawable branch) {
+		((Branch) branch).disconnect();
 	}
 }
