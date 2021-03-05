@@ -2,6 +2,7 @@ package components;
 
 import exceptions.ComponentNotFoundException;
 
+//A Component with no output; only the client can get it.
 final class OutputPin extends Component {
 
 	private Branch inputBranch;
@@ -16,6 +17,8 @@ final class OutputPin extends Component {
 	void wake_up(boolean newActive, int index, boolean prevChangeable) {
 		checkIndex(index, 1);
 		changeable = prevChangeable;
+
+		// propagate signal only if it's different
 		if (active != newActive) {
 			active = newActive;
 			if (outerGate != null)
@@ -41,11 +44,14 @@ final class OutputPin extends Component {
 		inputBranch = null;
 	}
 
+	// proper way for the client to get output
 	boolean getActive() {
 		checkChangeable();
 		return active;
 	}
 
+	// set the next Component to be woken up
+	// and mark this pin as final because it's hidden inside another gate
 	void setOuterGate(Gate g, int index) {
 		changeable = false;
 		outerGate = g;
