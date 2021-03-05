@@ -1,5 +1,6 @@
 package components;
 
+// A connection between two Components
 final class Branch extends Component {
 
 	private final Component in, out;
@@ -42,6 +43,8 @@ final class Branch extends Component {
 	void wake_up(boolean newActive, int index, boolean prevChangeable) {
 		checkIndex(index, 1);
 		changeable = prevChangeable;
+
+		// propagate signal only if it's different
 		if (active != newActive) {
 			active = newActive;
 			out.wake_up(active, indexOut);
@@ -50,8 +53,10 @@ final class Branch extends Component {
 
 	void disconnect() {
 		checkChangeable();
-		out.wake_up(false, indexOut);
 		in.removeOut(this, indexOut);
 		out.removeIn(this, indexIn);
+
+		// inform out that there is no longer an input
+		out.wake_up(false, indexOut);
 	}
 }
