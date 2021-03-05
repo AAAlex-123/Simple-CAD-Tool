@@ -8,7 +8,7 @@ final class GateAND extends PrimitiveGate {
 	}
 
 	@Override
-	protected void calculateOutput() {
+	void calculateOutput() {
 		boolean res = true;
 
 		for (int i = 0; i < inputPins.length; ++i) {
