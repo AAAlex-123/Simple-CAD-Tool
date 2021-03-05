@@ -42,8 +42,10 @@ final class Branch extends Component {
 	void wake_up(boolean newActive, int index, boolean prevChangeable) {
 		checkIndex(index, 1);
 		changeable = prevChangeable;
-		if (active != newActive)
-			out.wake_up(active = newActive, indexOut);
+		if (active != newActive) {
+			active = newActive;
+			out.wake_up(active, indexOut);
+		}
 	}
 
 	void disconnect() {
