@@ -1,5 +1,6 @@
 package components;
 
+// A Primitive Gate that maps the input to its logical not.
 final class GateNOT extends PrimitiveGate {
 
 	public GateNOT() {
@@ -8,6 +9,7 @@ final class GateNOT extends PrimitiveGate {
 
 	@Override
 	protected void calculateOutput() {
-		outputPins[0].wake_up(!inputPins[0].active);
+		boolean res = !inputPins[0].active;
+		outputPins[0].wake_up(res);
 	}
 }
