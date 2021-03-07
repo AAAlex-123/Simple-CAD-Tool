@@ -1,12 +1,5 @@
 package components;
 
-import java.awt.Graphics;
-import java.awt.Point;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionAdapter;
-
-import javax.swing.JComponent;
-
 import exceptions.ComponentNotAccessibleException;
 import exceptions.InvalidIndexException;
 
@@ -84,49 +77,5 @@ public abstract class Component extends JComponent {
 	public String toString() {
 		String str = String.format("%s", getClass().getSimpleName());
 		return changeable ? str : "(" + str + ")";
-	}
-
-	// ===== DRAWING =====
-
-	Component() {
-		this(0, 0, 50, 50);
-	}
-
-	Component(int x, int y) {
-		this(x, y, 50, 50);
-	}
-
-	Component(int x, int y, int w, int h) {
-		setBounds(x, y, w, h);
-		addMouseMotionListener(new MouseMotionAdapter() {
-			@Override
-			public void mouseDragged(MouseEvent e) {
-				setLocation(getX() + (e.getX() - (getWidth() / 2)), getY() + (e.getY() - (getHeight() / 2)));
-			}
-		});
-	}
-
-	@Override
-	public final void paintComponent(Graphics g) {
-		super.paintComponent(g);
-		draw(g);
-	}
-
-	@Override
-	public final void setLocation(int x, int y) {
-		super.setLocation(x, y);
-		updateOnMovement();
-	}
-
-	// specifies how the Component should be drawn
-	abstract void draw(Graphics g);
-
-	// specifies how the Component should react when it's moved
-	abstract void updateOnMovement();
-
-	// returns the coordinates of the branches so they know where to connect
-	Point getBranchCoords(Branch b, int index) {
-		throw new UnsupportedOperationException(String.format(
-				"Components of type %s don't support getBranchCoords(Branch, int)", getClass().getSimpleName()));
 	}
 }
