@@ -1,5 +1,7 @@
 package components;
 
+import java.awt.Graphics;
+import java.awt.Point;
 import java.util.Vector;
 
 import exceptions.ComponentNotFoundException;
@@ -41,8 +43,8 @@ class Gate extends Component {
 		outputPins = out;
 
 		for (int i = 0; i < inputPins.length; ++i) {
-			inputPins[i].setOuterGate(this, i);
 			inputPins[i].setActive(false);
+			inputPins[i].setOuterGate(this, i);
 		}
 
 		for (int i = 0; i < outputPins.length; ++i) {
@@ -64,7 +66,7 @@ class Gate extends Component {
 		inputPins[indexIn].wake_up(newActive, false);
 	}
 
-	// informs this Gate that an OutputPin has changed value
+	// informs this Gate that the state of an OutputPin has changed
 	void outputChanged(int index) {
 		checkIndex(index, outputPins.length);
 		for (Branch b : outputBranches.get(index))
@@ -115,5 +117,46 @@ class Gate extends Component {
 	public String toString() {
 		String str = String.format("%s: %d-%d", getClass().getSimpleName(), inputPins.length, outputPins.length);
 		return changeable ? str : "(" + str + ")";
+	}
+
+	@Override
+	public void draw(Graphics g) {
+		g.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
+
+		int dh = getHeight() / (inputPins.length + 1);
+		for (int i = 0; i < inputPins.length; ++i) {
+			g.drawRect(0, (i + 1) * dh, 5, 5);
+		}
+		dh = getHeight() / (outputPins.length + 1);
+		for (int i = 0; i < outputPins.length; ++i) {
+			g.drawRect(getWidth() - 5, (i + 1) * dh, 5, 5);
+		}
+	}
+
+	@Override
+	void updateOnMovement() {
+		for (Branch b : inputBranches)
+			if (b != null)
+				b.updateOnMovement();
+		for (Vector<Branch> vb : outputBranches)
+			for (Branch b : vb)
+				if (b != null)
+					b.updateOnMovement();
+	}
+
+	@Override
+	Point getBranchCoords(Branch b, int index) {
+		if (inputBranches[index] == b) {
+			int dh = getHeight() / (inputBranches.length + 1);
+			return new Point(getX() + 0, getY() + ((index + 1) * dh));
+		}
+
+		for (int i = 0; i < outputBranches.get(index).size(); ++i) {
+			if (outputBranches.get(index).get(i) == b) {
+				int dh = getHeight() / (outputBranches.size() + 1);
+				return new Point(getX() + getWidth(), getY() + ((i + 1) * dh));
+			}
+		}
+		return null;
 	}
 }

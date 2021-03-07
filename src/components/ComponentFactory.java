@@ -1,53 +1,181 @@
 package components;
 
-@SuppressWarnings("javadoc")
-final public class ComponentFactory {
+import exceptions.InvalidComponentException;
 
-	// PINS
-	public static InputPin createInputPin() {
+/**
+ * A set of static methods that acts as the interface of the {@link components}
+ * package. Clients can only interact with {@link components.Component
+ * Components} using methods of this class.
+ * <p>
+ * Available Components are:
+ * <ul>
+ * <li>{@code InputPin}: get input signal from client</li>
+ * <li>{@code OutputPin}: return output signal to client</li>
+ * <li>{@code Gate}: map a set of InputPins to a set of OutputPins</li>
+ * <li>{@code Branch}: connect the above components</li>
+ * </ul>
+ * In order to hide implementation details, methods of this factory handle
+ * objects of type {@code Component} but will only accept specific subclasses,
+ * indicated both by the parameter name and in the javadoc comment. In case of
+ * an object of the wrong subclass being provided, a RuntimeException will be
+ * thrown.
+ */
+public final class ComponentFactory {
+
+	/** Don't let anyone instantiate this class */
+	private ComponentFactory() {}
+
+	/**
+	 * Creates an {@code InputPin}.
+	 *
+	 * @return the InputPin
+	 */
+	public static Component createInputPin() {
 		return new InputPin();
 	}
 
-	public static OutputPin createOutputPin() {
+	/**
+	 * Creates an {@code OutputPin}.
+	 *
+	 * @return the OutputPin
+	 */
+	public static Component createOutputPin() {
 		return new OutputPin();
 	}
 
-	public static void setActive(Drawable inputPin, boolean active) {
-		((InputPin) inputPin).setActive(active);
+	/**
+	 * Sets the state of the {@code InputPin} as Active or Inactive.
+	 *
+	 * @param inputPin the InputPin
+	 * @param active   true or false (active or inactive)
+	 */
+	public static void setActive(Component inputPin, boolean active) {
+		try {
+			((InputPin) inputPin).setActive(active);
+		} catch (ClassCastException e) {
+			throw new InvalidComponentException(e, "setActive");
+		}
 	}
 
-	public static boolean getActive(Drawable outputPin) {
-		return ((OutputPin) outputPin).getActive();
+	/**
+	 * Returns the state of the {@code OutputPin}.
+	 *
+	 * @param outputPin the OutputPin
+	 * @return true or false (active or inactive)
+	 */
+	public static boolean getActive(Component outputPin) {
+		try {
+			return ((OutputPin) outputPin).getActive();
+		} catch (ClassCastException e) {
+			throw new InvalidComponentException(e, "getActive");
+		}
 	}
 
-	// CONNECTIONS
-	public static Branch connectGates(Drawable gateIn, int indexIn, Drawable gateOut, int indexOut) {
-		return new Branch((Gate) gateIn, indexIn, (Gate) gateOut, indexOut);
+	/**
+	 * Connects two {@code Gate}s by creating a {@code Branch} between them at the
+	 * specified indexes.
+	 *
+	 * @param gateIn   the Branch's input
+	 * @param indexIn  the index of the pin on the input gate
+	 * @param gateOut  the Branch's input
+	 * @param indexOut the index of the pin on the output gate
+	 * @return the created Branch
+	 */
+	public static Component connectGates(Component gateIn, int indexIn, Component gateOut, int indexOut) {
+		try {
+			return new Branch((Gate) gateIn, indexIn, (Gate) gateOut, indexOut);
+		} catch (ClassCastException e) {
+			throw new InvalidComponentException(e, "connectGates");
+		}
 	}
 
-	public static Branch connectToGateInput(Drawable gate, Drawable inputPin, int index) {
-		return new Branch((InputPin) inputPin, (Gate) gate, index);
+	/**
+	 * Connects an {@code InputPin} to a {@code Gate} by creating a {@code Branch}
+	 * between them at the specified index.
+	 *
+	 * @param gateOut    the Branch's output
+	 * @param inputPinIn the Branch's input
+	 * @param index      the index of the pin on the output gate
+	 * @return the created Branch
+	 */
+	public static Component connectToGateInput(Component gateOut, Component inputPinIn, int index) {
+		try {
+			return new Branch((InputPin) inputPinIn, (Gate) gateOut, index);
+		} catch (ClassCastException e) {
+			throw new InvalidComponentException(e, "connectToGateInput");
+		}
 	}
 
-	public static Branch connectToGateOutput(Drawable gate, Drawable outputPin, int index) {
-		return new Branch((Gate) gate, (OutputPin) outputPin, index);
+	/**
+	 * Connects a {@code Gate} to an {@code OutputPin} by creating a {@code Branch}
+	 * between them at the specified index.
+	 *
+	 * @param gateIn       the Branch's input
+	 * @param outputPinOut the Branch's output
+	 * @param index        the index of the pin on the output gate
+	 * @return the created Branch
+	 */
+	public static Component connectToGateOutput(Component gateIn, Component outputPinOut, int index) {
+		try {
+			return new Branch((Gate) gateIn, (OutputPin) outputPinOut, index);
+		} catch (ClassCastException e) {
+			throw new InvalidComponentException(e, "connectToGateOutput");
+		}
 	}
 
-	// GATES
-	public static Gate createGate(Drawable[] inputPins, Drawable[] outputPins) {
-		return new Gate((InputPin[]) inputPins, (OutputPin[]) outputPins);
+	/**
+	 * Creates a composite {@code Gate} by, effectively, packing all of the
+	 * Components between the {@code InputPin}s and the {@code OutputPin}s into a
+	 * new {@code Gate}. This renders the components hidden and cannot be directly
+	 * accessed or modified in any way.
+	 *
+	 * @param inputPins  the new gate's input pins
+	 * @param outputPins the new gate's output pins
+	 * @return the created Gate
+	 */
+	public static Component createGate(Component[] inputPins, Component[] outputPins) {
+		InputPin[] inp = new InputPin[inputPins.length];
+		OutputPin[] outp = new OutputPin[outputPins.length];
+		try {
+			for (int i = 0; i < inp.length; ++i)
+				inp[i] = (InputPin) inputPins[i];
+			for (int i = 0; i < outp.length; ++i)
+				outp[i] = (OutputPin) outputPins[i];
+			return new Gate(inp, outp);
+		} catch (ClassCastException e) {
+			throw new InvalidComponentException(e, "createGate");
+		}
 	}
 
-	public static Gate createAND(int inCount) {
+	/**
+	 * Creates an AND {@code Gate} with a given number of inputs.
+	 *
+	 * @param inCount the number of inputs
+	 * @return the AND Gate
+	 */
+	public static Component createAND(int inCount) {
 		return new GateAND(inCount);
 	}
 
-	public static Gate createNOT() {
+	/**
+	 * Creates a NOT {@code Gate}.
+	 *
+	 * @return the NOT Gate
+	 */
+	public static Component createNOT() {
 		return new GateNOT();
 	}
 
-	// MISCELLANEOUS
-	public static void deleteBranch(Drawable branch) {
-		((Branch) branch).disconnect();
+	/**
+	 * Removes a connection ({@code Branch}) between two Components.
+	 *
+	 * @param branch the Branch to delete
+	 */
+	public static void deleteBranch(Component branch) {
+		try {
+			((Branch) branch).disconnect();
+		} catch (ClassCastException e) {
+			throw new InvalidComponentException(e, "deleteBranch");
+		}
 	}
 }
