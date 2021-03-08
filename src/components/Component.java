@@ -4,8 +4,8 @@ import exceptions.ComponentNotAccessibleException;
 import exceptions.InvalidIndexException;
 
 /**
- * A class representing a component that is connected to other Components,
- * carries a signal and can also be drawn onto the screen.
+ * A class representing a component that is connected to other Components and
+ * carries a signal.
  * <p>
  * The Component's methods are package-private therefore the client may use the
  * {@link components.ComponentFactory ComponentFactory} to interact with them.
