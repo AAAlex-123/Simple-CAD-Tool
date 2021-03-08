@@ -1,76 +1,62 @@
 package components;
 
-@SuppressWarnings({ "javadoc" })
-public class Branch extends Component {
+// A connection between two Components
+final class Branch extends Component {
 
-	private boolean active;
-	private final Pin in, out;
+	private final Component in, out;
+	private final int indexIn, indexOut;
 
-	public Branch(Pin in, Pin out) {
+	Branch(Gate in, int gateIndexIn, Gate out, int gateIndexOut) {
 		this.in = in;
 		this.out = out;
-		in.setOut(this);
-		out.setIn(this);
+		indexIn = gateIndexIn;
+		indexOut = gateIndexOut;
+
+		in.addOut(this, indexIn);
+		out.setIn(this, indexOut);
+		wake_up(in.outputPins[indexIn].active, 0);
+	}
+
+	Branch(InputPin in, Gate out, int gateIndex) {
+		this.in = in;
+		this.out = out;
+		indexIn = 0;
+		indexOut = gateIndex;
+
+		in.addOut(this, indexIn);
+		out.setIn(this, indexOut);
+		wake_up(in.active, 0);
+	}
+
+	Branch(Gate in, OutputPin out, int gateIndex) {
+		this.in = in;
+		this.out = out;
+		indexIn = gateIndex;
+		indexOut = 0;
+
+		in.addOut(this, indexIn);
+		out.setIn(this, indexOut);
+		wake_up(in.outputPins[indexIn].active, 0);
 	}
 
 	@Override
-	protected void wake_up() {
-		boolean prevState = active;
-		active = in.getActive();
+	void wake_up(boolean newActive, int index, boolean prevChangeable) {
+		checkIndex(index, 1);
+		changeable = prevChangeable;
 
-		if (/* (prevState != active) && */(out != null))
-			out.wake_up();
+		// propagate signal only if it's different
+		if (active != newActive) {
+			active = newActive;
+			out.wake_up(active, indexOut);
+		}
 	}
 
-	@Override
-	public boolean getActive(int index) {
-		if (index != 0)
-			throw new IllegalArgumentException("too early for exceptions...");
-		return active;
+	void disconnect() {
+		checkChangeable();
+		in.removeOut(this, indexOut);
+		out.removeIn(this, indexIn);
+
+		// inform out that there is no longer an input
+		out.wake_up(false, indexOut);
 	}
-
-
-
-
-	/*
-	private final Gate g1, g2;
-	private int x1, y1, x2, y2;
-	private int w, h;
-	private boolean active;
-
-	public Branch(Gate g1, Gate g2) {
-		this.g1 = g1;
-		this.g2 = g2;
-		g1.outputpins[0] = this;
-		g2.inputpins[0] = this;
-		active = false;
-		move();
-		addMouseListener(new MouseAdapter() {
-			@Override
-			public void mousePressed(MouseEvent e) {
-				active = !active;
-			}
-		});
-	}
-
-	public void move() {
-		int[] coords1 = g1.getBranchCoords(this);
-		int[] coords2 = g2.getBranchCoords(this);
-		x1 = coords1[0];
-		y1 = coords1[1];
-		x2 = coords2[0];
-		y2 = coords2[1];
-		w = Math.abs(x2 - x1);
-		h = Math.abs(y2 - y1);
-		setBounds(Math.min(x1, x2), Math.min(y1, y2), w, h);
-	}
-
-	@Override
-	public void paintComponent(Graphics g) {
-		super.paintComponent(g);
-		g.setColor(active ? Color.green : Color.red);
-		g.drawLine(x1 < x2 ? 0 : w, y1 < y2 ? 0 : h, x1 < x2 ? w : 0, y1 < y2 ? h : 0);
-		System.out.printf("drawing branch: %d-%d, %d-%d%n", x1, y1, x2, y2);
-	}
-	 */
 }

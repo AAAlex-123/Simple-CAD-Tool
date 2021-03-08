@@ -1,25 +1,19 @@
 package components;
 
-@SuppressWarnings("javadoc")
-public class GateAND extends Gate {
+// A Primitive Gate that maps the inputs to their logical and.
+final class GateAND extends PrimitiveGate {
 
-	//	public GateAND(Pin[] in, Pin[] out) {
-	//		super(in, out);
-	//	}
-
-	public GateAND(int in, int out) {
-		super(in, out);
+	GateAND(int in) {
+		super(in, 1);
 	}
 
 	@Override
-	public void wake_up() {
-		super.wake_up();
+	void calculateOutput() {
 		boolean res = true;
-		for (int i = 0; i < innerIn.length; ++i) {
-			res &= innerIn[i].getActive();
+
+		for (int i = 0; i < inputPins.length; ++i) {
+			res &= inputPins[i].active;
 		}
-		// propagate to out
-		innerOut[0].setActive(res);
-		innerOut[0].out.wake_up();
+		outputPins[0].wake_up(res);
 	}
 }
