@@ -10,7 +10,7 @@ import exceptions.InvalidIndexException;
  * The Component's methods are package-private therefore the client may use the
  * {@link components.ComponentFactory ComponentFactory} to interact with them.
  */
-public abstract class Component extends JComponent {
+public abstract class Component {
 
 	boolean active = false, changeable = true;
 
