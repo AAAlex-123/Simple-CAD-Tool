@@ -1,7 +1,7 @@
 package components;
 
 // The most basic of gates; they can only be implemented with
-// transistors, so their output is artificially simulated.
+// transistors, so their output is artificially simulated (for now).
 abstract class PrimitiveGate extends Gate {
 
 	PrimitiveGate(int in, int out) {

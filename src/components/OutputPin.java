@@ -2,7 +2,7 @@ package components;
 
 import exceptions.ComponentNotFoundException;
 
-//A Component with no output; only the client can get it.
+// A Component with no output; only the client can get it.
 final class OutputPin extends Component {
 
 	private Branch inputBranch;
@@ -50,8 +50,8 @@ final class OutputPin extends Component {
 		return active;
 	}
 
-	// set the next Component to be woken up
-	// and mark this pin as final because it's hidden inside another gate
+	// sets the next Component to be woken up
+	// and marks this pin as final because it's hidden inside another gate
 	void setOuterGate(Gate g, int index) {
 		changeable = false;
 		outerGate = g;

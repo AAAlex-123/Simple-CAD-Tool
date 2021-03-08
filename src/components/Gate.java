@@ -41,8 +41,8 @@ class Gate extends Component {
 		outputPins = out;
 
 		for (int i = 0; i < inputPins.length; ++i) {
-			inputPins[i].setOuterGate(this, i);
 			inputPins[i].setActive(false);
+			inputPins[i].setOuterGate(this, i);
 		}
 
 		for (int i = 0; i < outputPins.length; ++i) {
@@ -64,7 +64,7 @@ class Gate extends Component {
 		inputPins[indexIn].wake_up(newActive, false);
 	}
 
-	// informs this Gate that an OutputPin has changed value
+	// informs this Gate that the state of an OutputPin has changed
 	void outputChanged(int index) {
 		checkIndex(index, outputPins.length);
 		for (Branch b : outputBranches.get(index))

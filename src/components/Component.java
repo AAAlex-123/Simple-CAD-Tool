@@ -3,16 +3,20 @@ package components;
 import exceptions.ComponentNotAccessibleException;
 import exceptions.InvalidIndexException;
 
-@SuppressWarnings("javadoc")
-public abstract class Component {
+/**
+ * A class representing a component that is connected to other Components,
+ * carries a signal and can also be drawn onto the screen.
+ * <p>
+ * The Component's methods are package-private therefore the client may use the
+ * {@link components.ComponentFactory ComponentFactory} to interact with them.
+ */
+public abstract class Component extends JComponent {
 
-	boolean active, changeable;
+	boolean active = false, changeable = true;
 
-	public Component() {
-		active = false;
-		changeable = true;
-	}
+	// ===== CIRCUITING =====
 
+	// the main method: carries forward the signal is has just received
 	abstract void wake_up(boolean newActive, int index, boolean prevChangeable);
 
 	void setIn(Branch b, int index) {
@@ -39,15 +43,23 @@ public abstract class Component {
 				this.getClass().getSimpleName()));
 	}
 
+	// checks if the Component is not "hidden" inside another gate
+	// if it is, it cannot be modified or accessed in any way.
+	// This should should never throw.
 	final void checkChangeable() {
 		if (!changeable)
 			throw new ComponentNotAccessibleException();
 	}
 
+	// checks the `index` (given by another object) to the `indexMax`
+	// (specified by this component) for validity.
+	// This should should never throw.
 	final void checkIndex(int index, int indexMax) {
 		if ((index < 0) || (index >= indexMax))
 			throw new InvalidIndexException(this, index);
 	}
+
+	// more fancy ways to propagate a signal
 
 	final void wake_up(boolean newActive, int index) {
 		wake_up(newActive, index, changeable);

@@ -4,7 +4,7 @@ import java.util.Vector;
 
 import exceptions.ComponentNotFoundException;
 
-// A Component with no input; only the client can set it.
+// A Component with no input; only the client can set it
 final class InputPin extends Component {
 
 	private final Vector<Branch> outputBranches;
