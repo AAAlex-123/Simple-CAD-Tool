@@ -1,8 +1,5 @@
 package components;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.min;
-
 // A connection between two Components
 final class Branch extends Component {
 
