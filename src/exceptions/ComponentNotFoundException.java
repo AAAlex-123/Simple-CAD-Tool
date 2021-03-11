@@ -6,11 +6,12 @@ import components.Component;
 public final class ComponentNotFoundException extends RuntimeException {
 
 	/**
-	 * Constructs the exception using the Component that couldn't be found.
-	 * 
-	 * @param c the Component
+	 * Constructs the exception using the necessary information.
+	 *
+	 * @param target the Component that was not found
+	 * @param source the Component whose Component was not found
 	 */
-	public ComponentNotFoundException(Component c) {
-		super(String.format("Attempted to remove a %s that couldn't be found", c));
+	public ComponentNotFoundException(Component target, Component source) {
+		super(String.format("Component %s of %s couldn't be found", target, source));
 	}
 }
