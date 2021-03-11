@@ -11,18 +11,17 @@ public final class InvalidComponentException extends RuntimeException {
 
 	/**
 	 * Constructs the exception with the information of a ClassCastException
-	 * 
+	 *
 	 * @param e      the underlying ClassCastException
-	 * @param method the method where it occurred
 	 */
-	public InvalidComponentException(ClassCastException e, String method) {
-		super(formatMessage(e.getLocalizedMessage(), method));
+	public InvalidComponentException(ClassCastException e) {
+		super(formatMessage(e.getLocalizedMessage()));
 	}
 
-	private static String formatMessage(String exc, String method) {
+	private static String formatMessage(String exc) {
 		Pattern p = Pattern.compile("class (.*?) cannot be cast to class (.*?) ");
 		Matcher m = p.matcher(exc);
 		m.find();
-		return String.format("Expected %s but got %s in method: %s()", m.group(2), m.group(1), method);
+		return String.format("Expected %s but got %s", m.group(2), m.group(1));
 	}
 }
