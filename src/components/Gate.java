@@ -1,5 +1,7 @@
 package components;
 
+import java.awt.Graphics;
+import java.awt.Point;
 import java.util.Vector;
 
 import exceptions.ComponentNotFoundException;
@@ -64,12 +66,29 @@ class Gate extends Component {
 		inputPins[indexIn].wake_up(newActive, false);
 	}
 
+	@Override
+	boolean getActive(int index) {
+		checkIndex(index, outputPins.length);
+		return outputPins[index].getActive(0);
+	}
+
+	@Override
+	final void destroy() {
+		for (Branch b : inputBranches)
+			if (b != null)
+				b.destroy();
+		for (Vector<Branch> vb : outputBranches)
+			for (Branch b : vb)
+				if (b != null)
+					b.destroy();
+	}
+
 	// informs this Gate that the state of an OutputPin has changed
 	void outputChanged(int index) {
 		checkIndex(index, outputPins.length);
 		for (Branch b : outputBranches.get(index))
 			if (b != null)
-				b.wake_up(outputPins[index].active);
+				b.wake_up(outputPins[index].getActive(0));
 	}
 
 	@Override
@@ -77,7 +96,7 @@ class Gate extends Component {
 		checkIndex(index, inputPins.length);
 		checkChangeable();
 		inputBranches[index] = b;
-		wake_up(inputBranches[index].active, index);
+		wake_up(inputBranches[index].getActive(0), index);
 	}
 
 	@Override
@@ -85,7 +104,7 @@ class Gate extends Component {
 		checkIndex(index, outputPins.length);
 		checkChangeable();
 		outputBranches.get(index).add(b);
-		b.wake_up(outputPins[index].active);
+		b.wake_up(outputPins[index].getActive(0));
 	}
 
 	@Override
@@ -93,7 +112,7 @@ class Gate extends Component {
 		checkIndex(index, inputPins.length);
 		checkChangeable();
 		if (inputBranches[index] != b)
-			throw new ComponentNotFoundException(b);
+			throw new ComponentNotFoundException(b, this);
 
 		inputBranches[index] = null;
 	}
@@ -108,12 +127,58 @@ class Gate extends Component {
 				return;
 			}
 		}
-		throw new ComponentNotFoundException(b);
+		throw new ComponentNotFoundException(b, this);
 	}
 
 	@Override
 	public String toString() {
 		String str = String.format("%s: %d-%d", getClass().getSimpleName(), inputPins.length, outputPins.length);
-		return changeable ? str : "(" + str + ")";
+		return String.format("%s (UID: %d)", changeable ? str : "(" + str + ")", UID);
+	}
+
+	@Override
+	public void draw(Graphics g) {
+		// System.out.printf("Drawing %s at [%d, %d] - [%d, %d] (%d, %d)%n",
+		// getClass().getSimpleName(), getX(), getY(),
+		// getX() + getWidth(), getY() + getHeight(), getWidth(), getHeight());
+
+		g.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
+		g.drawString(getClass().getSimpleName(), 0, getHeight() / 2);
+
+		int dh = getHeight() / (inputPins.length + 1);
+		for (int i = 0; i < inputPins.length; ++i) {
+			g.drawRect(0, (i + 1) * dh, 5, 5);
+		}
+		dh = getHeight() / (outputPins.length + 1);
+		for (int i = 0; i < outputPins.length; ++i) {
+			g.drawRect(getWidth() - 5, (i + 1) * dh, 5, 5);
+		}
+	}
+
+	@Override
+	void updateOnMovement() {
+		for (Branch b : inputBranches)
+			if (b != null)
+				b.updateOnMovement();
+		for (Vector<Branch> vb : outputBranches)
+			for (Branch b : vb)
+				if (b != null)
+					b.updateOnMovement();
+	}
+
+	@Override
+	Point getBranchCoords(Branch b, int index) {
+		if (inputBranches[index] == b) {
+			int dh = getHeight() / (inputBranches.length + 1);
+			return new Point(getX() + 0, getY() + ((index + 1) * dh));
+		}
+
+		for (int i = 0; i < outputBranches.get(index).size(); ++i) {
+			if (outputBranches.get(index).get(i) == b) {
+				int dh = getHeight() / (outputBranches.size() + 1);
+				return new Point(getX() + getWidth(), getY() + ((i + 1) * dh));
+			}
+		}
+		throw new ComponentNotFoundException(b, this);
 	}
 }
