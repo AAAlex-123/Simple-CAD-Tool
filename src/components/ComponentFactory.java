@@ -137,4 +137,22 @@ public final class ComponentFactory {
 		}
 	}
 
+	/**
+	 * Returns whether or not the {@code Component} is to be destroyed.
+	 *
+	 * @param c the component to check
+	 * @return boolean
+	 */
+	public static boolean toDestroy(Component c) {
+		return c.toRemove();
+	}
+
+	/** @param b the {@code Branch} to reconnect */
+	public static void reconnectBranch(Component b) {
+		try {
+			((Branch) b).connect();
+		} catch (ClassCastException e) {
+			throw new InvalidComponentException(e);
+		}
+	}
 }
