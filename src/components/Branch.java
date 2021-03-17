@@ -7,6 +7,8 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
 
+import exceptions.MalformedBranchException;
+
 // A connection between two Components
 final class Branch extends Component {
 
@@ -15,16 +17,17 @@ final class Branch extends Component {
 	private boolean active;
 
 	private int direction;
+	boolean toBeRemoved = false;
 
 	Branch(Component in, int indexIn, Component out, int indexOut) {
+		if ((in == null) || (out == null))
+			throw new MalformedBranchException(in, out);
 		this.in = in;
 		this.out = out;
 		this.indexIn = indexIn;
 		this.indexOut = indexOut;
 
-		in.addOut(this, indexIn);
-		out.setIn(this, indexOut);
-		wake_up(in.getActive(indexIn), 0);
+		connect();
 	}
 
 	@Override
@@ -35,7 +38,7 @@ final class Branch extends Component {
 		// propagate signal only if it's different
 		if (active != newActive) {
 			active = newActive;
-			// repaint();
+			repaint();
 			out.wake_up(active, indexOut);
 		}
 	}
@@ -43,17 +46,33 @@ final class Branch extends Component {
 	@Override
 	void destroy() {
 		checkChangeable();
-		in.removeOut(this, indexOut);
-		out.removeIn(this, indexIn);
+		in.removeOut(this, indexIn);
+		out.removeIn(this, indexOut);
 
 		// inform out that there is no longer an input
 		out.wake_up(false, indexOut);
+		toBeRemoved = true;
 	}
 
 	@Override
 	boolean getActive(int index) {
 		checkIndex(index, 1);
 		return active;
+	}
+
+	void connect() {
+		in.addOut(this, indexIn);
+		out.setIn(this, indexOut);
+		wake_up(!in.getActive(indexIn), 0);
+		wake_up(in.getActive(indexIn), 0);
+		wake_up(!in.getActive(indexIn), 0);
+		wake_up(in.getActive(indexIn), 0);
+		updateOnMovement();
+	}
+
+	@Override
+	boolean toRemove() {
+		return toBeRemoved;
 	}
 
 	@Override
