@@ -26,7 +26,7 @@ final class OutputPin extends Component {
 		// propagate signal only if it's different
 		if (active != newActive) {
 			active = newActive;
-			// repaint();
+			repaint();
 			if (outerGate != null)
 				outerGate.outputChanged(outerGateIndex);
 		}
@@ -34,8 +34,10 @@ final class OutputPin extends Component {
 
 	@Override
 	void destroy() {
-		if (inputBranch != null)
-			inputBranch.destroy();
+		if (inputBranch != null) {
+			// the branch should be destroyed using the appropriate factory method
+			inputBranch.toBeRemoved = true;
+		}
 	}
 
 	@Override
@@ -48,18 +50,30 @@ final class OutputPin extends Component {
 	void setIn(Branch b, int index) {
 		checkIndex(index, 1);
 		checkChangeable();
+		if (inputBranch != null) {
+			// the branch should be destroyed using the appropriate factory method
+			inputBranch.toBeRemoved = true;
+		}
+
 		inputBranch = b;
-		wake_up(inputBranch.getActive(0), index);
 	}
 
 	@Override
 	void removeIn(Branch b, int index) {
 		checkIndex(index, 1);
 		checkChangeable();
-		if (inputBranch != b)
-			throw new ComponentNotFoundException(b, this);
+		if ((inputBranch == b)) {
+			inputBranch = null;
+		} else {
+			// throw new ComponentNotFoundException(b, this);
 
-		inputBranch = null;
+			// when a Branch is created, setIn is called
+			// this component has in the new branch but
+			// the old branch has out this component
+			// therefore the old branch must be destroyed
+			// but it will call removeIn on this component
+			// but it isn't the in of this component :)
+		}
 	}
 
 	// proper way for the client (the Factory) to get output
@@ -68,8 +82,8 @@ final class OutputPin extends Component {
 		return active;
 	}
 
-	// sets the next Component to be woken up
-	// and marks this pin as final because it's hidden inside another gate
+	// sets the next Component to be woken up and
+	// marks this pin as final because it's hidden inside another gate
 	void setOuterGate(Gate g, int index) {
 		changeable = false;
 		outerGate = g;
@@ -80,8 +94,6 @@ final class OutputPin extends Component {
 	void draw(Graphics g) {
 		g.setColor(active ? Color.yellow : Color.black);
 		g.fillRect(0, 0, getWidth() - 1, getHeight() - 1);
-		g.setColor(Color.red);
-		// g.drawString("OUT", getWidth() / 2, getHeight() / 2);
 	}
 
 	@Override
