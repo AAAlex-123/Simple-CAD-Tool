@@ -12,7 +12,8 @@ abstract class PrimitiveGate extends Gate {
 	void wake_up(boolean newActive, int indexIn, boolean prevChangeable) {
 		changeable = prevChangeable;
 		inputPins[indexIn].wake_up(newActive);
-		calculateOutput();
+		if (checkBranches())
+			calculateOutput();
 	}
 
 	// calculates and sets the output pins to their correct values
