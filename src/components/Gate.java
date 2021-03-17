@@ -59,11 +59,8 @@ class Gate extends Component {
 		changeable = prevChangeable;
 
 		// only propagate signal if all InputPins are connected
-		for (int i = 0; i < inputBranches.length; ++i)
-			if (inputBranches[i] == null)
-				return;
-
-		inputPins[indexIn].wake_up(newActive, false);
+		if (checkBranches())
+			inputPins[indexIn].wake_up(newActive, false);
 	}
 
 	@Override
@@ -76,11 +73,11 @@ class Gate extends Component {
 	final void destroy() {
 		for (Branch b : inputBranches)
 			if (b != null)
-				b.destroy();
+				b.toBeRemoved = true;
 		for (Vector<Branch> vb : outputBranches)
 			for (Branch b : vb)
 				if (b != null)
-					b.destroy();
+					b.toBeRemoved = true;
 	}
 
 	// informs this Gate that the state of an OutputPin has changed
@@ -95,8 +92,11 @@ class Gate extends Component {
 	void setIn(Branch b, int index) {
 		checkIndex(index, inputPins.length);
 		checkChangeable();
+
+		if (inputBranches[index] != null) {
+			inputBranches[index].toBeRemoved = true;
+		}
 		inputBranches[index] = b;
-		wake_up(inputBranches[index].getActive(0), index);
 	}
 
 	@Override
@@ -111,10 +111,11 @@ class Gate extends Component {
 	void removeIn(Branch b, int index) {
 		checkIndex(index, inputPins.length);
 		checkChangeable();
-		if (inputBranches[index] != b)
-			throw new ComponentNotFoundException(b, this);
-
-		inputBranches[index] = null;
+		if (inputBranches[index] == b) {
+			inputBranches[index] = null;
+		} else {
+			// same as OutputPin.removeIn(Branch, int)
+		}
 	}
 
 	@Override
@@ -136,11 +137,15 @@ class Gate extends Component {
 		return String.format("%s (UID: %d)", changeable ? str : "(" + str + ")", UID);
 	}
 
+	boolean checkBranches() {
+		for (int i = 0; i < inputBranches.length; ++i)
+			if (inputBranches[i] == null)
+				return false;
+		return true;
+	}
+
 	@Override
 	public void draw(Graphics g) {
-		// System.out.printf("Drawing %s at [%d, %d] - [%d, %d] (%d, %d)%n",
-		// getClass().getSimpleName(), getX(), getY(),
-		// getX() + getWidth(), getY() + getHeight(), getWidth(), getHeight());
 
 		g.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
 		g.drawString(getClass().getSimpleName(), 0, getHeight() / 2);
@@ -176,7 +181,7 @@ class Gate extends Component {
 		for (int i = 0; i < outputBranches.get(index).size(); ++i) {
 			if (outputBranches.get(index).get(i) == b) {
 				int dh = getHeight() / (outputBranches.size() + 1);
-				return new Point(getX() + getWidth(), getY() + ((i + 1) * dh));
+				return new Point(getX() + getWidth(), getY() + ((index + 1) * dh));
 			}
 		}
 		throw new ComponentNotFoundException(b, this);
