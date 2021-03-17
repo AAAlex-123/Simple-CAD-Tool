@@ -39,6 +39,10 @@ public abstract class Component extends JComponent {
 	// used for unified access inside this package
 	abstract boolean getActive(int index);
 
+	boolean toRemove() {
+		return false;
+	}
+
 	void setIn(Branch b, int index) {
 		throw new UnsupportedOperationException(String.format(
 				"Components of type %s don't support setIn(Branch, int)",
@@ -102,7 +106,7 @@ public abstract class Component extends JComponent {
 	// ===== DRAWING =====
 
 	Component() {
-		this(0, 0, 50, 50, curr_id++);
+		this(50, 50, 50, 50, curr_id++);
 	}
 
 	Component(int x, int y) {
@@ -131,7 +135,6 @@ public abstract class Component extends JComponent {
 		g.setColor(Color.GREEN);
 		g.drawString(getClass().getSimpleName(), 0, getHeight() / 2);
 		g.drawString(String.valueOf(UID), 0, getHeight());
-		System.out.println(this.getClass().getSimpleName());
 	}
 
 	@Override
