@@ -44,86 +44,6 @@ public final class ComponentFactory {
 	}
 
 	/**
-	 * Sets the state of the {@code InputPin} as Active or Inactive.
-	 *
-	 * @param inputPin the InputPin
-	 * @param active   true or false (active or inactive)
-	 */
-	public static void setActive(Component inputPin, boolean active) {
-		try {
-			((InputPin) inputPin).setActive(active);
-		} catch (ClassCastException e) {
-			throw new InvalidComponentException(e, "setActive");
-		}
-	}
-
-	/**
-	 * Returns the state of the {@code OutputPin}.
-	 *
-	 * @param outputPin the OutputPin
-	 * @return true or false (active or inactive)
-	 */
-	public static boolean getActive(Component outputPin) {
-		try {
-			return ((OutputPin) outputPin).getActive();
-		} catch (ClassCastException e) {
-			throw new InvalidComponentException(e, "getActive");
-		}
-	}
-
-	/**
-	 * Connects two {@code Gate}s by creating a {@code Branch} between them at the
-	 * specified indexes.
-	 *
-	 * @param gateIn   the Branch's input
-	 * @param indexIn  the index of the pin on the input gate
-	 * @param gateOut  the Branch's input
-	 * @param indexOut the index of the pin on the output gate
-	 * @return the created Branch
-	 */
-	public static Component connectGates(Component gateIn, int indexIn, Component gateOut, int indexOut) {
-		try {
-			return new Branch((Gate) gateIn, indexIn, (Gate) gateOut, indexOut);
-		} catch (ClassCastException e) {
-			throw new InvalidComponentException(e, "connectGates");
-		}
-	}
-
-	/**
-	 * Connects an {@code InputPin} to a {@code Gate} by creating a {@code Branch}
-	 * between them at the specified index.
-	 *
-	 * @param gateOut    the Branch's output
-	 * @param inputPinIn the Branch's input
-	 * @param index      the index of the pin on the output gate
-	 * @return the created Branch
-	 */
-	public static Component connectToGateInput(Component gateOut, Component inputPinIn, int index) {
-		try {
-			return new Branch((InputPin) inputPinIn, (Gate) gateOut, index);
-		} catch (ClassCastException e) {
-			throw new InvalidComponentException(e, "connectToGateInput");
-		}
-	}
-
-	/**
-	 * Connects a {@code Gate} to an {@code OutputPin} by creating a {@code Branch}
-	 * between them at the specified index.
-	 *
-	 * @param gateIn       the Branch's input
-	 * @param outputPinOut the Branch's output
-	 * @param index        the index of the pin on the output gate
-	 * @return the created Branch
-	 */
-	public static Component connectToGateOutput(Component gateIn, Component outputPinOut, int index) {
-		try {
-			return new Branch((Gate) gateIn, (OutputPin) outputPinOut, index);
-		} catch (ClassCastException e) {
-			throw new InvalidComponentException(e, "connectToGateOutput");
-		}
-	}
-
-	/**
 	 * Creates a composite {@code Gate} by, effectively, packing all of the
 	 * Components between the {@code InputPin}s and the {@code OutputPin}s into a
 	 * new {@code Gate}. This renders the components hidden and cannot be directly
@@ -143,7 +63,7 @@ public final class ComponentFactory {
 				outp[i] = (OutputPin) outputPins[i];
 			return new Gate(inp, outp);
 		} catch (ClassCastException e) {
-			throw new InvalidComponentException(e, "createGate");
+			throw new InvalidComponentException(e);
 		}
 	}
 
@@ -167,15 +87,54 @@ public final class ComponentFactory {
 	}
 
 	/**
-	 * Removes a connection ({@code Branch}) between two Components.
+	 * Connects two {@code Component}s by creating a {@code Branch} between them at
+	 * the specified indexes.
 	 *
-	 * @param branch the Branch to delete
+	 * @param in       the Branch's input
+	 * @param indexIn  the index of the pin on the input gate
+	 * @param out      the Branch's input
+	 * @param indexOut the index of the pin on the output gate
+	 * @return the created Branch
 	 */
-	public static void deleteBranch(Component branch) {
+	public static Component connectComponents(Component in, int indexIn, Component out, int indexOut) {
+		return new Branch(in, indexIn, out, indexOut);
+	}
+
+	/**
+	 * Removes {@code Component} and deletes some {@code Branch}es.
+	 *
+	 * @param c the Component to delete
+	 */
+	public static void deleteComponent(Component c) {
+		c.destroy();
+	}
+
+	/**
+	 * Sets the state of the {@code InputPin} as Active or Inactive.
+	 *
+	 * @param inputPin the InputPin
+	 * @param active   true or false (active or inactive)
+	 */
+	public static void setActive(Component inputPin, boolean active) {
 		try {
-			((Branch) branch).disconnect();
+			((InputPin) inputPin).setActive(active);
 		} catch (ClassCastException e) {
-			throw new InvalidComponentException(e, "deleteBranch");
+			throw new InvalidComponentException(e);
 		}
 	}
+
+	/**
+	 * Returns the state of the {@code OutputPin}.
+	 *
+	 * @param outputPin the OutputPin
+	 * @return true or false (active or inactive)
+	 */
+	public static boolean getActive(Component outputPin) {
+		try {
+			return ((OutputPin) outputPin).getActive();
+		} catch (ClassCastException e) {
+			throw new InvalidComponentException(e);
+		}
+	}
+
 }

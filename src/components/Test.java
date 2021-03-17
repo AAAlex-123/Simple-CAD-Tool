@@ -1,12 +1,25 @@
 package components;
 
-@SuppressWarnings({ "javadoc", "unused" })
+/** A class to test the components package */
+@SuppressWarnings({ "unused" })
 final public class Test {
 
+	/**
+	 * The main method that runs the tests.
+	 *
+	 * @param args command line arguments (not used)
+	 */
 	public static void main(String[] args) {
 
 		// input to output
-		// lmao can't do that
+		System.out.println("INPUT TO OUTPUT");
+		Component ip001 = ComponentFactory.createInputPin();
+		Component op001 = ComponentFactory.createOutputPin();
+		Component b001 = ComponentFactory.connectComponents(ip001, 0, op001, 0);
+
+		System.out.printf("op001: %b%n", op001.getActive(0));
+		ComponentFactory.setActive(ip001, true);
+		System.out.printf("op001: %b%n", op001.getActive(0));
 
 
 
@@ -18,16 +31,15 @@ final public class Test {
 		// ComponentFactory.setActive(op01, false);
 		Component op02 = ComponentFactory.createOutputPin();
 		Component g01 = ComponentFactory.createNOT();
-		Component b01 = ComponentFactory.connectToGateInput(g01, ip01, 0);
-		Component b02 = ComponentFactory.connectToGateOutput(g01, op01, 0);
-		Component b03 = ComponentFactory.connectToGateOutput(g01, op02, 0);
+		Component b01 = ComponentFactory.connectComponents(ip01, 0, g01, 0);
+		Component b02 = ComponentFactory.connectComponents(g01, 0, op01, 0);
+		Component b03 = ComponentFactory.connectComponents(g01, 0, op02, 0);
 
-		System.out.printf("op01, op02: %b, %b%n", op01.active, op02.active);
+		System.out.printf("op01, op02: %b, %b%n", op01.getActive(0), op02.getActive(0));
 		ComponentFactory.setActive(ip01, false);
-		System.out.printf("op01, op02: %b, %b%n", op01.active, op02.active);
+		System.out.printf("op01, op02: %b, %b%n", op01.getActive(0), op02.getActive(0));
 		ComponentFactory.setActive(ip01, true);
-		System.out.printf("op01, op02: %b, %b%n", op01.active, op02.active);
-
+		System.out.printf("op01, op02: %b, %b%n", op01.getActive(0), op02.getActive(0));
 
 
 		// basic AND
@@ -37,40 +49,40 @@ final public class Test {
 		Component op11 = ComponentFactory.createOutputPin();
 		Component g11 = ComponentFactory.createAND(2);
 
-		Component b11 = ComponentFactory.connectToGateInput(g11, ip11, 0);
-		Component b12 = ComponentFactory.connectToGateInput(g11, ip12, 1);
-		Component b13 = ComponentFactory.connectToGateOutput(g11, op11, 0);
+		Component b11 = ComponentFactory.connectComponents(ip11, 0, g11, 0);
+		Component b12 = ComponentFactory.connectComponents(ip12, 0, g11, 1);
+		Component b13 = ComponentFactory.connectComponents(g11, 0, op11, 0);
 
 		ComponentFactory.setActive(ip11, true);
 		ComponentFactory.setActive(ip12, true);
-		System.out.printf("op11: %b%n", op11.active);
+		System.out.printf("op11: %b%n", op11.getActive(0));
 		ComponentFactory.setActive(ip12, false);
-		System.out.printf("op11: %b%n", op11.active);
+		System.out.printf("op11: %b%n", op11.getActive(0));
 
 
 
 		// disconnecting NOT then AND
 		System.out.println("DISCONNECTING AND");
-		System.out.printf("op01, op02: %b, %b%n", op01.active, op02.active);
-		ComponentFactory.deleteBranch(b01);
+		System.out.printf("op01, op02: %b, %b%n", op01.getActive(0), op02.getActive(0));
+		ComponentFactory.deleteComponent(b01);
 		b01 = null;
-		System.out.printf("op01, op02: %b, %b%n", op01.active, op02.active);
-		ComponentFactory.deleteBranch(b03);
-		System.out.printf("op01, op02: %b, %b%n", op01.active, op02.active);
+		System.out.printf("op01, op02: %b, %b%n", op01.getActive(0), op02.getActive(0));
+		ComponentFactory.deleteComponent(b03);
+		System.out.printf("op01, op02: %b, %b%n", op01.getActive(0), op02.getActive(0));
 
 		System.out.println("DISCONNECTING NOT");
 		ComponentFactory.setActive(ip12, true);
-		System.out.printf("op11: %b%n", op11.active);
-		ComponentFactory.deleteBranch(b11);
+		System.out.printf("op11: %b%n", op11.getActive(0));
+		ComponentFactory.deleteComponent(b11);
 		b11 = null;
-		System.out.printf("op11: %b%n", op11.active);
-		b11 = ComponentFactory.connectToGateInput(g11, ip11, 0);
-		System.out.printf("op11: %b%n", op11.active);
-		ComponentFactory.deleteBranch(b13);
+		System.out.printf("op11: %b%n", op11.getActive(0));
+		b11 = ComponentFactory.connectComponents(ip11, 0,g11, 0);
+		System.out.printf("op11: %b%n", op11.getActive(0));
+		ComponentFactory.deleteComponent(b13);
 		b13 = null;
-		System.out.printf("op11: %b%n", op11.active);
-		b13 = ComponentFactory.connectToGateOutput(g11, op11, 0);
-		System.out.printf("op11: %b%n", op11.active);
+		System.out.printf("op11: %b%n", op11.getActive(0));
+		b13 = ComponentFactory.connectComponents(g11, 0, op11, 0);
+		System.out.printf("op11: %b%n", op11.getActive(0));
 
 
 
@@ -84,23 +96,23 @@ final public class Test {
 		Component g21 = ComponentFactory.createAND(2);
 		Component g22 = ComponentFactory.createAND(2);
 
-		Component b21 = ComponentFactory.connectToGateInput(g21, ip21, 0);
-		Component b22 = ComponentFactory.connectToGateInput(g21, ip22, 1);
-		Component b23 = ComponentFactory.connectToGateInput(g22, ip23, 0);
-		Component b24 = ComponentFactory.connectToGateOutput(g22, op21, 0);
-		Component b25 = ComponentFactory.connectGates(g21, 0, g22, 1);
+		Component b21 = ComponentFactory.connectComponents(ip21, 0, g21, 0);
+		Component b22 = ComponentFactory.connectComponents(ip22, 0, g21, 1);
+		Component b23 = ComponentFactory.connectComponents(ip23, 0, g22, 0);
+		Component b24 = ComponentFactory.connectComponents(g22, 0, op21, 0);
+		Component b25 = ComponentFactory.connectComponents(g21, 0, g22, 1);
 
 		ComponentFactory.setActive(ip21, true);
 		ComponentFactory.setActive(ip22, true);
 		ComponentFactory.setActive(ip23, true);
-		System.out.printf("op21: %b%n", op21.active);
+		System.out.printf("op21: %b%n", op21.getActive(0));
 		ComponentFactory.setActive(ip21, false);
-		System.out.printf("op21: %b%n", op21.active);
+		System.out.printf("op21: %b%n", op21.getActive(0));
 		ComponentFactory.setActive(ip21, true);
 		ComponentFactory.setActive(ip22, false);
-		System.out.printf("op21: %b%n", op21.active);
+		System.out.printf("op21: %b%n", op21.getActive(0));
 		ComponentFactory.setActive(ip22, true);
-		System.out.printf("op21: %b%n", op21.active);
+		System.out.printf("op21: %b%n", op21.getActive(0));
 
 
 
@@ -109,15 +121,13 @@ final public class Test {
 		Component ip31 = ComponentFactory.createInputPin();
 		Component op31 = ComponentFactory.createOutputPin();
 		Component g31 = ComponentFactory.createAND(3);
-		Component b31 = ComponentFactory.connectToGateInput(g31, ip31, 0);
-		Component b32 = ComponentFactory.connectToGateInput(g31, ip31, 1);
-		Component b33 = ComponentFactory.connectToGateInput(g31, ip31, 2);
-		Component b34 = ComponentFactory.connectToGateOutput(g31, op31, 0);
+		Component b31 = ComponentFactory.connectComponents(ip31, 0, g31, 0);
+		Component b32 = ComponentFactory.connectComponents(ip31, 0, g31, 1);
+		Component b33 = ComponentFactory.connectComponents(ip31, 0, g31, 2);
+		Component b34 = ComponentFactory.connectComponents(g31, 0, op31, 0);
 
 		ComponentFactory.setActive(ip31, true);
-		System.out.printf("op31: %b%n", op21.active);
-
-
+		System.out.printf("op31: %b%n", op21.getActive(0));
 
 		// create custom gate
 		System.out.println("CUSTOM GATE");
@@ -129,11 +139,11 @@ final public class Test {
 		Component g41 = ComponentFactory.createAND(2);
 		Component g42 = ComponentFactory.createAND(2);
 
-		Component b41 = ComponentFactory.connectToGateInput(g41, ip41, 0);
-		Component b42 = ComponentFactory.connectToGateInput(g41, ip42, 1);
-		Component b43 = ComponentFactory.connectToGateInput(g42, ip43, 0);
-		Component b45 = ComponentFactory.connectGates(g41, 0, g42, 1);
-		Component b44 = ComponentFactory.connectToGateOutput(g42, op41, 0);
+		Component b41 = ComponentFactory.connectComponents(ip41, 0, g41, 0);
+		Component b42 = ComponentFactory.connectComponents(ip42, 0, g41, 1);
+		Component b43 = ComponentFactory.connectComponents(ip43, 0, g42, 0);
+		Component b45 = ComponentFactory.connectComponents(g41, 0, g42, 1);
+		Component b44 = ComponentFactory.connectComponents(g42, 0, op41, 0);
 
 		Component and3 = ComponentFactory.createGate(new Component[] { ip41, ip42, ip43 }, new Component[] { op41 });
 
@@ -145,21 +155,21 @@ final public class Test {
 		Component ip47 = ComponentFactory.createInputPin();
 		Component op45 = ComponentFactory.createOutputPin();
 
-		Component b46 = ComponentFactory.connectToGateInput(and3, ip45, 0);
-		Component b47 = ComponentFactory.connectToGateInput(and3, ip46, 1);
-		Component b48 = ComponentFactory.connectToGateInput(and3, ip47, 2);
-		Component b49 = ComponentFactory.connectToGateOutput(and3, op45, 0);
+		Component b46 = ComponentFactory.connectComponents(ip45, 0, and3, 0);
+		Component b47 = ComponentFactory.connectComponents(ip46, 0, and3, 1);
+		Component b48 = ComponentFactory.connectComponents(ip47, 0, and3, 2);
+		Component b49 = ComponentFactory.connectComponents(and3, 0, op45, 0);
 
 		ComponentFactory.setActive(ip45, true);
 		ComponentFactory.setActive(ip46, true);
 		ComponentFactory.setActive(ip47, true);
-		System.out.printf("op45: %b%n", op45.active);
+		System.out.printf("op45: %b%n", op45.getActive(0));
 		ComponentFactory.setActive(ip45, false);
-		System.out.printf("op45: %b%n", op45.active);
+		System.out.printf("op45: %b%n", op45.getActive(0));
 		ComponentFactory.setActive(ip45, true);
 		ComponentFactory.setActive(ip46, false);
-		System.out.printf("op45: %b%n", op45.active);
+		System.out.printf("op45: %b%n", op45.getActive(0));
 		ComponentFactory.setActive(ip46, true);
-		System.out.printf("op45: %b%n", op45.active);
+		System.out.printf("op45: %b%n", op45.getActive(0));
 	}
 }

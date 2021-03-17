@@ -11,7 +11,7 @@ abstract class PrimitiveGate extends Gate {
 	@Override
 	void wake_up(boolean newActive, int indexIn, boolean prevChangeable) {
 		changeable = prevChangeable;
-		inputPins[indexIn].active = newActive;
+		inputPins[indexIn].wake_up(newActive);
 		calculateOutput();
 	}
 

@@ -9,7 +9,7 @@ final class GateNOT extends PrimitiveGate {
 
 	@Override
 	void calculateOutput() {
-		boolean res = !inputPins[0].active;
+		boolean res = !inputPins[0].getActive(0);
 		outputPins[0].wake_up(res);
 	}
 }
