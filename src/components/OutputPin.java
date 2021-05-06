@@ -5,39 +5,63 @@ import java.awt.Graphics;
 import java.awt.Point;
 
 import exceptions.ComponentNotFoundException;
+import exceptions.MalformedGateException;
 
-// A Component with no output; only the client can get it.
+/** Corresponds to the {@link ComponentType#OUTPUT_PIN OUTPUT_PIN} type. */
 final class OutputPin extends Component {
+
+	private static final long serialVersionUID = 1L;
 
 	private Branch inputBranch;
 	private boolean active;
 
+	// information about the enclosing Gate necessary for signal transmiion
 	private Gate outerGate;
 	private int outerGateIndex;
 
+	/** Constructs the OuputPin */
 	OutputPin() {
+		active = false;
+	}
+
+	@Override
+	public
+	ComponentType type() {
+		return ComponentType.OUTPUT_PIN;
 	}
 
 	@Override
 	void wake_up(boolean newActive, int index, boolean prevChangeable) {
 		checkIndex(index, 1);
+
+		// once hidden cannot be un-hidden
+		if ((changeable == false) && (prevChangeable == true))
+			throw new MalformedGateException(this);
+
 		changeable = prevChangeable;
 
 		// propagate signal only if it's different
 		if (active != newActive) {
 			active = newActive;
 			repaint();
+
+			// inform the enclosing Gate that an output has changed
 			if (outerGate != null)
 				outerGate.outputChanged(outerGateIndex);
 		}
 	}
 
 	@Override
-	void destroy() {
+	void destroySelf() {
 		if (inputBranch != null) {
-			// the branch should be destroyed using the appropriate factory method
-			inputBranch.toBeRemoved = true;
+			inputBranch.destroy();
+			inputBranch = null;
 		}
+	}
+
+	@Override
+	void restore() {
+		toBeRemoved = false;
 	}
 
 	@Override
@@ -50,8 +74,10 @@ final class OutputPin extends Component {
 	void setIn(Branch b, int index) {
 		checkIndex(index, 1);
 		checkChangeable();
+
 		if (inputBranch != null) {
-			// the branch should be destroyed using the appropriate factory method
+			// declare that the connected branches should be destroyed
+			// the application should take care of destroying the Branch
 			inputBranch.toBeRemoved = true;
 		}
 
@@ -62,6 +88,7 @@ final class OutputPin extends Component {
 	void removeIn(Branch b, int index) {
 		checkIndex(index, 1);
 		checkChangeable();
+
 		if ((inputBranch == b)) {
 			inputBranch = null;
 		} else {
@@ -76,28 +103,51 @@ final class OutputPin extends Component {
 		}
 	}
 
-	// proper way for the client (the Factory) to get output
+	/**
+	 * Proper way for the client (the Factory) to get output.
+	 *
+	 * @return the active state of this OutputPin
+	 */
 	boolean getActive() {
 		checkChangeable();
 		return active;
 	}
 
-	// sets the next Component to be woken up and
-	// marks this pin as final because it's hidden inside another gate
-	void setOuterGate(Gate g, int index) {
+	/**
+	 * Marks this Component as unchangeable because it's hidden in a {@code Gate}
+	 * and sets the {@code gate} as the next component to be woken up. Normally
+	 * should only be called during the construction of the {@code gate}.
+	 *
+	 * @param gate  the next component to be woken up
+	 * @param index the pin's index in the gate
+	 */
+	void setOuterGate(Gate gate, int index) {
+		if (outerGate != null)
+			checkChangeable();
+
 		changeable = false;
-		outerGate = g;
+
+		outerGate = gate;
 		outerGateIndex = index;
 	}
 
 	@Override
+	void attachListeners() {
+		attachListeners_((byte) (DRAG | KEYBOARD | FOCUS));
+	}
+
+	@Override
 	void draw(Graphics g) {
+		// crappy drawing
 		g.setColor(active ? Color.yellow : Color.black);
 		g.fillRect(0, 0, getWidth() - 1, getHeight() - 1);
+		g.setColor(Color.red);
+		g.fillRect(0, (getHeight() / 2) - 5, 4, 4);
 	}
 
 	@Override
 	void updateOnMovement() {
+		// this component is moved by the user; tell branch to update
 		if (inputBranch != null)
 			inputBranch.updateOnMovement();
 	}
@@ -105,8 +155,10 @@ final class OutputPin extends Component {
 	@Override
 	Point getBranchCoords(Branch b, int index) {
 		checkIndex(index, 1);
-		if (b == inputBranch)
-			return new Point(getX(), getY() + (getHeight() / 2));
-		throw new ComponentNotFoundException(b, this);
+
+		if (b != inputBranch)
+			throw new ComponentNotFoundException(b, this);
+
+		return new Point(getX(), getY() + (getHeight() / 2));
 	}
 }
