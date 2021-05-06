@@ -1,41 +1,62 @@
 package components;
 
+import static myUtil.Utility.foreach;
+
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
+import java.util.ArrayList;
 import java.util.Vector;
 
 import exceptions.ComponentNotFoundException;
+import exceptions.MalformedGateException;
 
-// A Component with no input; only the client can set it
+/** Corresponds to the {@link ComponentType#INPUT_PIN INPUT_PIN} type. */
 final class InputPin extends Component {
+
+	private static final long serialVersionUID = 1L;
 
 	private final Vector<Branch> outputBranches;
 	private boolean active;
 
+	/** Constructs an {@code InputPin} */
 	InputPin() {
-		outputBranches = new Vector<>(1);
+		outputBranches = new Vector<>(1, 1);
+		active = false;
+	}
+
+	@Override
+	public ComponentType type() {
+		return ComponentType.INPUT_PIN;
 	}
 
 	@Override
 	void wake_up(boolean newActive, int index, boolean prevChangeable) {
 		checkIndex(index, 1);
+
+		// once hidden cannot be un-hidden
+		if ((changeable == false) && (prevChangeable == true))
+			throw new MalformedGateException(this);
+
 		changeable = prevChangeable;
 
 		// propagate signal only if it's different
 		if (active != newActive) {
 			active = newActive;
-			// repaint();
-			for (Branch b : outputBranches)
-				b.wake_up(active);
+			repaint();
+			foreach(outputBranches, b -> b.wake_up(active, changeable));
 		}
 	}
 
 	@Override
-	void destroy() {
-		for (Branch b : outputBranches)
-			if (b != null)
-				b.destroy();
+	void destroySelf() {
+		foreach(new ArrayList<>(outputBranches), Branch::destroy);
+		outputBranches.clear();
+	}
+
+	@Override
+	void restore() {
+		toBeRemoved = false;
 	}
 
 	@Override
@@ -49,56 +70,63 @@ final class InputPin extends Component {
 		checkIndex(index, 1);
 		checkChangeable();
 		outputBranches.add(b);
-		b.wake_up(active);
 	}
 
 	@Override
 	void removeOut(Branch b, int index) {
 		checkIndex(index, 1);
 		checkChangeable();
-		for (Branch br : outputBranches) {
-			if (br == b) {
-				outputBranches.remove(b);
-				return;
-			}
-		}
-		throw new ComponentNotFoundException(b, this);
+		if (!outputBranches.remove(b))
+			throw new ComponentNotFoundException(b, this);
 	}
 
-	// proper way for the client to set input
+	/**
+	 * Proper way for the client (the Factory) to set input. This method, unlike
+	 * wake_up, will throw when it is called on a hidden {@code InputPin}.
+	 *
+	 * @param newActive the new value for the active state of this InputPin
+	 */
 	void setActive(boolean newActive) {
 		checkChangeable();
-		wake_up(newActive, 0);
+		wake_up(newActive);
 	}
 
-	// mark this pin as final because it's hidden inside another gate
-	void setOuterGate(Gate g, int index) {
+	/**
+	 * Marks this Component as unchangeable because it's hidden in a {@code Gate}.
+	 * Normally should only be called during the construction of a {@code Gate}.
+	 */
+	void setOuterGate() {
 		checkChangeable();
 		changeable = false;
 	}
 
 	@Override
+	void attachListeners() {
+		attachListeners_((byte) (DRAG | KEYBOARD | ACTIVATE | FOCUS));
+	}
+
+	@Override
 	public void draw(Graphics g) {
+		// crappy drawing
 		g.setColor(active ? Color.yellow : Color.black);
 		g.fillRect(0, 0, getWidth() - 1, getHeight() - 1);
-		g.setColor(Color.red);
-		// g.drawString("IN", getWidth() / 2, getHeight() / 2);
+		g.setColor(Color.RED);
+		g.fillRect(getWidth() - 5, (getHeight() / 2) - 5, 4, 4);
 	}
 
 	@Override
 	public void updateOnMovement() {
-		for (Branch b : outputBranches) {
-			b.updateOnMovement();
-		}
+		// this component is moved by the user; tell branches to update
+		foreach(outputBranches, Branch::updateOnMovement);
 	}
 
 	@Override
 	public Point getBranchCoords(Branch b, int index) {
 		checkIndex(index, 1);
-		for (Branch br : outputBranches) {
-			if (br == b)
-				return new Point(getX() + getWidth(), getY() + (getHeight() / 2));
-		}
-		throw new ComponentNotFoundException(b, this);
+
+		if (!outputBranches.contains(b))
+			throw new ComponentNotFoundException(b, this);
+
+		return new Point(getX() + getWidth(), getY() + (getHeight() / 2));
 	}
 }

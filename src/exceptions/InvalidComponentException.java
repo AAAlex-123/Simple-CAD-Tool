@@ -1,27 +1,21 @@
 package exceptions;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import components.Component;
+import components.ComponentType;
 
-/**
- * Thrown when a Component of a class other than the expected gets passed as an
- * argument in a factory method
- */
+/** Thrown when a Component of a wrong type is provided in a Factory method. */
 public final class InvalidComponentException extends RuntimeException {
 
 	/**
-	 * Constructs the exception with the information of a ClassCastException
-	 *
-	 * @param e      the underlying ClassCastException
+	 * Constructs the exception using information about the {@code Component} and
+	 * the expected {@code correctType}.
+	 * 
+	 * @param c           the Component with the wrong type
+	 * @param correctType the correct type
 	 */
-	public InvalidComponentException(ClassCastException e) {
-		super(formatMessage(e.getLocalizedMessage()));
+	public InvalidComponentException(Component c, ComponentType correctType) {
+		super(String.format("Expected type %s but got Component of type %s", correctType.description(),
+				c.type().description()));
 	}
 
-	private static String formatMessage(String exc) {
-		Pattern p = Pattern.compile("class (.*?) cannot be cast to class (.*?) ");
-		Matcher m = p.matcher(exc);
-		m.find();
-		return String.format("Expected %s but got %s", m.group(2), m.group(1));
-	}
 }

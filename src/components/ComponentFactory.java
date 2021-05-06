@@ -1,5 +1,9 @@
 package components;
 
+import static components.ComponentType.INPUT_PIN;
+import static components.ComponentType.OUTPUT_PIN;
+import static myUtil.Utility.foreach;
+
 import exceptions.InvalidComponentException;
 
 /**
@@ -14,11 +18,14 @@ import exceptions.InvalidComponentException;
  * <li>{@code Gate}: map a set of InputPins to a set of OutputPins</li>
  * <li>{@code Branch}: connect the above components</li>
  * </ul>
+ * A more detailed list of them and their properties can be found in the
+ * {@link ComponentType} enum.
+ * <p>
  * In order to hide implementation details, methods of this factory handle
  * objects of type {@code Component} but will only accept specific subclasses,
  * indicated both by the parameter name and in the javadoc comment. In case of
- * an object of the wrong subclass being provided, a RuntimeException will be
- * thrown.
+ * an object of the wrong subclass being provided, an Exception will be thrown.
+ * If everything is designed correctly, however, the methods should never throw.
  */
 public final class ComponentFactory {
 
@@ -29,6 +36,7 @@ public final class ComponentFactory {
 	 * Creates an {@code InputPin}.
 	 *
 	 * @return the InputPin
+	 * @see ComponentType#INPUT_PIN
 	 */
 	public static Component createInputPin() {
 		return new InputPin();
@@ -38,9 +46,52 @@ public final class ComponentFactory {
 	 * Creates an {@code OutputPin}.
 	 *
 	 * @return the OutputPin
+	 * @see ComponentType#OUTPUT_PIN
 	 */
 	public static Component createOutputPin() {
 		return new OutputPin();
+	}
+
+	/**
+	 * Connects two {@code Component}s by creating a {@code Branch} between them at
+	 * the specified {@code indexes}.
+	 *
+	 * @param in       the Branch's input
+	 * @param indexIn  the index of the pin on the input gate
+	 * @param out      the Branch's input
+	 * @param indexOut the index of the pin on the output gate
+	 * @return the created Branch
+	 * @see ComponentType#BRANCH
+	 */
+	public static Component connectComponents(Component in, int indexIn, Component out, int indexOut) {
+		return new Branch(in, indexIn, out, indexOut);
+	}
+
+	/**
+	 * Creates a {@code Primitive Gate} of a specific {@code type} with a given
+	 * number of inputs.
+	 *
+	 * @param type    the type of the Primitive Gate
+	 * @param inCount the number of inputs
+	 * @return the Primitive Gate
+	 * @see ComponentType#GATEAND
+	 * @see ComponentType#GATEOR
+	 * @see ComponentType#GATENOT
+	 * @see ComponentType#GATEXOR
+	 */
+	public static Component createPrimitiveGate(ComponentType type, int inCount) {
+		switch (type) {
+		case GATEAND:
+			return new GateAND(inCount);
+		case GATEOR:
+			return new GateOR(inCount);
+		case GATENOT:
+			return new GateNOT(inCount);
+		case GATEXOR:
+			return new GateXOR(inCount);
+		default:
+			throw new RuntimeException("wrong primitive gate type");
+		}
 	}
 
 	/**
@@ -52,61 +103,47 @@ public final class ComponentFactory {
 	 * @param inputPins  the new gate's input pins
 	 * @param outputPins the new gate's output pins
 	 * @return the created Gate
+	 * @see ComponentType#GATE
 	 */
 	public static Component createGate(Component[] inputPins, Component[] outputPins) {
+
+		// check component type
+		foreach(inputPins, t -> checkType(t, INPUT_PIN));
+		foreach(outputPins, t -> checkType(t, OUTPUT_PIN));
+
+		// cast to correct type and create Gate
 		InputPin[] inp = new InputPin[inputPins.length];
 		OutputPin[] outp = new OutputPin[outputPins.length];
-		try {
-			for (int i = 0; i < inp.length; ++i)
-				inp[i] = (InputPin) inputPins[i];
-			for (int i = 0; i < outp.length; ++i)
-				outp[i] = (OutputPin) outputPins[i];
-			return new Gate(inp, outp);
-		} catch (ClassCastException e) {
-			throw new InvalidComponentException(e);
-		}
+
+		for (int i = 0; i < inp.length; ++i)
+			inp[i] = (InputPin) inputPins[i];
+
+		for (int i = 0; i < outp.length; ++i)
+			outp[i] = (OutputPin) outputPins[i];
+
+		return new Gate(inp, outp);
 	}
 
 	/**
-	 * Creates an AND {@code Gate} with a given number of inputs.
-	 *
-	 * @param inCount the number of inputs
-	 * @return the AND Gate
-	 */
-	public static Component createAND(int inCount) {
-		return new GateAND(inCount);
-	}
-
-	/**
-	 * Creates a NOT {@code Gate}.
-	 *
-	 * @return the NOT Gate
-	 */
-	public static Component createNOT() {
-		return new GateNOT();
-	}
-
-	/**
-	 * Connects two {@code Component}s by creating a {@code Branch} between them at
-	 * the specified indexes.
-	 *
-	 * @param in       the Branch's input
-	 * @param indexIn  the index of the pin on the input gate
-	 * @param out      the Branch's input
-	 * @param indexOut the index of the pin on the output gate
-	 * @return the created Branch
-	 */
-	public static Component connectComponents(Component in, int indexIn, Component out, int indexOut) {
-		return new Branch(in, indexIn, out, indexOut);
-	}
-
-	/**
-	 * Removes {@code Component} and deletes some {@code Branch}es.
+	 * Destroys a {@code Component}.
 	 *
 	 * @param c the Component to delete
+	 * @see Component#destroy()
 	 */
-	public static void deleteComponent(Component c) {
+	public static void destroyComponent(Component c) {
 		c.destroy();
+	}
+
+	/**
+	 * Returns whether or not the {@code Component} is to be removed from the
+	 * Application. Only destroyed {@code Components} can be removed.
+	 *
+	 * @param c the component to check
+	 * @return boolean
+	 * @see Component#toBeRemoved
+	 */
+	public static boolean toRemove(Component c) {
+		return c.toRemove();
 	}
 
 	/**
@@ -116,11 +153,9 @@ public final class ComponentFactory {
 	 * @param active   true or false (active or inactive)
 	 */
 	public static void setActive(Component inputPin, boolean active) {
-		try {
-			((InputPin) inputPin).setActive(active);
-		} catch (ClassCastException e) {
-			throw new InvalidComponentException(e);
-		}
+		checkType(inputPin, INPUT_PIN);
+
+		((InputPin) inputPin).setActive(active);
 	}
 
 	/**
@@ -130,11 +165,40 @@ public final class ComponentFactory {
 	 * @return true or false (active or inactive)
 	 */
 	public static boolean getActive(Component outputPin) {
-		try {
-			return ((OutputPin) outputPin).getActive();
-		} catch (ClassCastException e) {
-			throw new InvalidComponentException(e);
-		}
+		checkType(outputPin, OUTPUT_PIN);
+
+		return ((OutputPin) outputPin).getActive();
 	}
 
+	/**
+	 * Restores the state of a destroyed {@code Component} so that it's not
+	 * destroyed.
+	 *
+	 * @param component the Component
+	 */
+	public static void restoreComponent(Component component) {
+		component.restore();
+	}
+
+	/**
+	 * Attaches the Listeners of a {@code Component}.
+	 *
+	 * @param component the Component
+	 */
+	public static void attachListeners(Component component) {
+		component.attachListeners();
+	}
+
+	/**
+	 * Checks if the type of a Component matches the required type. If there is a
+	 * mismatch, an exception is thrown. If everything is designed correctly, this
+	 * should never throw.
+	 *
+	 * @param c    the Component to check
+	 * @param type the required type
+	 */
+	private static void checkType(Component c, ComponentType type) {
+		if (c.type() != type)
+			throw new InvalidComponentException(c, type);
+	}
 }

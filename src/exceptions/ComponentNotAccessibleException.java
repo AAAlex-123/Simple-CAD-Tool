@@ -3,13 +3,14 @@ package exceptions;
 import components.Component;
 
 /**
- * Thrown when trying to access or modify a Component that is "hidden" inside
- * another gate.
+ * Thrown when attempting to access or modify a Component that is hidden.
+ * 
+ * @see components.Component#hidden
  */
 public final class ComponentNotAccessibleException extends RuntimeException {
 
 	/**
-	 * Constructs the exception using the necessary information.
+	 * Constructs the exception using information about the {@code Component}.
 	 *
 	 * @param c the Component that is not accessible
 	 */

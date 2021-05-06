@@ -1,5 +1,5 @@
 /**
- * Declares a set of components that can fully define any logic circuit. The
+ * Defines a set of components that can fully define any logic circuit. The
  * client can interact with objects of type {@link components.Component
  * Component} which represent a circuit component that can be connected to other
  * Components and transmit a signal. Components can also be drawn onto the

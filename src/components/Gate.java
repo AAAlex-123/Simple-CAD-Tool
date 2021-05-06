@@ -1,69 +1,126 @@
 package components;
 
+import static myUtil.Utility.all;
+import static myUtil.Utility.foreach;
+
 import java.awt.Graphics;
 import java.awt.Point;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Vector;
 
 import exceptions.ComponentNotFoundException;
+import exceptions.MalformedGateException;
 
-// A Component that maps InputPins to OutputPins
+/** Corresponds to the {@link ComponentType#GATE GATE} type. */
 class Gate extends Component {
 
 	private final Branch[] inputBranches;
+	// Each pin has many Branches coming out of it (generic arrays aren't supported)
 	private final Vector<Vector<Branch>> outputBranches;
 
-	// inner pins
-	final InputPin[] inputPins;
-	final OutputPin[] outputPins;
+	/** The Gate's inner Input Pins  (should only be accessed by subclasses) */
+	protected final InputPin[] inputPins;
 
+	/** The Gate's inner Output Pins (should only be accessed by subclasses) */
+	protected final OutputPin[] outputPins;
+
+	// TODO: make this work
+	// private String customGateName;
+
+	/**
+	 * Constructs a Gate with the given number of Input and Output pins.
+	 *
+	 * @param inN  the number of input pins
+	 * @param outN the number of output pins
+	 */
 	Gate(int inN, int outN) {
 		inputBranches = new Branch[inN];
-		outputBranches = new Vector<>(outN);
+		outputBranches = new Vector<>(outN, 1);
 		inputPins = new InputPin[inN];
 		outputPins = new OutputPin[outN];
 
 		for (int i = 0; i < inN; ++i) {
 			inputPins[i] = new InputPin();
-			inputPins[i].setOuterGate(this, i);
+			inputPins[i].setOuterGate();
 		}
+
 		for (int i = 0; i < outN; ++i) {
 			outputPins[i] = new OutputPin();
 			outputPins[i].setOuterGate(this, i);
-			outputBranches.add(new Vector<>(1));
+			outputBranches.add(new Vector<>(1, 1));
 		}
 	}
 
-	// constructs a composite gate consisting of everything between the InputPins
-	// and the OutputPins, essentially packing that circuit into a gate, and
-	// behaves exactly as it would had it not been packed into a gate.
+	/**
+	 * Constructs a Gate using as Input and Output Pins the ones provided. During
+	 * construction, the Input Pins are marked as "hidden" and the hiddenness is
+	 * propagated all the way to the Output Pins. This essentially packs the circuit
+	 * between the Input and Output Pins into this Gate and it behaves exactly as it
+	 * would have, had it not been packed into a Gate.
+	 *
+	 * @param in  the Gate's inner Input Pins
+	 * @param out the Gate's inner Output Pins
+	 */
 	Gate(InputPin[] in, OutputPin[] out) {
 		inputBranches = new Branch[in.length];
-		outputBranches = new Vector<>(out.length);
+		outputBranches = new Vector<>(out.length, 1);
 		inputPins = in;
 		outputPins = out;
 
 		for (int i = 0; i < inputPins.length; ++i) {
-			inputPins[i].setActive(false);
-			inputPins[i].setOuterGate(this, i);
+			inputPins[i].setOuterGate();
+
+			// propagate hiddenness and reset the state of the pins
+			inputPins[i].wake_up(true);
+			inputPins[i].wake_up(false, false);
 		}
 
 		for (int i = 0; i < outputPins.length; ++i) {
 			outputPins[i].setOuterGate(this, i);
-			outputBranches.add(new Vector<>(1));
+			outputBranches.add(new Vector<>(1, 1));
 		}
+	}
+
+	@Override
+	public ComponentType type() {
+		return ComponentType.GATE;
 	}
 
 	@Override
 	void wake_up(boolean newActive, int indexIn, boolean prevChangeable) {
 		checkIndex(indexIn, inputBranches.length);
+
+		// once hidden cannot be un-hidden
+		if ((changeable == false) && (prevChangeable == true))
+			throw new MalformedGateException(this);
+
 		changeable = prevChangeable;
 
-		// only propagate signal if all InputPins are connected
-		for (int i = 0; i < inputBranches.length; ++i)
-			if (inputBranches[i] == null)
-				return;
+		// only propagate signal if all InputPins are connected to a Branch
+		if (checkBranches())
+			inputPins[indexIn].wake_up(newActive);
+	}
 
-		inputPins[indexIn].wake_up(newActive, false);
+	@Override
+	void destroySelf() {
+		foreach(inputBranches, Branch::destroy);
+		Arrays.fill(inputBranches, null);
+
+		List<Branch> ls = new ArrayList<>();
+		foreach(outputBranches, vb -> ls.addAll(vb));
+		foreach(ls, Branch::destroy);
+
+		outputBranches.clear();
+	}
+
+	@Override
+	void restore() {
+		toBeRemoved = false;
+
+		for (int i = 0; i < outputPins.length; ++i)
+			outputBranches.add(new Vector<>(1, 1));
 	}
 
 	@Override
@@ -72,31 +129,30 @@ class Gate extends Component {
 		return outputPins[index].getActive(0);
 	}
 
-	@Override
-	final void destroy() {
-		for (Branch b : inputBranches)
-			if (b != null)
-				b.destroy();
-		for (Vector<Branch> vb : outputBranches)
-			for (Branch b : vb)
-				if (b != null)
-					b.destroy();
-	}
-
-	// informs this Gate that the state of an OutputPin has changed
+	/**
+	 * Informs this Gate that the state of an inner Output Pin has changed. The Gate
+	 * then wakes up the Branches that are connected to that Output Pin.
+	 *
+	 * @param index the index of the OutputPin
+	 */
 	void outputChanged(int index) {
 		checkIndex(index, outputPins.length);
-		for (Branch b : outputBranches.get(index))
-			if (b != null)
-				b.wake_up(outputPins[index].getActive(0));
+
+		foreach(outputBranches.get(index), b -> b.wake_up(outputPins[index].getActive(0), changeable));
 	}
 
 	@Override
 	void setIn(Branch b, int index) {
 		checkIndex(index, inputPins.length);
 		checkChangeable();
+
+		if (inputBranches[index] != null) {
+			// declare that the connected branches should be destroyed
+			// the application should take care of that using the appropriate factory method
+			inputBranches[index].toBeRemoved = true;
+		}
+
 		inputBranches[index] = b;
-		wake_up(inputBranches[index].getActive(0), index);
 	}
 
 	@Override
@@ -104,66 +160,80 @@ class Gate extends Component {
 		checkIndex(index, outputPins.length);
 		checkChangeable();
 		outputBranches.get(index).add(b);
-		b.wake_up(outputPins[index].getActive(0));
 	}
 
 	@Override
 	void removeIn(Branch b, int index) {
 		checkIndex(index, inputPins.length);
 		checkChangeable();
-		if (inputBranches[index] != b)
-			throw new ComponentNotFoundException(b, this);
-
-		inputBranches[index] = null;
+		if (inputBranches[index] == b) {
+			inputBranches[index] = null;
+		} else {
+			// same as OutputPin.removeIn(Branch, int)
+		}
 	}
 
 	@Override
 	void removeOut(Branch b, int index) {
 		checkIndex(index, outputPins.length);
 		checkChangeable();
-		for (Branch br : outputBranches.get(index)) {
-			if (br == b) {
-				outputBranches.get(index).remove(b);
-				return;
-			}
-		}
-		throw new ComponentNotFoundException(b, this);
+
+		if (!outputBranches.get(index).remove(b))
+			throw new ComponentNotFoundException(b, this);
 	}
 
 	@Override
 	public String toString() {
-		String str = String.format("%s: %d-%d", getClass().getSimpleName(), inputPins.length, outputPins.length);
-		return String.format("%s (UID: %d)", changeable ? str : "(" + str + ")", UID);
+		// [<gate name>: <inN>-<outN> (UID: <UID>)], enclosed in '()' if hidden
+		String str = String.format("%s: %d-%d", type().description(), inputPins.length, outputPins.length);
+		return String.format("[%s (UID: %d)]", changeable ? str : "(" + str + ")", UID);
+	}
+
+	/**
+	 * Checks if the Input Pin at the given index is connected to a Branch. Should
+	 * only be called by primitive gates that contain multiple gates e.g. NOT.
+	 *
+	 * @param index the index
+	 * @return true if a branch is connected, false otherwise
+	 */
+	boolean checkBranch(int index) {
+		return !(inputBranches[index] == null);
+	}
+
+	/**
+	 * Checks if all of the Input Pins are connected to a Branch. A Gate shouldn't
+	 * produce an output unless all of its Input Pins are connected to a Branch.
+	 *
+	 * @return true if all inputs are connected; if an output will be produced
+	 */
+	boolean checkBranches() {
+		return all(inputBranches, b -> b != null);
+	}
+
+	@Override
+	void attachListeners() {
+		attachListeners_((byte) (DRAG | KEYBOARD | FOCUS));
 	}
 
 	@Override
 	public void draw(Graphics g) {
-		// System.out.printf("Drawing %s at [%d, %d] - [%d, %d] (%d, %d)%n",
-		// getClass().getSimpleName(), getX(), getY(),
-		// getX() + getWidth(), getY() + getHeight(), getWidth(), getHeight());
-
+		// crappy drawing
 		g.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
 		g.drawString(getClass().getSimpleName(), 0, getHeight() / 2);
 
 		int dh = getHeight() / (inputPins.length + 1);
-		for (int i = 0; i < inputPins.length; ++i) {
+		for (int i = 0; i < inputPins.length; ++i)
 			g.drawRect(0, (i + 1) * dh, 5, 5);
-		}
+
 		dh = getHeight() / (outputPins.length + 1);
-		for (int i = 0; i < outputPins.length; ++i) {
+		for (int i = 0; i < outputPins.length; ++i)
 			g.drawRect(getWidth() - 5, (i + 1) * dh, 5, 5);
-		}
 	}
 
 	@Override
 	void updateOnMovement() {
-		for (Branch b : inputBranches)
-			if (b != null)
-				b.updateOnMovement();
-		for (Vector<Branch> vb : outputBranches)
-			for (Branch b : vb)
-				if (b != null)
-					b.updateOnMovement();
+		foreach(inputBranches, Branch::updateOnMovement);
+		foreach(outputBranches, vb -> foreach(vb, Branch::updateOnMovement));
 	}
 
 	@Override
@@ -173,12 +243,11 @@ class Gate extends Component {
 			return new Point(getX() + 0, getY() + ((index + 1) * dh));
 		}
 
-		for (int i = 0; i < outputBranches.get(index).size(); ++i) {
-			if (outputBranches.get(index).get(i) == b) {
-				int dh = getHeight() / (outputBranches.size() + 1);
-				return new Point(getX() + getWidth(), getY() + ((i + 1) * dh));
-			}
+		if (outputBranches.get(index).contains(b)) {
+			int dh = getHeight() / (outputBranches.size() + 1);
+			return new Point(getX() + getWidth(), getY() + ((index + 1) * dh));
 		}
+
 		throw new ComponentNotFoundException(b, this);
 	}
 }
