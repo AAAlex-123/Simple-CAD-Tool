@@ -25,7 +25,7 @@ import exceptions.InvalidIndexException;
  */
 public abstract class Component extends JComponent {
 
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 2L;
 
 	/**
 	 * Indicates whether or not this Component is hidden inside another Component. A
@@ -289,33 +289,24 @@ public abstract class Component extends JComponent {
 
 	// ===== DRAWING =====
 
+	/*
+	 * used instead of hasFocus() because it does not return true immediately after
+	 * requestFocus() is called and therefore the user has no indication of focus.
+	 */
 	private boolean focused;
 
-	/** bit to make component dragable */
-	static final byte DRAG = 0x01;
-	/** bit to make component moveable */
-	static final byte KEYBOARD = 0x02;
-	/** bit to make component activate on click */
-	static final byte ACTIVATE = 0x04;
-	/** bit to make component get keyboard focus when clicked */
-	static final byte /* CLICK_TO_ */ FOCUS = 0x08;
+	/** bit to make component dragable, keyboard-usable and focusable */
+	static final byte DRAG_KB_FOCUS = 0x01;
+	/** bit to make component (de)activate on click */
+	static final byte ACTIVATE = 0x02;
 
-	/** Default constructor (only constructor used at the moment lmao) */
+	/** Default constructor */
 	Component() {
-		this(50, 50, 50, 50, curr_id++);
+		this(0, 0, 50, 50, curr_id++);
 	}
 
 	/**
-	 * Constructs a Component with specific ID, probably will never be used.
-	 *
-	 * @param UID the component's ID
-	 */
-	Component(int UID) {
-		this(50, 50, 50, 50, UID);
-	}
-
-	/**
-	 * Master constructor specifying location, dimensions and ID,
+	 * Constructor specifying location, dimensions and ID.
 	 *
 	 * @param x   the Component's X position
 	 * @param y   the Component's Y position
@@ -323,7 +314,7 @@ public abstract class Component extends JComponent {
 	 * @param h   the Component's height
 	 * @param UID the Component's ID
 	 */
-	Component(int x, int y, int w, int h, int UID) {
+	private Component(int x, int y, int w, int h, int UID) {
 		this.UID = UID;
 		focused = false;
 		setBounds(x, y, w, h);
@@ -364,29 +355,37 @@ public abstract class Component extends JComponent {
 
 	private void move(KeyEvent e) {
 		if (hasFocus()) {
-			int dx = 0, dy = 0;
+			int d = 10, dm = 5, dx = 0, dy = 0;
 			switch (e.getKeyCode()) {
 			case KeyEvent.VK_LEFT:
-				dx = -7;
+				dx = -d;
 				break;
 			case KeyEvent.VK_RIGHT:
-				dx = 7;
+				dx = d;
 				break;
 			case KeyEvent.VK_UP:
-				dy = -7;
+				dy = -d;
 				break;
 			case KeyEvent.VK_DOWN:
-				dy = 7;
+				dy = d;
 				break;
 			default:
 				break;
 			}
 
 			if (e.isControlDown()) {
-				dx *= 5;
-				dy *= 5;
+				dx *= dm;
+				dy *= dm;
 			}
-			setLocation(getX() + dx, getY() + dy);
+
+			int newx = getX(), newy = getY();
+			if ((dx != 0) && ((getX() + dx) >= 0) && ((getX() + dx) <= (getParent().getWidth() - getWidth())))
+				newx = (int) Math.floor((getX() + dx) / (double) d) * d;
+			if ((dy != 0) && ((getY() + dy) >= 0) && ((getY() + dy) <= (getParent().getHeight() - getHeight())))
+				newy = (int) Math.floor((getY() + dy) / (double) d) * d;
+
+			if ((newx != getX()) || (newy != getY()))
+				setLocation(newx, newy);
 		}
 	}
 
@@ -403,14 +402,13 @@ public abstract class Component extends JComponent {
 	 * @param flags a byte whose bits correspond to different listeners
 	 */
 	final void attachListeners_(byte flags) {
-		if ((flags & DRAG) != 0)
+		if ((flags & DRAG_KB_FOCUS) != 0) {
 			addDragListener();
-		if ((flags & KEYBOARD) != 0)
 			addKeyboardListener();
+			addFocusListener();
+		}
 		if ((flags & ACTIVATE) != 0)
 			addActivateListener();
-		if ((flags & FOCUS) != 0)
-			addFocusListener();
 	}
 
 	private void addDragListener() {
@@ -440,7 +438,6 @@ public abstract class Component extends JComponent {
 					break;
 				default:
 					break;
-
 				}
 			}
 		});
@@ -457,6 +454,15 @@ public abstract class Component extends JComponent {
 	}
 
 	private void addFocusListener() {
+
+		addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (!focused)
+					requestFocus();
+			}
+		});
+
 		addFocusListener(new FocusListener() {
 			@Override
 			public void focusLost(FocusEvent e) {
@@ -492,6 +498,6 @@ public abstract class Component extends JComponent {
 	 */
 	Point getBranchCoords(Branch b, int index) {
 		throw new UnsupportedOperationException(String.format(
-				"Components of type %s don't support getBranchCoords(Branch, int)", getClass().getSimpleName()));
+				"Component of type %s don't support getBranchCoords(Branch, int)", getClass().getSimpleName()));
 	}
 }

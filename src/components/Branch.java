@@ -8,11 +8,14 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
 
+import exceptions.InvalidIndexException;
 import exceptions.MalformedBranchException;
 import exceptions.MalformedGateException;
 
 /** Corresponds to the {@link ComponentType#BRANCH BRANCH} type */
 final class Branch extends Component {
+
+	private static final long serialVersionUID = 3L;
 
 	private final Component in, out;
 	private final int indexIn, indexOut;
@@ -45,11 +48,6 @@ final class Branch extends Component {
 		toBeRemoved = false;
 
 		connect();
-	}
-
-	@Override
-	void attachListeners() {
-		attachListeners_((byte) 0);
 	}
 
 	@Override
@@ -106,7 +104,7 @@ final class Branch extends Component {
 		try {
 			in.addOut(this, indexIn);
 			out.setIn(this, indexOut);
-		} catch (UnsupportedOperationException e) {
+		} catch (UnsupportedOperationException | InvalidIndexException e) {
 			// don't leave hanging connections
 			destroy();
 			throw e;
@@ -118,6 +116,11 @@ final class Branch extends Component {
 
 		// update the Branch's graphics
 		updateOnMovement();
+	}
+
+	@Override
+	void attachListeners() {
+		attachListeners_((byte) 0);
 	}
 
 	@Override
