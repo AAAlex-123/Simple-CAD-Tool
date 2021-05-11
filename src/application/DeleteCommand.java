@@ -11,7 +11,7 @@ import components.ComponentFactory;
 /** A Command that deletes a Component */
 class DeleteCommand extends Command {
 
-	private static final long serialVersionUID = 2L;
+	private static final long serialVersionUID = 3L;
 
 	private Component componentToDelete;
 
@@ -31,6 +31,16 @@ class DeleteCommand extends Command {
 	@Override
 	Command myclone() {
 		return new DeleteCommand(context);
+	}
+
+	@Override
+	Command myclone(boolean keepIdAndReqs) {
+		Command newCommand = new DeleteCommand(context);
+		if (keepIdAndReqs) {
+			newCommand.requirements = requirements;
+		}
+
+		return newCommand;
 	}
 
 	@Override

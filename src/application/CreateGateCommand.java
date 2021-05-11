@@ -16,7 +16,7 @@ import components.ComponentFactory;
  */
 class CreateGateCommand extends Command {
 
-	private static final long serialVersionUID = 2L;
+	private static final long serialVersionUID = 4L;
 
 	// the sequence of Commands required to create the Gate
 	private final List<Command> commands;
@@ -37,6 +37,7 @@ class CreateGateCommand extends Command {
 		super(app);
 		commands = cmds;
 		description = desc;
+		componentID = -1;
 	}
 
 	@Override
@@ -48,7 +49,7 @@ class CreateGateCommand extends Command {
 	Command myclone(boolean keepId) {
 		CreateGateCommand cgc = new CreateGateCommand(context, commands, description);
 		if (keepId)
-			cgc.componentID = componentID;
+			cgc.componentID = createdComponent.UID();
 		return cgc;
 	}
 
@@ -63,7 +64,7 @@ class CreateGateCommand extends Command {
 			Application tempContext = new Application();
 
 			foreach(commands, c -> {
-				Command cloned = ((CreateCommand) c).myclone(true);
+				Command cloned = c.myclone(true);
 				cloned.context = tempContext;
 				cloned.execute();
 			});
@@ -85,7 +86,8 @@ class CreateGateCommand extends Command {
 
 			// create the composite Gate and add it to the real context
 			createdComponent = ComponentFactory.createGate(in, out);
-			componentID = createdComponent.UID();
+			if (componentID != -1)
+				createdComponent.setID(componentID);
 			context.addComponent(createdComponent);
 		}
 		return 0;

@@ -23,7 +23,7 @@ import exceptions.MalformedBranchException;
 /** A Command that creates a Component */
 class CreateCommand extends Command {
 
-	private static final long serialVersionUID = 2L;
+	private static final long serialVersionUID = 3L;
 
 	/** The type of the component that will be created */
 	final ComponentType componentType;

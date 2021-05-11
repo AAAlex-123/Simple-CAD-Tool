@@ -55,4 +55,9 @@ abstract class Command implements Undoable, Serializable {
 
 	/** @return a description for this Command */
 	abstract String desc();
+
+	@Override
+	public String toString() {
+		return desc();
+	}
 }
