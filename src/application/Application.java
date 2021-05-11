@@ -6,7 +6,6 @@ import static myUtil.Utility.max;
 
 import java.awt.BorderLayout;
 import java.io.EOFException;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -21,11 +20,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.WindowConstants;
-import javax.swing.filechooser.FileFilter;
 
 import components.Component;
 import components.ComponentFactory;
@@ -58,7 +55,7 @@ public final class Application {
 	/** HashMap containing all of the active Components */
 	private final Map<Integer, Component> hm = new HashMap<>();
 
-	/** An {@link application.UndoableHistory CommandHistory} instance to keep track of Commands */
+	/** An {@link application.UndoableHistory UndoableHistory} instance to keep track of Commands */
 	private final UndoableHistory<Command> undoableHistory;
 
 	/** Constructs the application including its different UI elements */
@@ -72,10 +69,15 @@ public final class Application {
 
 		sb.addLabel("message");
 		sb.addLabel("count");
+		sb.addLabel("freeM");
+		sb.addLabel("totalM");
+		updateMemory();
 	}
 
 	/** Runs the application */
 	public void run() {
+		// TODO: autosave thread
+
 		ui.setFocusable(true);
 		// configure components only when run to make construction faster
 		window.setLayout(new BorderLayout());
@@ -119,6 +121,7 @@ public final class Application {
 		hm.put(c.UID(), c);
 		ui.addComponent(c);
 		sb.setLabelText("count", "Component count: %d", hm.size());
+		updateMemory();
 	}
 
 	/**
@@ -130,6 +133,7 @@ public final class Application {
 		hm.remove(c.UID());
 		ui.removeComponent(c);
 		sb.setLabelText("count", "Component count: %d", hm.size());
+		updateMemory();
 	}
 
 	/**
@@ -217,6 +221,12 @@ public final class Application {
 	 */
 	void error(String text, Object... args) {
 		sb.setLabelText("message", StatusBar.MessageType.FAILURE, text, args);
+	}
+
+	private void updateMemory() {
+		Runtime rt = Runtime.getRuntime();
+		sb.setLabelText("freeM", "Free: %d MB", rt.freeMemory() / 1_000_000);
+		sb.setLabelText("totalM", "Total: %d MB", rt.totalMemory() / 1_000_000);
 	}
 
 	/** An enum-strategy for the different Actions the user may take. */
@@ -325,7 +335,6 @@ public final class Application {
 						Component.setGlobalID(max(context.getComponents(), Component::UID).UID());
 
 					} else if (ftype.equals(component)) {
-
 						Command cgc = new CreateGateCommand(context, commands, (String) reqs.get("gatename").value());
 						context.addCreateCommand(cgc);
 
@@ -342,11 +351,13 @@ public final class Application {
 				} else if (readResult == 1)
 					context.error("File %s not found", reqs.get("filename").value());
 				else if (readResult == 2)
-					context.error("Error while reading from file");
+					context.error(
+							"Error while reading from file. Try again or inform the developer about error code Action-Open-%d",
+							readResult);
 				else if (readResult == 4)
 					context.error("File corrupted");
 				else if (readResult == 5)
-					context.error("File corresponds to an earlier version that is no longer supported");
+					context.error("File contains components of an earlier version that is no longer supported");
 				else
 					context.error("Inform the developer about error code Action-Open-%d", readResult);
 
@@ -584,14 +595,11 @@ public final class Application {
 
 			} catch (InvalidClassException e) {
 				return 5;
-			} catch (EOFException e) {
+			} catch (EOFException | StreamCorruptedException e) {
 				e.printStackTrace();
 				return 4;
 			} catch (FileNotFoundException e) {
 				return 1;
-			} catch (StreamCorruptedException e) {
-				e.printStackTrace();
-				return 4;
 			} catch (IOException e) {
 				e.printStackTrace();
 				return 2;
@@ -600,32 +608,6 @@ public final class Application {
 				return 3;
 			}
 			return 0;
-		}
-
-		@SuppressWarnings("unused")
-		private static JFileChooser createFileChooser() {
-			JFileChooser jfc = new JFileChooser(new File(user_data));
-			jfc.setFileHidingEnabled(true);
-			jfc.removeChoosableFileFilter(jfc.getAcceptAllFileFilter());
-			jfc.setFileFilter(new FileFilter() {
-				@Override
-				public String getDescription() {
-					return ".sct SimpleCadTool file";
-				}
-
-				@Override
-				public boolean accept(File f) {
-					return f.toString().endsWith(".sct");
-				}
-			});
-			//			jfc.setFileSystemView(new FileSystemView() {
-			//
-			//				@Override
-			//				public File createNewFolder(File containingDir) throws IOException {
-			//					return null;
-			//				}
-			//			});
-			return jfc;
 		}
 	}
 }
