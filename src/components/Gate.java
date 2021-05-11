@@ -16,6 +16,8 @@ import exceptions.MalformedGateException;
 /** Corresponds to the {@link ComponentType#GATE GATE} type. */
 class Gate extends Component {
 
+	private static final long serialVersionUID = 2L;
+
 	private final Branch[] inputBranches;
 	// Each pin has many Branches coming out of it (generic arrays aren't supported)
 	private final Vector<Vector<Branch>> outputBranches;
@@ -135,7 +137,7 @@ class Gate extends Component {
 	 *
 	 * @param index the index of the OutputPin
 	 */
-	void outputChanged(int index) {
+	final void outputChanged(int index) {
 		checkIndex(index, outputPins.length);
 
 		foreach(outputBranches.get(index), b -> b.wake_up(outputPins[index].getActive(0), changeable));
@@ -212,7 +214,7 @@ class Gate extends Component {
 
 	@Override
 	void attachListeners() {
-		attachListeners_((byte) (DRAG | KEYBOARD | FOCUS));
+		attachListeners_(DRAG_KB_FOCUS);
 	}
 
 	@Override

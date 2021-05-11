@@ -14,7 +14,7 @@ import exceptions.MalformedGateException;
 /** Corresponds to the {@link ComponentType#INPUT_PIN INPUT_PIN} type. */
 final class InputPin extends Component {
 
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 2L;
 
 	private final Vector<Branch> outputBranches;
 	private boolean active;
@@ -102,7 +102,7 @@ final class InputPin extends Component {
 
 	@Override
 	void attachListeners() {
-		attachListeners_((byte) (DRAG | KEYBOARD | ACTIVATE | FOCUS));
+		attachListeners_((byte) (DRAG_KB_FOCUS | ACTIVATE));
 	}
 
 	@Override
