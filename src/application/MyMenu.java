@@ -105,7 +105,7 @@ final class MyMenu extends JMenuBar {
 			a_delete = new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					Command c = new DeleteCommand(context);
+					Command c = Command.delete(context);
 					c.fillRequirements(app.getFrame());
 					Application.Actions.DELETE.context(context).specify("command", c).execute();
 				}
