@@ -84,14 +84,14 @@ public final class Application {
 		window.add(ui, BorderLayout.CENTER);
 		window.add(sb, BorderLayout.SOUTH);
 		window.setJMenuBar(menu);
-
-		addCreateCommand(new CreateCommand(this, ComponentType.INPUT_PIN));
-		addCreateCommand(new CreateCommand(this, ComponentType.OUTPUT_PIN));
-		addCreateCommand(new CreateCommand(this, ComponentType.BRANCH));
-		addCreateCommand(new CreateCommand(this, ComponentType.GATEAND));
-		addCreateCommand(new CreateCommand(this, ComponentType.GATEOR));
-		addCreateCommand(new CreateCommand(this, ComponentType.GATENOT));
-		addCreateCommand(new CreateCommand(this, ComponentType.GATEXOR));
+		
+		addCreateCommand(Command.create(this, ComponentType.INPUT_PIN));
+		addCreateCommand(Command.create(this, ComponentType.OUTPUT_PIN));
+		addCreateCommand(Command.create(this, ComponentType.BRANCH));
+		addCreateCommand(Command.create(this, ComponentType.GATEAND));
+		addCreateCommand(Command.create(this, ComponentType.GATEOR));
+		addCreateCommand(Command.create(this, ComponentType.GATENOT));
+		addCreateCommand(Command.create(this, ComponentType.GATEXOR));
 
 		window.setTitle("Simple CAD Tool");
 		window.setSize(1000, 600);
@@ -335,7 +335,7 @@ public final class Application {
 						Component.setGlobalID(max(context.getComponents(), Component::UID).UID());
 
 					} else if (ftype.equals(component)) {
-						Command cgc = new CreateGateCommand(context, commands, (String) reqs.get("gatename").value());
+						Command cgc = Command.create(context, commands, (String) reqs.getV("gatename"));
 						context.addCreateCommand(cgc);
 
 					} else {
