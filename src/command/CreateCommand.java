@@ -1,35 +1,37 @@
-package application;
+package command;
 
-import static application.Requirement.StringType.NON_NEG_INTEGER;
-import static application.Requirement.StringType.POS_INTEGER;
 import static components.ComponentType.BRANCH;
 import static components.ComponentType.GATEAND;
 import static components.ComponentType.GATENOT;
 import static components.ComponentType.GATEOR;
 import static components.ComponentType.GATEXOR;
 import static myUtil.Utility.foreach;
+import static requirement.StringType.NON_NEG_INTEGER;
+import static requirement.StringType.POS_INTEGER;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
+import application.Application;
+import application.Application.MissingComponentException;
 import components.Component;
 import components.ComponentFactory;
 import components.ComponentType;
-import exceptions.InvalidIndexException;
 import exceptions.MalformedBranchException;
+import requirement.Requirements;
 
 /** A Command that creates a Component */
 class CreateCommand extends Command {
 
-	private static final long serialVersionUID = 3L;
+	private static final long serialVersionUID = 4L;
+	private static final int ID_NOT_SET = -1;
 
 	/** The type of the component that will be created */
-	final ComponentType componentType;
+	private final ComponentType componentType;
 
 	// save the created Component for undo
 	private Component createdComponent;
+	// used for composites
 	private int componentID;
 
 	private final List<Command> deleteCommands;
@@ -43,7 +45,7 @@ class CreateCommand extends Command {
 	CreateCommand(Application app, ComponentType ct) {
 		super(app);
 		componentType = ct;
-		componentID = -1;
+		componentID = ID_NOT_SET;
 		deleteCommands = new ArrayList<>();
 
 		switch (ct) {
@@ -67,24 +69,17 @@ class CreateCommand extends Command {
 	}
 
 	@Override
-	Command myclone() {
-		return myclone(false);
-	}
-
-	@Override
-	Command myclone(boolean keepIdAndReqs) {
+	public Command clone() {
 		CreateCommand newCommand = new CreateCommand(context, componentType);
-		if (keepIdAndReqs) {
+		if (createdComponent != null)
 			newCommand.componentID = createdComponent.UID();
-			newCommand.requirements = requirements;
-		}
+		newCommand.requirements = new Requirements<>(requirements);
 
 		return newCommand;
 	}
 
-	@SuppressWarnings("unused")
 	@Override
-	public int execute() {
+	public void execute() throws MissingComponentException, MalformedBranchException {
 		if (createdComponent != null) {
 			context.addComponent(createdComponent);
 			ComponentFactory.restoreComponent(createdComponent);
@@ -97,102 +92,38 @@ class CreateCommand extends Command {
 				createdComponent = ComponentFactory.createOutputPin();
 				break;
 			case BRANCH:
-				// there are a lot of ways a Branch may fail to be created...
-				// don't look at this case too much
+				Component in = context.getComponent(Integer.valueOf(requirements.getV("in id")));
+				Component out = context.getComponent(Integer.valueOf(requirements.getV("out id")));
 
-				Component in = context.getComponent(Integer.valueOf(requirements.get("in id").value()));
-				Component out = context.getComponent(Integer.valueOf(requirements.get("out id").value()));
-
-				// catch null here for better error message
-				if ((in == null) || (out == null)) {
-					String ID1 = requirements.get("in id").value();
-					String ID2 = requirements.get("out id").value();
-					boolean same = ID1.equals(ID2);
-					boolean both = ((in == null) && (out == null));
-
-					String s = both && !same ? "s" : "";
-					String firstID = (in == null) ? ID1 : ID2;
-					String andSecondID = both && !same ? " and " + ID2 : "";
-
-					context.error("Component%s with ID%s %s%s not found", s, s, firstID, andSecondID);
-					return 1;
-				}
-
-				try {
-					createdComponent = ComponentFactory.connectComponents(
-							in,
-							Integer.valueOf(requirements.get("in index").value()),
-							out,
-							Integer.valueOf(requirements.get("out index").value()));
-				} catch (MalformedBranchException e) {
-					// catch invalid Component type here
-					context.error(e.getMessage());
-					return 2;
-				} catch (InvalidIndexException e) {
-					// catch invalid index here. this can't be a MalformedBranchException because
-					// index information would be lost.
-
-					// also don't look at this too much
-
-					// exception:
-					// 	Invalid index `i` for component of type [`component-gate`: `in`-`out` (UID: `id`)].
-					// 	Invalid index `i` for component of type [`component-pin`: (UID: `id`)].
-					// user:
-					//	Invalid index `i` for `component` (ID=`id`) with `in` input(s) and `out` output(s)
-					// input pins have in=0, out=1, output pins have in=1, out=0
-					Pattern p = Pattern.compile(
-							"Invalid index (\\d+) for component of type \\(?\\[(.*?): (?:(\\d+)-(\\d+) )?\\(UID: (\\d+)\\)\\]\\)?");
-					Matcher m = p.matcher(e.getMessage());
-					m.find();
-					int index = Integer.valueOf(m.group(1));
-					String comp = m.group(2);
-					int i1, i2;
-					try {
-						i1 = Integer.valueOf(m.group(3));
-						i2 = Integer.valueOf(m.group(4));
-					} catch (NumberFormatException e1) {
-						if (comp.equals("Input Pin")) {
-							i1 = 0;
-							i2 = 1;
-						} else if (comp.equals("Output Pin")) {
-							i1 = 1;
-							i2 = 0;
-						} else {
-							return 4;
-						}
-					}
-					int id = Integer.valueOf(m.group(5));
-					String s1 = i1 != 1 ? "s" : "";
-					String s2 = i2 != 1 ? "s" : "";
-					context.error("Invalid index %d for %s (ID=%d) with %d input%s and %d output%s", index, comp, id,
-							i1, s1, i2, s2);
-					return 3;
-				}
-
+				createdComponent = ComponentFactory.connectComponents(
+						in,
+						Integer.valueOf(requirements.getV("in index")),
+						out,
+						Integer.valueOf(requirements.getV("out index")));
 				break;
 			case GATEAND:
 				createdComponent = ComponentFactory.createPrimitiveGate(GATEAND,
-						Integer.valueOf(requirements.get("in count").value()));
+						Integer.valueOf(requirements.getV("in count")));
 				break;
 			case GATEOR:
 				createdComponent = ComponentFactory.createPrimitiveGate(GATEOR,
-						Integer.valueOf(requirements.get("in count").value()));
+						Integer.valueOf(requirements.getV("in count")));
 				break;
 			case GATENOT:
 				createdComponent = ComponentFactory.createPrimitiveGate(GATENOT,
-						Integer.valueOf(requirements.get("in count").value()));
+						Integer.valueOf(requirements.getV("in count")));
 				break;
 			case GATEXOR:
 				createdComponent = ComponentFactory.createPrimitiveGate(GATEXOR,
-						Integer.valueOf(requirements.get("in count").value()));
+						Integer.valueOf(requirements.getV("in count")));
 				break;
 			case GATE:
-				return 6;
+				throw new RuntimeException("reeeee Gates can't be created");
 			default:
 				break;
 			}
 
-			if (componentID != -1)
+			if (componentID != ID_NOT_SET)
 				createdComponent.setID(componentID);
 
 			context.addComponent(createdComponent);
@@ -203,31 +134,33 @@ class CreateCommand extends Command {
 		if (createdComponent.type() == BRANCH) {
 			List<Component> ls = context.getDeletedComponents();
 			if (ls.size() == 0)
-				return 0;
+				return;
 			if (ls.size() > 1)
-				return 5;
+				throw new RuntimeException("reeeee there are more than 1 deleted Branches");
 			Command d = new DeleteCommand(context);
 			deleteCommands.add(d);
-			d.requirements.get("id").fulfil(String.valueOf(ls.get(0).UID()));
-			d.execute();
+			d.requirements.fulfil("id", String.valueOf(ls.get(0).UID()));
+			try {
+				// the Component with that id for sure exists; this statement can't throw
+				d.execute();
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
 		}
-
-		return 0;
 	}
 
 	@Override
-	public int unexecute() {
+	public void unexecute() {
 		if (componentType == BRANCH) {
 			foreach(deleteCommands, Command::unexecute);
 			deleteCommands.clear();
 		}
 		ComponentFactory.destroyComponent(createdComponent);
 		context.removeComponent(createdComponent);
-		return 0;
 	}
 
 	@Override
-	String desc() {
+	public String toString() {
 		return "Create " + componentType.description();
 	}
 }
