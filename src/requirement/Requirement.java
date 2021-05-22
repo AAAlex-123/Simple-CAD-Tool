@@ -21,9 +21,7 @@ public final class Requirement<V> implements Serializable {
 
 	private boolean fulfilled;
 
-	/**
-	 * rip doc
-	 */
+	/** The type of the String expected as value */
 	public final StringType stringType;
 
 	/**
