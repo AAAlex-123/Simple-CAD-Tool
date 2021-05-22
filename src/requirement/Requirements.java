@@ -1,4 +1,4 @@
-package application;
+package requirement;
 
 import static myUtil.Utility.all;
 import static myUtil.Utility.foreach;
@@ -7,7 +7,6 @@ import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.GridLayout;
-import java.awt.KeyboardFocusManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
@@ -33,23 +32,35 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 
+import application.StatusBar;
+
 /**
- * A wrapper for a collection of {@code Requirements} that acts as a wrapper.
- * For method details refer to the Requirement class.
+ * A wrapper for a collection of {@code Requirements}. For method details refer
+ * to the {@link Requirement} class.
  *
  * @param <V> the type of the Requirement objects
- * @see application.Requirement Requirement
+ * @see requirement.Requirement Requirement
  */
-final class Requirements<V> implements Iterable<Requirement<V>>, Serializable {
+public final class Requirements<V> implements Iterable<Requirement<V>>, Serializable {
 
-	private static final long serialVersionUID = 2L;
+	private static final long serialVersionUID = 4L;
 
 	private final Map<String, Requirement<V>> requirements;
 
 	/** Constructs the collection of Requirements */
-	Requirements() {
+	public Requirements() {
 		// map for simpler lookup, linked to retain the order
 		requirements = new LinkedHashMap<>(1, 1);
+	}
+
+	/**
+	 * Copy constructor.
+	 * 
+	 * @param old the object to be copied
+	 */
+	public Requirements(Requirements<V> old) {
+		this();
+		foreach(old, r -> this.add(r.key(), r.stringType));
 	}
 
 	/**
@@ -57,7 +68,7 @@ final class Requirements<V> implements Iterable<Requirement<V>>, Serializable {
 	 * 
 	 * @param key the key
 	 */
-	void add(String key) {
+	public void add(String key) {
 		requirements.put(key, new Requirement<V>(key));
 	}
 
@@ -67,27 +78,53 @@ final class Requirements<V> implements Iterable<Requirement<V>>, Serializable {
 	 * @param key        the key
 	 * @param stringType the type
 	 */
-	void add(String key, Requirement.StringType stringType) {
+	public void add(String key, StringType stringType) {
 		requirements.put(key, new Requirement<V>(key, stringType));
 	}
 
 	/**
-	 * Returns the Requirement with the {@code key} given.
+	 * Returns the Requirement with the {@code key} given. This method isn't even
+	 * used but might be used in the future.
 	 * 
 	 * @param key the key
-	 * @return the Requirement with that key or {@code null}
+	 * @return the Requirement with that key
+	 * 
+	 * @throws MissingRequirementException if no such Requirement exists
 	 */
-	Requirement<V> get(String key) {
-		return requirements.get(key);
+	public Requirement<V> get(String key) {
+		Requirement<V> r = requirements.get(key);
+		if (r == null)
+			throw new MissingRequirementException(key);
+
+		return r;
 	}
 
 	/**
-	 * Returns {@code true} if all the Requirements are fulfilled.
+	 * Returns the value of the Requirement with the {@code key}.
 	 * 
-	 * @return {@code true} if all the Requirements are fulfilled
+	 * @param key the key
+	 * @return the value of the
+	 * 
+	 * @throws MissingRequirementException if no such Requirement exists
 	 */
-	boolean fulfilled() {
-		return all(this, Requirement::fulfilled);
+	public V getV(String key) {
+		return get(key).value();
+	}
+
+	/**
+	 * Fulfils the Requirement with key {@code k} using {@code v}.
+	 * 
+	 * @param k the key
+	 * @param v the value
+	 * 
+	 * @throws MissingRequirementException if no such Requirement exists
+	 */
+	public void fulfil(String k, V v) {
+		Requirement<V> r = requirements.get(k);
+		if (r == null)
+			throw new MissingRequirementException(k);
+
+		r.fulfil(v);
 	}
 
 	/**
@@ -99,7 +136,7 @@ final class Requirements<V> implements Iterable<Requirement<V>>, Serializable {
 	 * @param description the text that will be displayed
 	 */
 	@SuppressWarnings("unchecked")
-	void fulfillWithDialog(Frame frame, String description) {
+	public void fulfillWithDialog(Frame frame, String description) {
 		if (fulfilled())
 			return;
 
@@ -111,13 +148,30 @@ final class Requirements<V> implements Iterable<Requirement<V>>, Serializable {
 	}
 
 	/** Clears all the Requirements in this collection. */
-	void clear() {
+	public void clear() {
 		foreach(this, Requirement::clear);
+	}
+
+	/**
+	 * Returns {@code true} if all the Requirements are fulfilled.
+	 * 
+	 * @return {@code true} if all the Requirements are fulfilled
+	 */
+	public boolean fulfilled() {
+		return all(this, Requirement::fulfilled);
 	}
 
 	@Override
 	public Iterator<Requirement<V>> iterator() {
 		return new RequirementsIterator();
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append(String.format("Requirements fulfilled: %s%n", fulfilled() ? "yes" : "no"));
+		foreach(this, r -> sb.append(r));
+		return sb.toString();
 	}
 
 	// fancy iterator stuff. totally didn't just use the iterator of the underlying map.
@@ -140,13 +194,14 @@ final class Requirements<V> implements Iterable<Requirement<V>>, Serializable {
 		}
 	}
 
-	/** The dialog with which the user fulfils the Requirements */
+	/** A dialog with which the user fulfils the Requirements */
 	private final class RequirementsDialog extends JDialog {
 
 		private final JPanel mainPanel, infoPanel, optionsPanel, buttonsPanel, lowerPanel;
 		private final JButton okButton, cancelButton;
 		private final JLabel[] labels;
 		private final JTextField[] textAreas;
+
 		private final StatusBar sb;
 
 		private final Requirements<String> reqs;
@@ -159,8 +214,9 @@ final class Requirements<V> implements Iterable<Requirement<V>>, Serializable {
 			setResizable(false);
 
 			mainPanel = new JPanel(new GridLayout(1, 2, 0, 20));
-			add(mainPanel, BorderLayout.CENTER);
+			mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
+			// --- info panel (left) ---
 			infoPanel = new JPanel();
 			infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
 			JLabel l1 = new JLabel("Parameters for:");
@@ -170,12 +226,14 @@ final class Requirements<V> implements Iterable<Requirement<V>>, Serializable {
 			infoPanel.add(l1);
 			infoPanel.add(Box.createVerticalStrut(8));
 			infoPanel.add(l2);
-			mainPanel.add(infoPanel);
 
-			optionsPanel = new JPanel(new GridLayout(reqs.requirements.size(), 2, 15, 15));
+			// --- options panel (right) ---
+			optionsPanel = new JPanel();
+			optionsPanel.setLayout(new GridLayout(reqs.requirements.size(), 2, 15, 15));
 			labels = new JLabel[reqs.requirements.size()];
 			textAreas = new JTextField[reqs.requirements.size()];
 			int i = 0;
+			// add text areas
 			for (Requirement<String> r : reqs) {
 				labels[i] = new JLabel(r.key());
 				textAreas[i] = new JTextField(7);
@@ -188,6 +246,7 @@ final class Requirements<V> implements Iterable<Requirement<V>>, Serializable {
 				optionsPanel.add(textAreas[i]);
 				++i;
 			}
+			mainPanel.add(infoPanel);
 			mainPanel.add(optionsPanel);
 
 			buttonsPanel = new JPanel(new FlowLayout());
@@ -202,12 +261,13 @@ final class Requirements<V> implements Iterable<Requirement<V>>, Serializable {
 			lowerPanel = new JPanel(new BorderLayout());
 			lowerPanel.add(buttonsPanel, BorderLayout.CENTER);
 			lowerPanel.add(sb, BorderLayout.SOUTH);
+
+			add(mainPanel, BorderLayout.CENTER);
 			add(lowerPanel, BorderLayout.SOUTH);
 
 			addListeners();
 
 			setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-			mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 			pack();
 			setLocationRelativeTo(parent);
 		}
@@ -223,8 +283,8 @@ final class Requirements<V> implements Iterable<Requirement<V>>, Serializable {
 				r.fulfil(textAreas[i].getText());
 
 				if (!r.fulfilled()) {
-					textAreas[i].setText(r.stringType.regex);
-					sb.setLabelText("message", "Match the regex!");
+					textAreas[i].setText(r.stringType.description);
+					sb.setLabelText("message", "Give correct values!");
 					textAreas[i].requestFocus();
 				}
 			}
@@ -234,8 +294,6 @@ final class Requirements<V> implements Iterable<Requirement<V>>, Serializable {
 
 		@SuppressWarnings("unused")
 		private void addListeners() {
-
-			// --- ACTIONS ---
 
 			Action pressOK = new AbstractAction() {
 				@Override
@@ -253,36 +311,38 @@ final class Requirements<V> implements Iterable<Requirement<V>>, Serializable {
 				}
 			};
 
+			okButton.addActionListener(pressOK);
+			cancelButton.addActionListener(pressCancel);
+
 			for (int j = 0; j < textAreas.length; ++j) {
 				final int i = j;
 				textAreas[i].setFocusTraversalKeysEnabled(true);
-				textAreas[i].setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, null);
-				textAreas[i].setFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS, null);
-				textAreas[i].addFocusListener(new FocusAdapter() {
 
+				textAreas[i].addFocusListener(new FocusAdapter() {
 					@Override
 					public void focusGained(FocusEvent e) {
 						textAreas[i].setSelectionStart(0);
 						textAreas[i].setSelectionEnd(textAreas[i].getText().length());
-						textAreas[i].addKeyListener(new KeyAdapter() {
+					}
+				});
+				// textAreas[i].setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS,
+				// null);
+				// textAreas[i].setFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS,
+				// null);
 
-							@Override
-							public void keyPressed(KeyEvent e1) {
-								if (e1.getKeyCode() == KeyEvent.VK_ENTER) {
-									pressOK.actionPerformed(null);
-									e1.consume();
-								} else if (e1.getKeyCode() == KeyEvent.VK_ESCAPE) {
-									pressCancel.actionPerformed(null);
-									e1.consume();
-								}
-							}
-						});
+				textAreas[i].addKeyListener(new KeyAdapter() {
+					@Override
+					public void keyPressed(KeyEvent e1) {
+						if (e1.getKeyCode() == KeyEvent.VK_ENTER) {
+							pressOK.actionPerformed(null);
+							e1.consume();
+						} else if (e1.getKeyCode() == KeyEvent.VK_ESCAPE) {
+							pressCancel.actionPerformed(null);
+							e1.consume();
+						}
 					}
 				});
 			}
-
-			okButton.addActionListener(pressOK);
-			cancelButton.addActionListener(pressCancel);
 
 			addWindowListener(new WindowAdapter() {
 				@Override
@@ -301,7 +361,7 @@ final class Requirements<V> implements Iterable<Requirement<V>>, Serializable {
 							return;
 						}
 
-					// ... or the button if none exist
+					// ... or the ok button if none exist
 					okButton.requestFocus();
 				}
 			});
