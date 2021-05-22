@@ -17,7 +17,7 @@ public enum StringType {
 	/** Type for valid file types */
 	FILETYPE("component|circuit", "'component' or 'circuit'"),
 
-	/** Type for positive integers */
+	/** Type for on or off */
 	ON_OFF("on|off", "'on' or 'off'"),
 
 	/** Type for any string */
