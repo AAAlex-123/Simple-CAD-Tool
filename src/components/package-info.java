@@ -5,9 +5,9 @@
  * Components and transmit a signal. Components can also be drawn onto the
  * screen.
  * <p>
- * Since none of the circuit-related methods of the Component are visible, the
- * client may may use the {@link components.ComponentFactory ComponentFactory}
- * class and its static methods to handle the connections of Components to one
- * another, to give input and to get output.
+ * Since none of the circuit-related methods of the Components are visible, the
+ * client may use the static methods provided by the
+ * {@link components.ComponentFactory ComponentFactory} class to create, delete
+ * and connect Components to one another, to give input and to get output.
  */
 package components;
