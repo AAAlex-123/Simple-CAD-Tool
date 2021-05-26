@@ -63,7 +63,7 @@ final class Branch extends Component {
 
 	@Override
 	protected void wake_up(boolean newActive, int index, boolean prevHidden) {
-		checkIndex(index, 1);
+		checkIndex(index, inCount());
 
 		// once hidden cannot be un-hidden
 		if (hidden() && !prevHidden)
@@ -101,7 +101,7 @@ final class Branch extends Component {
 
 	@Override
 	protected boolean getActive(int index) {
-		checkIndex(index, 1);
+		checkIndex(index, inCount());
 		return active;
 	}
 
@@ -157,8 +157,8 @@ final class Branch extends Component {
 	protected void updateOnMovement() {
 		// from the new coordinates calculate the Branch's start point, width and height
 		// and also calculate its direction (as specified in the declaration).
-		Point p1 = in.getBranchCoords(this, indexIn);
-		Point p2 = out.getBranchCoords(this, indexOut);
+		Point p1 = in.getBranchInputCoords(this, indexIn);
+		Point p2 = out.getBranchOutputCoords(this, indexOut);
 		direction = ((p2.x - p1.x) * (p2.y - p1.y)) > 0 ? 1 : -1;
 		// components with a dimension = 0 aren't drawn and text can't be drawn on a
 		// small space so add extra width/height here and remove it when drawing
