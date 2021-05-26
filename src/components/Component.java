@@ -554,14 +554,27 @@ public abstract class Component extends JComponent {
 
 	/**
 	 * Returns information about the location of the, imaginary, pins on the
-	 * component so the {@code branch} knows precisely where to connect.
+	 * Component's output so the {@code branch} knows precisely where to connect.
 	 *
 	 * @param branch the Branch (used for safety, only index is necessary)
 	 * @param index  the Branch's index (used for safety, only Branch is necessary)
 	 * @return a Point with the coordinates of the Branch
 	 */
-	protected Point getBranchCoords(Branch branch, int index) {
-		throw new UnsupportedOperationException(String.format(
-				"Component of type %s don't support getBranchCoords(Branch, int)", type().description()));
+	protected Point getBranchInputCoords(Branch branch, int index) {
+		throw new UnsupportedOperationException(String
+				.format("Component of type %s don't support getBranchInputCoords(Branch, int)", type().description()));
+	}
+
+	/**
+	 * Returns information about the location of the, imaginary, pins on the
+	 * Component's input so the {@code branch} knows precisely where to connect.
+	 *
+	 * @param branch the Branch (used for safety, only index is necessary)
+	 * @param index  the Branch's index (used for safety, only Branch is necessary)
+	 * @return a Point with the coordinates of the Branch
+	 */
+	protected Point getBranchOutputCoords(Branch branch, int index) {
+		throw new UnsupportedOperationException(String
+				.format("Component of type %s don't support getBranchOutputCoords(Branch, int)", type().description()));
 	}
 }
