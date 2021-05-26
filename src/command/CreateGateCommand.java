@@ -53,7 +53,7 @@ class CreateGateCommand extends Command {
 	public void execute() {
 		if (createdComponent != null) {
 			context.addComponent(createdComponent);
-			ComponentFactory.restoreComponent(createdComponent);
+			ComponentFactory.restoreDeletedComponent(createdComponent);
 		} else {
 
 			// execute the sequence of commands to create the circuit in a temporary context
