@@ -1,12 +1,17 @@
 package components;
 
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
+
+import exceptions.MalformedGateException;
+
 /**
- * The most basic of gates; they can only be implemented with transistors, so
- * their output is artificially calculated (for now).
+ * The most basic of gates; they can only be implemented with transistors (or by
+ * NAND Gates), so their output is artificially calculated (for now).
  */
 abstract class PrimitiveGate extends Gate {
 
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 3L;
 
 	/**
 	 * Constructs the Primitive Gate with the given number of input and output pins.
@@ -19,8 +24,14 @@ abstract class PrimitiveGate extends Gate {
 	}
 
 	@Override
-	void wake_up(boolean newActive, int indexIn, boolean prevChangeable) {
-		changeable = prevChangeable;
+	protected void wake_up(boolean newActive, int indexIn, boolean prevHidden) {
+
+		// once hidden cannot be un-hidden
+		if (hidden() && !prevHidden)
+			throw new MalformedGateException(this);
+
+		if (prevHidden)
+			hideComponent();
 
 		inputPins[indexIn].wake_up(newActive); // this isn't propagated anywhere
 
@@ -30,5 +41,16 @@ abstract class PrimitiveGate extends Gate {
 	}
 
 	/** calculates the output and sets the output pins to their correct values */
-	abstract void calculateOutput();
+	abstract protected void calculateOutput();
+
+	/** @return the Image used to draw the Primitive Gate */
+	abstract protected BufferedImage getImage();
+
+	@Override
+	protected final void draw(Graphics g) {
+		BufferedImage image = getImage();
+		if (image != null)
+			g.drawImage(image, 0, 0, null);
+		super.draw(g);
+	}
 }
