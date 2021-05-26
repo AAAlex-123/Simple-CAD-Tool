@@ -99,20 +99,20 @@ final class InputPin extends Component {
 
 	@Override
 	protected boolean getActive(int index) {
-		checkIndex(index, 1);
+		checkIndex(index, outCount());
 		return active;
 	}
 
 	@Override
 	protected void addOut(Branch b, int index) {
-		checkIndex(index, 1);
+		checkIndex(index, outCount());
 		checkChangeable();
 		outputBranches.add(b);
 	}
 
 	@Override
 	protected void removeOut(Branch b, int index) {
-		checkIndex(index, 1);
+		checkIndex(index, outCount());
 		checkChangeable();
 		if (!outputBranches.remove(b))
 			throw new ComponentNotFoundException(b, this);
@@ -155,8 +155,8 @@ final class InputPin extends Component {
 	}
 
 	@Override
-	protected Point getBranchCoords(Branch b, int index) {
-		checkIndex(index, 1);
+	protected Point getBranchInputCoords(Branch b, int index) {
+		checkIndex(index, outCount());
 
 		if (!outputBranches.contains(b))
 			throw new ComponentNotFoundException(b, this);
