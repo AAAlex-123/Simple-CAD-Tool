@@ -82,7 +82,7 @@ class CreateCommand extends Command {
 	public void execute() throws MissingComponentException, MalformedBranchException {
 		if (createdComponent != null) {
 			context.addComponent(createdComponent);
-			ComponentFactory.restoreComponent(createdComponent);
+			ComponentFactory.restoreDeletedComponent(createdComponent);
 		} else {
 			switch (componentType) {
 			case INPUT_PIN:
