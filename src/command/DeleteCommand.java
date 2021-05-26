@@ -67,7 +67,7 @@ class DeleteCommand extends Command {
 
 	@Override
 	public void unexecute() {
-		ComponentFactory.restoreComponent(componentToDelete);
+		ComponentFactory.restoreDeletedComponent(componentToDelete);
 		context.addComponent(componentToDelete);
 		foreach(deleteCommands, Command::unexecute);
 	}
