@@ -6,11 +6,16 @@ import static myUtil.Utility.foreach;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Vector;
 import java.util.function.Function;
+
+import javax.imageio.ImageIO;
 
 import exceptions.ComponentNotFoundException;
 import exceptions.MalformedGateException;
@@ -19,6 +24,23 @@ import exceptions.MalformedGateException;
 class Gate extends Component {
 
 	private static final long serialVersionUID = 5L;
+
+	private static final String sprite = application.Application.component_icon_path + "gate.png";
+	private static final BufferedImage image;
+
+	static {
+		BufferedImage temp = null;
+		File file = null;
+
+		try {
+			file = new File(sprite);
+			temp = ImageIO.read(file);
+		} catch (@SuppressWarnings("unused") IOException e) {
+			System.err.printf("Could not load image %s", file);
+		}
+
+		image = temp;
+	}
 
 	/** The Gate's incoming Branches (should only be accessed by subclasses) */
 	protected final Branch[] inputBranches;
@@ -116,7 +138,7 @@ class Gate extends Component {
 
 	@Override
 	protected void wake_up(boolean newActive, int indexIn, boolean prevHidden) {
-		checkIndex(indexIn, inputBranches.length);
+		checkIndex(indexIn, inCount());
 		// once hidden cannot be un-hidden
 		if (hidden() && !prevHidden)
 			throw new MalformedGateException(this);
@@ -155,7 +177,7 @@ class Gate extends Component {
 
 	@Override
 	protected boolean getActive(int index) {
-		checkIndex(index, outputPins.length);
+		checkIndex(index, outCount());
 		return outputPins[index].getActive(0);
 	}
 
@@ -166,14 +188,14 @@ class Gate extends Component {
 	 * @param index the index of the OutputPin
 	 */
 	final void outputChanged(int index) {
-		checkIndex(index, outputPins.length);
+		checkIndex(index, outCount());
 
 		foreach(outputBranches.get(index), b -> b.wake_up(outputPins[index].getActive(0), hidden()));
 	}
 
 	@Override
 	protected void setIn(Branch b, int index) {
-		checkIndex(index, inputPins.length);
+		checkIndex(index, inCount());
 		checkChangeable();
 		if (inputBranches[index] != null) {
 			// declare that the connected branches should be destroyed
@@ -186,14 +208,14 @@ class Gate extends Component {
 
 	@Override
 	protected void addOut(Branch b, int index) {
-		checkIndex(index, outputPins.length);
+		checkIndex(index, outCount());
 		checkChangeable();
 		outputBranches.get(index).add(b);
 	}
 
 	@Override
 	protected void removeIn(Branch b, int index) {
-		checkIndex(index, inputPins.length);
+		checkIndex(index, inCount());
 		checkChangeable();
 
 		if (inputBranches[index] == b) {
@@ -205,7 +227,7 @@ class Gate extends Component {
 
 	@Override
 	protected void removeOut(Branch b, int index) {
-		checkIndex(index, outputPins.length);
+		checkIndex(index, outCount());
 		checkChangeable();
 		if (!outputBranches.get(index).remove(b))
 			throw new ComponentNotFoundException(b, this);
@@ -250,7 +272,9 @@ class Gate extends Component {
 	}
 
 	@Override
-	protected void draw(Graphics g) {
+	protected final void draw(Graphics g) {
+
+		drawSprite(g);
 
 		g.setColor(Color.BLACK);
 		g.drawString(description, 7, (getHeight() / 2) + 5);
@@ -266,6 +290,24 @@ class Gate extends Component {
 		}
 	}
 
+	/**
+	 * Draws the sprite of the Gate.
+	 * 
+	 * @param g the Graphics object with which to draw
+	 */
+	protected final void drawSprite(Graphics g) {
+		BufferedImage bImage = getImage();
+		if (bImage != null)
+			g.drawImage(bImage, 0, 0, null);
+		else
+			g.drawImage(image, 0, 0, null);
+	}
+
+	/** @return the Image used to draw the Primitive Gate */
+	protected BufferedImage getImage() {
+		return image;
+	}
+
 	private static void drawPin(Graphics g, Point p) {
 		g.fillRect(p.x - (BOX_SIZE / 2), p.y - (BOX_SIZE / 2), BOX_SIZE, BOX_SIZE);
 	}
@@ -277,12 +319,21 @@ class Gate extends Component {
 	}
 
 	@Override
-	protected Point getBranchCoords(Branch b, int index) {
-		if (inputBranches[index] == b)
-			return new Point(getX() + dxi().apply(index), getY() + dyi().apply(index));
+	protected Point getBranchInputCoords(Branch b, int index) {
+		checkIndex(index, outCount());
 
 		if (outputBranches.get(index).contains(b))
 			return new Point(getX() + dxo().apply(index), getY() + dyo().apply(index));
+
+		throw new ComponentNotFoundException(b, this);
+	}
+
+	@Override
+	protected Point getBranchOutputCoords(Branch b, int index) {
+		checkIndex(index, inCount());
+
+		if (inputBranches[index] == b)
+			return new Point(getX() + dxi().apply(index), getY() + dyi().apply(index));
 
 		throw new ComponentNotFoundException(b, this);
 	}
