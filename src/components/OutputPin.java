@@ -66,7 +66,7 @@ final class OutputPin extends Component {
 
 	@Override
 	protected void wake_up(boolean newActive, int index, boolean prevHidden) {
-		checkIndex(index, 1);
+		checkIndex(index, inCount());
 
 		// once hidden cannot be un-hidden
 		if (hidden() && !prevHidden)
@@ -104,13 +104,13 @@ final class OutputPin extends Component {
 
 	@Override
 	protected boolean getActive(int index) {
-		checkIndex(index, 1);
+		checkIndex(index, inCount());
 		return active;
 	}
 
 	@Override
 	protected void setIn(Branch b, int index) {
-		checkIndex(index, 1);
+		checkIndex(index, inCount());
 		checkChangeable();
 
 		if (inputBranch != null) {
@@ -124,7 +124,7 @@ final class OutputPin extends Component {
 
 	@Override
 	protected void removeIn(Branch b, int index) {
-		checkIndex(index, 1);
+		checkIndex(index, inCount());
 		checkChangeable();
 
 		if ((inputBranch == b)) {
@@ -187,8 +187,8 @@ final class OutputPin extends Component {
 	}
 
 	@Override
-	protected Point getBranchCoords(Branch b, int index) {
-		checkIndex(index, 1);
+	protected Point getBranchOutputCoords(Branch b, int index) {
+		checkIndex(index, inCount());
 
 		if (b != inputBranch)
 			throw new ComponentNotFoundException(b, this);
