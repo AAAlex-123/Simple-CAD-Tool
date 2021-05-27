@@ -222,8 +222,9 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 			setLayout(new BorderLayout());
 			setResizable(false);
 
-			mainPanel = new JPanel(new GridLayout(1, 2, 0, 20));
-			mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+			mainPanel = new JPanel();
+			mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.X_AXIS));
+			mainPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
 			// --- info panel (left) ---
 			infoPanel = new JPanel();
@@ -245,7 +246,7 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 			// add text areas
 			for (Requirement<String> r : reqs) {
 				labels[i] = new JLabel(r.key());
-				textAreas[i] = new JTextField(7);
+				textAreas[i] = new JTextField(10);
 				textAreas[i].setText(r.value());
 				if (r.value() != null)
 					textAreas[i].setEnabled(false);
