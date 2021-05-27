@@ -577,7 +577,7 @@ public final class Application {
 				int count = ois.readInt();
 				for (int i = 0; i < count; ++i) {
 					Component c = (Component) ois.readObject();
-					ComponentFactory.attachListeners(c);
+					ComponentFactory.restoreSerialisedComponent(c);
 					components.add(c);
 				}
 
