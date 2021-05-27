@@ -20,7 +20,7 @@ public enum StringType {
 	/** Type for positive integers */
 	ON_OFF("on|off", "'on' or 'off'"),
 
-	/** Type for any string */
+	/** Type for on or off */
 	ANY(".+", "Non-empty string");
 
 	/** A human-readable description for the regex of this Type */
