@@ -105,16 +105,6 @@ public final class Utility {
 			if ((item != null) && !predicate.test(item))
 				return false;
 		return true;
-		/*
-		for (T item : array)
-			try {
-				if (!predicate.test(item))
-					return false;
-			} catch (NullPointerException e) {
-
-			}
-		return true;
-		*/
 	}
 
 	/**
