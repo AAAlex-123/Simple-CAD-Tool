@@ -40,14 +40,5 @@ class UI extends JPanel {
 		super.paintComponent(g);
 		g.setColor(Color.BLACK);
 		g.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
-		/* possible fancy grid stuff
-		g.setColor(Color.BLACK);
-		int w = getWidth();
-		int h = getHeight();
-		for (int i = 0; i < w; i += 4)
-			g.drawLine(i, 0, i, h);
-		for (int i = 0; i < h; i += 4)
-			g.drawLine(0, i, w, i);
-		 */
 	}
 }
