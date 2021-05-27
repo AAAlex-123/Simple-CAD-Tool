@@ -9,7 +9,7 @@ import java.util.Stack;
  * 
  * @param <T> the type of object that will be stored
  */
-final class UndoableHistory<T extends Undoable> {
+public final class UndoableHistory<T extends Undoable> {
 
 	private final Stack<T> past, future;
 
