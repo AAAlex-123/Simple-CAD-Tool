@@ -1,8 +1,5 @@
 package components;
 
-import java.awt.Graphics;
-import java.awt.image.BufferedImage;
-
 import exceptions.MalformedGateException;
 
 /**
@@ -42,15 +39,4 @@ abstract class PrimitiveGate extends Gate {
 
 	/** calculates the output and sets the output pins to their correct values */
 	abstract protected void calculateOutput();
-
-	/** @return the Image used to draw the Primitive Gate */
-	abstract protected BufferedImage getImage();
-
-	@Override
-	protected final void draw(Graphics g) {
-		BufferedImage image = getImage();
-		if (image != null)
-			g.drawImage(image, 0, 0, null);
-		super.draw(g);
-	}
 }

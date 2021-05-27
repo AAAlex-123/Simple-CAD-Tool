@@ -43,7 +43,7 @@ import application.StatusBar;
  */
 public final class Requirements<V> implements Iterable<Requirement<V>>, Serializable {
 
-	private static final long serialVersionUID = 4L;
+	private static final long serialVersionUID = 5L;
 
 	private final Map<String, Requirement<V>> requirements;
 
@@ -60,7 +60,7 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 	 */
 	public Requirements(Requirements<V> old) {
 		this();
-		foreach(old, r -> this.add(r.key(), r.stringType));
+		foreach(old, r -> this.add(new Requirement<>(r)));
 	}
 
 	/**
@@ -80,6 +80,15 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 	 */
 	public void add(String key, StringType stringType) {
 		requirements.put(key, new Requirement<V>(key, stringType));
+	}
+
+	/**
+	 * Adds the given Requirement
+	 * 
+	 * @param r the Requirement
+	 */
+	public void add(Requirement<V> r) {
+		requirements.put(r.key(), r);
 	}
 
 	/**
