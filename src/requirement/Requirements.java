@@ -43,7 +43,7 @@ import application.StatusBar;
  */
 public final class Requirements<V> implements Iterable<Requirement<V>>, Serializable {
 
-	private static final long serialVersionUID = 4L;
+	private static final long serialVersionUID = 5L;
 
 	private final Map<String, Requirement<V>> requirements;
 
@@ -60,7 +60,7 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 	 */
 	public Requirements(Requirements<V> old) {
 		this();
-		foreach(old, r -> this.add(r.key(), r.stringType));
+		foreach(old, r -> this.add(new Requirement<>(r)));
 	}
 
 	/**
@@ -80,6 +80,15 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 	 */
 	public void add(String key, StringType stringType) {
 		requirements.put(key, new Requirement<V>(key, stringType));
+	}
+
+	/**
+	 * Adds the given Requirement
+	 * 
+	 * @param r the Requirement
+	 */
+	public void add(Requirement<V> r) {
+		requirements.put(r.key(), r);
 	}
 
 	/**
@@ -213,8 +222,9 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 			setLayout(new BorderLayout());
 			setResizable(false);
 
-			mainPanel = new JPanel(new GridLayout(1, 2, 0, 20));
-			mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+			mainPanel = new JPanel();
+			mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.X_AXIS));
+			mainPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
 			// --- info panel (left) ---
 			infoPanel = new JPanel();
@@ -236,7 +246,7 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 			// add text areas
 			for (Requirement<String> r : reqs) {
 				labels[i] = new JLabel(r.key());
-				textAreas[i] = new JTextField(7);
+				textAreas[i] = new JTextField(10);
 				textAreas[i].setText(r.value());
 				if (r.value() != null)
 					textAreas[i].setEnabled(false);

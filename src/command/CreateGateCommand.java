@@ -86,7 +86,7 @@ class CreateGateCommand extends Command {
 				out[i] = outs.get(i);
 
 			// create the composite Gate and add it to the real context
-			createdComponent = ComponentFactory.createGate(in, out);
+			createdComponent = ComponentFactory.createGate(in, out, description);
 			if (componentID != -1)
 				createdComponent.setID(componentID);
 			context.addComponent(createdComponent);

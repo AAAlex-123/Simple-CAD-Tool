@@ -198,6 +198,7 @@ public abstract class Component extends JComponent {
 	final void restoreDeleted() {
 		restoreDeletedSelf();
 		toBeRemoved = false;
+		focused = false;
 		requestFocus();
 	}
 
@@ -208,6 +209,7 @@ public abstract class Component extends JComponent {
 	final void restoreSerialised() {
 		restoreSerialisedSelf();
 		attachListeners();
+		focused = false;
 		requestFocus();
 	}
 

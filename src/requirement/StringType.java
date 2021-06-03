@@ -6,18 +6,18 @@ import java.util.regex.Pattern;
 public enum StringType {
 
 	/** Type for non-negative integers */
-	NON_NEG_INTEGER("[0-9]+", "Non-negative Integer"),
+	NON_NEG_INTEGER("[0-9]+", "Non-negative int"),
 
 	/** Type for positive integers */
-	POS_INTEGER("[1-9][0-9]*", "Positive Integer"),
+	POS_INTEGER("[1-9][0-9]*", "Positive integer"),
 
 	/** Type for valid file names */
-	FILENAME("^[^\\\\/:*?\"<>|]*$", "None of: \\, , :, *, ?, \", <, >, |"),
+	FILENAME("^[^\\\\/:*?\"<>|]*$", "Valid file name"),
 
 	/** Type for valid file types */
 	FILETYPE("component|circuit", "'component' or 'circuit'"),
 
-	/** Type for on or off */
+	/** Type for positive integers */
 	ON_OFF("on|off", "'on' or 'off'"),
 
 	/** Type for any string */

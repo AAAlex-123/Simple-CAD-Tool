@@ -14,7 +14,7 @@ import java.io.Serializable;
  */
 public final class Requirement<V> implements Serializable {
 
-	private static final long serialVersionUID = 3L;
+	private static final long serialVersionUID = 4L;
 
 	private final String key;
 	private V value;
@@ -58,6 +58,8 @@ public final class Requirement<V> implements Serializable {
 	 */
 	public Requirement(Requirement<V> old) {
 		this(old.key, old.stringType);
+		fulfilled = old.fulfilled;
+		value = old.value;
 	}
 
 	/** @return the key */
