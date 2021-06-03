@@ -9,22 +9,22 @@ import java.util.Stack;
  * 
  * @param <T> the type of object that will be stored
  */
-final class UndoableHistory<T extends Undoable> {
+public final class UndoableHistory<T extends Undoable> {
 
 	private final Stack<T> past, future;
 
 	/** Initialises the UndoableHistory */
-	UndoableHistory() {
+	public UndoableHistory() {
 		past = new Stack<>();
 		future = new Stack<>();
 	}
 
 	/**
-	 * Executes the given {@code Undoable}.
+	 * Adds the given {@code Undoable} to the history without executing it.
 	 * 
 	 * @param c the undoable
 	 */
-	void add(T c) {
+	public void add(T c) {
 		past.push(c);
 
 		// flush the redo history
@@ -33,7 +33,7 @@ final class UndoableHistory<T extends Undoable> {
 	}
 
 	/** Undoes the last {@code Undoable} */
-	void undo() {
+	public void undo() {
 		if (!past.isEmpty()) {
 			T last = past.pop();
 			last.unexecute();
@@ -42,29 +42,34 @@ final class UndoableHistory<T extends Undoable> {
 	}
 
 	/** Re-does the last {@code Undoable} */
-	void redo() {
+	public void redo() {
 		if (!future.isEmpty()) {
 			T first = future.pop();
-			first.execute();
+			try {
+				// this Undoable has executed successfully before; this statement can't throw
+				first.execute();
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
 			past.push(first);
 		}
+	}
+
+	/** Empties the history */
+	public void clear() {
+		past.clear();
+		future.clear();
 	}
 
 	/**
 	 * Returns the past part of the history.
 	 * <p>
-	 * Note that this does not return a copy of the Undoables. Therefore any changes
-	 * to the items will be reflected in the UndoableHistory object.
+	 * Note that this does not return a copy of the history. Any changes to the
+	 * items will be reflected in this UndoableHistory object.
 	 * 
 	 * @return a List with the previously executed Undoables
 	 */
-	List<Undoable> getHistory() {
+	public List<Undoable> getHistory() {
 		return new ArrayList<>(past);
-	}
-
-	/** Empties the history */
-	void clear() {
-		past.clear();
-		future.clear();
 	}
 }

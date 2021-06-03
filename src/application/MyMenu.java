@@ -11,9 +11,14 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu.Separator;
 import javax.swing.KeyStroke;
 
+import application.Application.Actions;
+import application.Application.MissingComponentException;
+import command.Command;
 import components.Component;
 import components.ComponentFactory;
 import exceptions.InvalidComponentException;
+import requirement.Requirements;
+import requirement.StringType;
 
 /** Custom Menu bar for the Application. */
 final class MyMenu extends JMenuBar {
@@ -21,7 +26,7 @@ final class MyMenu extends JMenuBar {
 	private final Application context;
 
 	private final JMenu m_file, m_edit, m_create, m_delete, m_help;
-	private final JMenuItem f_save, f_save_as, f_open, f_clear, f_import, f_undo, f_redo, e_activate, e_move,
+	private final JMenuItem f_save, f_save_as, f_open, f_clear, f_import, f_undo, f_redo, e_activate, e_focus,
 	d_component, h_help;
 
 	private final Action a_undo, a_redo, a_save, a_save_as, a_open, a_clear, a_import, a_delete, a_help;
@@ -42,14 +47,14 @@ final class MyMenu extends JMenuBar {
 			a_undo = new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					Application.Actions.UNDO.context(context).execute();
+					Actions.UNDO.context(context).execute();
 				}
 			};
 
 			a_redo = new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					Application.Actions.REDO.context(context).execute();
+					Actions.REDO.context(context).execute();
 				}
 			};
 
@@ -57,64 +62,69 @@ final class MyMenu extends JMenuBar {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 
-					// when first time saving ask for file dialog
+					// when first time saving get filename with dialog
 					if (context.current_file == null) {
-						Application.Actions.SAVE.reqs.fulfillWithDialog(app.getFrame(), "Save file");
+						Actions.SAVE.specifyWithDialog(context);
 					} else {
-						Application.Actions.SAVE.reqs.get("filename").fulfil(context.current_file);
+						Actions.SAVE.specify("filename", context.current_file);
 					}
 
-					Application.Actions.SAVE.context(context).execute();
+					Actions.SAVE.context(context).execute();
 				}
 			};
 
 			a_save_as = new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					Application.Actions.SAVE.reqs.fulfillWithDialog(app.getFrame(), "Save file");
-					Application.Actions.SAVE.context(context).execute();
+					Actions.SAVE.specifyWithDialog(context)
+					.context(context)
+					.execute();
 				}
 			};
 
 			a_open = new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					Application.Actions.OPEN.reqs.get("gatename").fulfil("N/A");
-					Application.Actions.OPEN.reqs.get("filetype").fulfil("circuit");
-					Application.Actions.OPEN.reqs.fulfillWithDialog(app.getFrame(), "Open file");
-					Application.Actions.OPEN.context(context).execute();
+					Actions.OPEN.specify("gatename", "N/A")
+					.specify("filetype", "circuit")
+					.specifyWithDialog(context)
+					.context(context)
+					.execute();
 				}
 			};
 
 			a_clear = new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					Application.Actions.CLEAR.context(context).execute();
+					Actions.CLEAR.context(context).execute();
 				}
 			};
 
 			a_import = new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					Application.Actions.OPEN.reqs.get("filetype").fulfil("component");
-					Application.Actions.OPEN.reqs.fulfillWithDialog(app.getFrame(), "Import file");
-					Application.Actions.OPEN.context(context).execute();
+					Actions.OPEN.specify("filetype", "component")
+					.specifyWithDialog(context)
+					.context(context)
+					.execute();
 				}
 			};
 
 			a_delete = new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					Command c = new DeleteCommand(context);
+					Command c = Command.delete(context);
 					c.fillRequirements(app.getFrame());
-					Application.Actions.DELETE.context(context).specify("command", c).execute();
+					Actions.DELETE.specify("command", c)
+					.context(context)
+					.execute();
 				}
 			};
 
 			a_help = new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					Application.Actions.HELP.context(context).execute();
+					Actions.HELP.context(context).execute();
 				}
 			};
 		}
@@ -146,9 +156,9 @@ final class MyMenu extends JMenuBar {
 		// --- edit ---
 		m_edit = new JMenu("Edit");
 		e_activate = new JMenuItem("Turn on/off");
-		e_move = new JMenuItem("Move");
+		e_focus = new JMenuItem("Focus");
 		m_edit.add(e_activate);
-		m_edit.add(e_move);
+		m_edit.add(e_focus);
 		add(m_edit);
 
 		// --- create ---
@@ -183,18 +193,20 @@ final class MyMenu extends JMenuBar {
 	void addCreateCommand(Command c) {
 		JMenuItem jmic = new JMenuItem();
 
-		if (c.desc().startsWith("Create") || c.desc().startsWith("Delete")) {
-			jmic.setText(c.desc().substring(6));
-			setAccel(jmic, String.format("control %d", commandCounter++));
+		if (c.toString().matches("^(?:Create|Delete).*")) {
+			jmic.setText(c.toString().substring(7));
+			setAccel(jmic, "control " + commandCounter++);
 		} else {
-			jmic.setText(c.desc());
-			setAccel(jmic, String.format("control shift %d", customCommandCounter++));
+			jmic.setText(c.toString());
+			setAccel(jmic, "control shift " + customCommandCounter++);
 		}
 
 		jmic.addActionListener(e -> {
-			Command cloned = c.myclone();
+			Command cloned = c.clone();
 			cloned.fillRequirements(context.getFrame());
-			Application.Actions.CREATE.context(context).specify("command", cloned).execute();
+			Actions.CREATE.specify("command", cloned)
+			.context(context)
+			.execute();
 		});
 
 		m_create.add(jmic);
@@ -223,48 +235,50 @@ final class MyMenu extends JMenuBar {
 	private void editMenuListeners() {
 		e_activate.addActionListener(e -> {
 			Requirements<String> reqs = new Requirements<>();
-			reqs.add("id", Requirement.StringType.NON_NEG_INTEGER);
-			reqs.add("active", Requirement.StringType.ON_OFF);
+			reqs.add("id", StringType.NON_NEG_INTEGER);
+			reqs.add("active", StringType.ON_OFF);
 			reqs.fulfillWithDialog(context.getFrame(), "Turn Input Pin on/off");
-			if (reqs.fulfilled()) {
-				int id = Integer.valueOf(reqs.get("id").value());
-				Component comp = context.getComponent(id);
 
-				if (comp == null) {
-					context.error("Component with ID %d not found", id);
+			if (reqs.fulfilled()) {
+				int id = Integer.valueOf(reqs.getV("id"));
+				Component comp;
+				try {
+					comp = context.getComponent(id);
+				} catch (MissingComponentException e1) {
+					context.error(e1);
 					return;
 				}
 
-				boolean active = reqs.get("active").value().equals("on");
+				boolean active = reqs.getV("active").equals("on");
 				try {
 					ComponentFactory.setActive(comp, active);
 				} catch (InvalidComponentException e1) {
-					context.error(e1.getMessage());
+					context.error(e1);
 					return;
 				}
-				context.status("Activate Input Pin successful");
+				context.status("Activated Input Pin");
 			} else {
 				context.status("Activate Input Pin cancelled");
 			}
 		});
 
-		e_move.addActionListener(e -> {
+		e_focus.addActionListener(e -> {
 			Requirements<String> reqs = new Requirements<>();
-			reqs.add("id", Requirement.StringType.NON_NEG_INTEGER);
-			reqs.fulfillWithDialog(context.getFrame(), "Move component");
+			reqs.add("id", StringType.NON_NEG_INTEGER);
+			reqs.fulfillWithDialog(context.getFrame(), "Focus Component");
 			if (reqs.fulfilled()) {
-				int id = Integer.valueOf(reqs.get("id").value());
-				Component comp = context.getComponent(id);
-
-				if (comp == null) {
-					context.error("Component with ID %d not found", id);
+				int id = Integer.valueOf(reqs.getV("id"));
+				Component comp;
+				try {
+					comp = context.getComponent(id);
+				} catch (MissingComponentException e1) {
+					context.error(e1);
 					return;
 				}
 				comp.requestFocus();
-				comp.repaint();
-				context.status("Moving component");
+				context.status("Focusing Component");
 			} else {
-				context.status("Move component cancelled");
+				context.status("Focus Component cancelled");
 			}
 		});
 	}
@@ -278,7 +292,7 @@ final class MyMenu extends JMenuBar {
 		setAccel(f_undo, "control Z");
 		setAccel(f_redo, "control Y");
 		setAccel(e_activate, "shift A");
-		setAccel(e_move, "shift M");
+		setAccel(e_focus, "shift M");
 		setAccel(d_component, "control D");
 		setAccel(h_help, "F1");
 	}
@@ -294,7 +308,7 @@ final class MyMenu extends JMenuBar {
 		setIcon(f_import, "import");
 		setIcon(m_edit, "edit");
 		setIcon(e_activate, "activate");
-		setIcon(e_move, "move");
+		setIcon(e_focus, "focus");
 		setIcon(m_create, "create");
 		setIcon(m_delete, "delete");
 		setIcon(m_help, "help");

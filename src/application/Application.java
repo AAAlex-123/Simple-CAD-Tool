@@ -1,11 +1,9 @@
 package application;
 
-import static myUtil.Utility.all;
 import static myUtil.Utility.foreach;
 import static myUtil.Utility.max;
 
 import java.awt.BorderLayout;
-import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -14,34 +12,43 @@ import java.io.IOException;
 import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.StreamCorruptedException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.SwingWorker;
 import javax.swing.WindowConstants;
-import javax.swing.filechooser.FileFilter;
 
+import command.Command;
 import components.Component;
 import components.ComponentFactory;
 import components.ComponentType;
+import exceptions.MalformedBranchException;
+import requirement.Requirements;
+import requirement.StringType;
 
 /**
- * A class representing the application. It aggregates all of the individual
+ * A class representing an Application. It aggregates all of the individual
  * components and handles the communications between them. The client has to
  * create an {@code Application} object then call its {@code run} method to
  * start the program.
  */
 public final class Application {
 
+	/** Location for the icons of the menu */
 	public static final String menu_icon_path = "assets\\menu_icons\\";
+	/** Location for the icons of the components */
 	public static final String component_icon_path = "assets\\component_icons\\";
+
 	private static final String user_data = "user_data\\";
+	private static final String autosaveFname = ".autosave.scad";
+	private boolean tempSaved = true;
 
 	/**
 	 * a spaghetti way to check if the user has opened a file. if not, the first
@@ -58,7 +65,7 @@ public final class Application {
 	/** HashMap containing all of the active Components */
 	private final Map<Integer, Component> hm = new HashMap<>();
 
-	/** An {@link application.UndoableHistory CommandHistory} instance to keep track of Commands */
+	/** An {@link application.UndoableHistory UndoableHistory} instance to keep track of Commands */
 	private final UndoableHistory<Command> undoableHistory;
 
 	/** Constructs the application including its different UI elements */
@@ -76,27 +83,89 @@ public final class Application {
 
 	/** Runs the application */
 	public void run() {
-		ui.setFocusable(true);
+
 		// configure components only when run to make construction faster
 		window.setLayout(new BorderLayout());
 		window.add(ui, BorderLayout.CENTER);
 		window.add(sb, BorderLayout.SOUTH);
 		window.setJMenuBar(menu);
 
-		addCreateCommand(new CreateCommand(this, ComponentType.INPUT_PIN));
-		addCreateCommand(new CreateCommand(this, ComponentType.OUTPUT_PIN));
-		addCreateCommand(new CreateCommand(this, ComponentType.BRANCH));
-		addCreateCommand(new CreateCommand(this, ComponentType.GATEAND));
-		addCreateCommand(new CreateCommand(this, ComponentType.GATEOR));
-		addCreateCommand(new CreateCommand(this, ComponentType.GATENOT));
-		addCreateCommand(new CreateCommand(this, ComponentType.GATEXOR));
+		addCreateCommand(Command.create(this, ComponentType.INPUT_PIN));
+		addCreateCommand(Command.create(this, ComponentType.OUTPUT_PIN));
+		addCreateCommand(Command.create(this, ComponentType.BRANCH));
+		addCreateCommand(Command.create(this, ComponentType.GATEAND));
+		addCreateCommand(Command.create(this, ComponentType.GATEOR));
+		addCreateCommand(Command.create(this, ComponentType.GATENOT));
+		addCreateCommand(Command.create(this, ComponentType.GATEXOR));
 
 		window.setTitle("Simple CAD Tool");
 		window.setSize(1000, 600);
 		window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		window.setVisible(true);
+
+		checkForAutosave();
+		(new BackgroundTasks()).execute();
 	}
 
+	/** Terminates the applciation */
+	public void terminate() {
+		System.out.println("bye");
+	}
+
+	private void checkForAutosave() {
+
+		File file = new File(user_data + autosaveFname);
+
+		if (file.isFile() && (file.length() > 0)) {
+			int rv = JOptionPane.showOptionDialog(getFrame(), "Autosave file detected. Would you like to load it?",
+					"Load Autosave",
+					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
+
+			if (rv == JOptionPane.YES_OPTION) {
+
+				Actions.OPEN.specify("filename", autosaveFname)
+				.specify("gatename", "N/A")
+				.specify("filetype", "circuit")
+				.context(this)
+				.execute();
+
+				current_file = null;
+
+			} else if ((rv == JOptionPane.NO_OPTION) || (rv == JOptionPane.CLOSED_OPTION)) {
+
+			}
+		}
+	}
+
+	private class BackgroundTasks extends SwingWorker<Void, Void> {
+
+		@Override
+		protected Void doInBackground() throws Exception {
+			while (!isCancelled()) {
+				try {
+					Thread.sleep(5000);
+				} catch (@SuppressWarnings("unused") InterruptedException ignored) {
+
+				}
+
+				// don't save if there are no recent changes or if there are no Components
+				if (!tempSaved && (hm.size() > 0)) {
+
+					String workingFile = current_file;
+
+					Actions.SAVE.specify("filename", autosaveFname)
+					.context(Application.this)
+					.execute();
+
+					tempSaved = true;
+					current_file = workingFile;
+				}
+			}
+			return null;
+		}
+	}
+
+	/** @return the application's frame */
 	JFrame getFrame() {
 		return window;
 	}
@@ -106,7 +175,7 @@ public final class Application {
 	 *
 	 * @param c the Command
 	 */
-	void addCreateCommand(Command c) {
+	public void addCreateCommand(Command c) {
 		menu.addCreateCommand(c);
 	}
 
@@ -115,7 +184,7 @@ public final class Application {
 	 *
 	 * @param c the Component
 	 */
-	void addComponent(Component c) {
+	public void addComponent(Component c) {
 		hm.put(c.UID(), c);
 		ui.addComponent(c);
 		sb.setLabelText("count", "Component count: %d", hm.size());
@@ -126,27 +195,31 @@ public final class Application {
 	 *
 	 * @param c the Component
 	 */
-	void removeComponent(Component c) {
+	public void removeComponent(Component c) {
 		hm.remove(c.UID());
 		ui.removeComponent(c);
 		sb.setLabelText("count", "Component count: %d", hm.size());
 	}
 
 	/**
-	 * Returns the Component with the given ID or null.
+	 * Returns the Component with the given ID.
 	 *
 	 * @param UID the ID
-	 * @return the Component, or null if no such Component exists
+	 * @return the Component
+	 * 
+	 * @throws MissingComponentException if no Component with the UID exists
 	 */
-	Component getComponent(int UID) {
-		return hm.get(UID);
+	public Component getComponent(int UID) throws MissingComponentException {
+		Component c = hm.get(UID);
+		if (c == null)
+			throw new MissingComponentException(UID);
+
+		return c;
 	}
 
 	/** Clears the Application resetting it to its original state */
 	void clear() {
 		List<Component> ls = new ArrayList<>(getComponents());
-
-		current_file = null;
 
 		foreach(ls, this::removeComponent);
 
@@ -156,18 +229,14 @@ public final class Application {
 	}
 
 	/**
-	 * Executes a Command
+	 * Executes a Command.
 	 *
 	 * @param c the Command to execute
-	 * @return 0 indicating success, otherwise failure
+	 * @throws Exception when something exceptional happens
 	 */
-	int do_(Command c) {
-		int retval = c.execute();
-		if (retval != 0)
-			return retval;
-
+	void do_(Command c) throws Exception {
+		c.execute();
 		undoableHistory.add(c);
-		return 0;
 	}
 
 	/** Undoes the most recent Command */
@@ -181,14 +250,12 @@ public final class Application {
 	}
 
 	/** @return a list of the Application's Components */
-	List<Component> getComponents() {
-		List<Component> ls = new LinkedList<>();
-		foreach(hm.values(), c -> ls.add(c));
-		return ls;
+	public List<Component> getComponents() {
+		return new LinkedList<>(hm.values());
 	}
 
 	/** @return a list of the Application's deleted Components */
-	List<Component> getDeletedComponents() {
+	public List<Component> getDeletedComponents() {
 		List<Component> ls = new LinkedList<>();
 		foreach(hm.values(), c -> {
 			if (ComponentFactory.toRemove(c))
@@ -205,7 +272,7 @@ public final class Application {
 	 * @param args the format arguments
 	 */
 	void status(String text, Object... args) {
-		sb.setLabelText("message", StatusBar.MessageType.DEFAULT, text, args);
+		sb.setLabelText("message", StatusBar.TextType.DEFAULT, text, args);
 	}
 
 	/**
@@ -216,59 +283,96 @@ public final class Application {
 	 * @param args the format arguments
 	 */
 	void error(String text, Object... args) {
-		sb.setLabelText("message", StatusBar.MessageType.FAILURE, text, args);
+		sb.setLabelText("message", StatusBar.TextType.FAILURE, text, args);
+	}
+
+	/**
+	 * Updates the 'message' label with the message of the {@code exception}.
+	 * 
+	 * @param exception the Exception
+	 */
+	void error(Exception exception) {
+		error("%s", exception.getMessage());
+	}
+
+	/** Thrown when no Component with the {@code ID} exists */
+	public static class MissingComponentException extends Exception {
+
+		/**
+		 * Constructs the Exception with information about the {@code ID}.
+		 * 
+		 * @param id the id for which there is no Component
+		 */
+		public MissingComponentException(int id) {
+			super(String.format("No Component with ID %d exists", id));
+		}
 	}
 
 	/** An enum-strategy for the different Actions the user may take. */
 	enum Actions {
 
-		/** An Action for creating a Component. */
+		/** Action for creating a Component. */
 		CREATE("command") {
 			@Override
 			void execute() {
 
-				Command cte = (Command) reqs.get("command").value();
+				if (!reqs.fulfilled())
+					throw new RuntimeException("Execute CREATE without reqs");
 
-				if (!cte.requirements.fulfilled()) {
-					context.status("Create %s cancelled", cte.desc());
+				Command cte = (Command) reqs.getV("command");
+
+				if (!cte.canExecute()) {
+					context.status("%s cancelled", cte);
 					return;
 				}
 
-				int execResult = context.do_(cte);
+				try {
+					context.do_(cte);
+					context.status("%s successful", cte);
+					context.tempSaved = false;
+				} catch (MissingComponentException | MalformedBranchException e) {
+					context.error(e);
+				} catch (Exception e) {
+					// semi-spaghetti throws declaration on execute();
+					throw new RuntimeException(e);
+				}
 
-				if (execResult == 0)
-					context.status("%s successful", cte.desc());
-				else if (all(new Integer[] { 1, 2, 3 }, i -> execResult != i))
-					context.error("Inform the developer about error code Action-Create-%d", execResult);
-
+				reqs.clear();
 			}
 		},
 
-		/** An Action for deleting a Component. */
+		/** Action for deleting a Component. */
 		DELETE("command") {
 			@Override
 			void execute() {
-				Command cte = (Command) reqs.get("command").value();
 
-				if (!cte.requirements.fulfilled()) {
+				if (!reqs.fulfilled())
+					throw new RuntimeException("Execute DELETE without reqs");
+
+				Command cte = (Command) reqs.getV("command");
+
+				if (!cte.canExecute()) {
 					context.status("Delete cancelled");
 					return;
 				}
 
-				int execResult = context.do_(cte);
-				String id = cte.requirements.get("id").value();
+				try {
+					context.do_(cte);
+					context.status("Component deleted");
+					context.tempSaved = false;
+				} catch (MissingComponentException e) {
+					context.error(e);
+				} catch (Exception e) {
+					// semi-spaghetti throws declaration on execute();
+					throw new RuntimeException(e);
+				}
 
-				if (execResult == 0)
-					context.status("Component with ID %s deleted", id);
-				else if (execResult == 1)
-					context.error("Component with ID %s not found", id);
-				else
-					context.error("Inform the developer about error code Action-Delete-%d", execResult);
+				reqs.clear();
 			}
 		},
 
-		/** An Action that saves the components of the Application to a File. */
-		SAVE("filename", Requirement.StringType.FILENAME) {
+		/** Action for saving the components of the Application to a File. */
+		SAVE("filename", StringType.FILENAME) {
 			@Override
 			void execute() {
 
@@ -277,19 +381,17 @@ public final class Application {
 					return;
 				}
 
-				String fname = ((String) reqs.get("filename").value());
+				String fname = (String) reqs.getV("filename");
 				context.current_file = fname;
 
-				int writeResult = writeToFile(fname);
-
-				if (writeResult == 0)
+				try {
+					writeToFile(fname);
 					context.status("File %s saved successfully", fname);
-				else if (writeResult == 1)
-					context.error("File %s not found", fname);
-				else if (writeResult == 2)
-					context.error("Error while writing to file");
-				else
-					context.error("Inform the developer about error code Action-Save-%d", writeResult);
+				} catch (IOException e) {
+					context.error(
+							"Error while writing to file. Try again or inform the developer about 'Action-Open-IO'");
+					throw new RuntimeException(e);
+				}
 
 				reqs.clear();
 			}
@@ -297,24 +399,24 @@ public final class Application {
 
 		/** An Action that reads the contents of a File to the Application. */
 		OPEN(new String[] { "filename", "gatename", "filetype" },
-				new Requirement.StringType[] { Requirement.StringType.FILENAME, Requirement.StringType.ANY, Requirement.StringType.FILETYPE }) {
+				new StringType[] { StringType.FILENAME, StringType.ANY, StringType.FILETYPE }) {
 			@Override
 			void execute() {
 
-				String fname = (String) reqs.get("filename").value();
-				String ftype = (String) reqs.get("filetype").value();
-
 				if (!reqs.fulfilled()) {
-					context.status("File %s cancelled", ftype.equals(circuit) ? "open" : "import");
+					context.status("File %s cancelled", reqs.getV("filetype").equals(circuit) ? "open" : "import");
 					return;
 				}
+
+				String fname = (String) reqs.getV("filename");
+				String ftype = (String) reqs.getV("filetype");
 
 				List<Component> components = new ArrayList<>();
 				List<Command> commands = new ArrayList<>();
 
-				int readResult = readFromFile(fname, components, commands);
+				try {
+					readFromFile(fname, components, commands);
 
-				if (readResult == 0) {
 					if (ftype.equals(circuit)) {
 
 						context.clear();
@@ -322,33 +424,33 @@ public final class Application {
 						foreach(components, c -> context.addComponent(c));
 						foreach(commands, c -> context.undoableHistory.add(c));
 
-						Component.setGlobalID(max(context.getComponents(), Component::UID).UID());
+						Component.setGlobalID(max(context.getComponents(), Component::UID).UID() + 1);
 
 					} else if (ftype.equals(component)) {
 
-						Command cgc = new CreateGateCommand(context, commands, (String) reqs.get("gatename").value());
+						Command cgc = Command.create(context, commands, (String) reqs.getV("gatename"));
 						context.addCreateCommand(cgc);
 
 					} else {
-						throw new RuntimeException("ffs-open-filetype");
+						throw new RuntimeException("Invalid filetype specified");
 					}
 
-					// specify this file as the current file
-					// SAVE.reqs.get("filename").fulfill(fname);
 					context.current_file = fname;
 
 					context.status("File %s %s successfully", fname, ftype.equals(circuit) ? "opened" : "imported");
+					context.tempSaved = false;
 
-				} else if (readResult == 1)
-					context.error("File %s not found", reqs.get("filename").value());
-				else if (readResult == 2)
-					context.error("Error while reading from file");
-				else if (readResult == 4)
-					context.error("File corrupted");
-				else if (readResult == 5)
-					context.error("File corresponds to an earlier version that is no longer supported");
-				else
-					context.error("Inform the developer about error code Action-Open-%d", readResult);
+				} catch (IncompatibleFileException | FileCorruptedException e) {
+					context.error(e);
+				} catch (@SuppressWarnings("unused") FileNotFoundException e) {
+					context.error("File %s doesn't exist", fname);
+				} catch (IOException e) {
+					context.error(
+							"Error while reading from file. Try again or inform the developer about 'Action-Open-IO'");
+					throw new RuntimeException(e);
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
 
 				reqs.clear();
 			}
@@ -369,6 +471,7 @@ public final class Application {
 			public void execute() {
 				context.undo();
 				context.status("Undo");
+				context.tempSaved = false;
 			}
 		},
 
@@ -378,6 +481,7 @@ public final class Application {
 			public void execute() {
 				context.redo();
 				context.status("Redo");
+				context.tempSaved = false;
 			}
 		},
 
@@ -431,28 +535,22 @@ public final class Application {
 			}
 		};
 
-		// byte at the start of file to differentiate between filetypes
-		private static final Integer component_i, circuit_i, start, eof;
+		// bytes at the start and end of file
+		private static final Integer start, eof;
 
-		// these match the subdirectories in `user_data`
 		private static final String component, circuit;
 
-		private static final Map<String, Integer> mp = new HashMap<>();
 		static {
-			// the string should match Requirement.Type :/
+			// the string should match Requirement.Type
 			component = "component";
 			circuit = "circuit";
-			component_i = 1;
-			circuit_i = 2;
-			mp.put(component, component_i);
-			mp.put(circuit, circuit_i);
 
 			start = 10;
 			eof = 42;
 		}
 
 		/** The Requirements of the Action */
-		final Requirements<Object> reqs;
+		protected final Requirements<Object> reqs;
 
 		/** The context of the Action */
 		Application context;
@@ -461,28 +559,29 @@ public final class Application {
 			reqs = null;
 		}
 
-		Actions(String req) {
+		Actions(String reqKey) {
 			reqs = new Requirements<>();
-			reqs.add(req);
+			reqs.add(reqKey);
 		}
 
-		Actions(String req, Requirement.StringType stringType) {
+		Actions(String reqKey, StringType stringType) {
 			reqs = new Requirements<>();
-			reqs.add(req, stringType);
+			reqs.add(reqKey, stringType);
 		}
 
-		Actions(String[] reqs) {
-			this.reqs = new Requirements<>();
-			for (String r : reqs)
-				this.reqs.add(r);
+		Actions(String[] reqKeys) {
+			reqs = new Requirements<>();
+			foreach(reqKeys, reqs::add);
 		}
 
-		Actions(String[] reqs, Requirement.StringType[] types) {
-			this.reqs = new Requirements<>();
-			if (reqs.length != types.length)
-				throw new RuntimeException("fix enum constructors lmao");
-			for (int i = 0; i < reqs.length; i++)
-				this.reqs.add(reqs[i], types[i]);
+		Actions(String[] reqKeys, StringType[] types) {
+			reqs = new Requirements<>();
+
+			if (reqKeys.length != types.length)
+				throw new RuntimeException("Invalid arguments in enum constructor");
+
+			for (int i = 0; i < reqKeys.length; i++)
+				reqs.add(reqKeys[i], types[i]);
 		}
 
 		/** Executes the Action */
@@ -500,25 +599,78 @@ public final class Application {
 		}
 
 		/**
-		 * Specifies a Command to fulfill a specific Requirement.
+		 * Creates a pop-up dialog to let the user fulfil the Requirements.
+		 * 
+		 * @param parentFrame the parent frame for the dialog
+		 * 
+		 * @return this (used for chaining)
+		 */
+		Actions specifyWithDialog(Application parentFrame) {
+			reqs.fulfillWithDialog(parentFrame.getFrame(), toString());
+			return this;
+		}
+
+		/**
+		 * Specifies an Object to fulfil a specific Requirement.
 		 *
 		 * @param req the Requirement
 		 * @param c   the Command
 		 * @return this (used for chaining)
 		 */
-		Actions specify(String req, Command c) {
-			reqs.get(req).fulfil(c);
+		Actions specify(String req, Object c) {
+			reqs.fulfil(req, c);
 			return this;
 		}
 
+		/** Thrown when a file is corrupted and can't be read */
+		protected static class FileCorruptedException extends Exception {
+
+			/**
+			 * Constructs the Exception with information about the {@code filename}.
+			 * 
+			 * @param filename the name of the corrupted file
+			 */
+			public FileCorruptedException(String filename) {
+				super(String.format("Can't read file %s because its contents are corrupted", filename));
+			}
+		}
+
+		/** Thrown when a file's data are incompatible with current program version */
+		protected static class IncompatibleFileException extends Exception {
+
+			/**
+			 * Constructs the Exception with information about the {@code filename}.
+			 * 
+			 * @param filename the name of the file with incompatible data
+			 */
+			public IncompatibleFileException(String filename, InvalidClassException e) {
+				super(formatMessage(filename, e));
+			}
+
+			private static String formatMessage(String filename, InvalidClassException e) {
+				Pattern p = Pattern
+						.compile(".*? serialVersionUID = (\\d+), .*? serialVersionUID = (\\d+)");
+				Matcher m = p.matcher(e.getMessage());
+
+				if (!m.matches())
+					throw new RuntimeException("Invalid regex in IncompatibleFileException");
+
+				int idInFile = Integer.valueOf(m.group(1));
+				int idInClass = Integer.valueOf(m.group(2));
+
+				return String.format("Data in file %s corresponds to %s version of the program", filename,
+						idInFile > idInClass ? "a later" : "a previous");
+			}
+		}
+
 		/**
-		 * Writes the contents of the Application to a file
+		 * Writes the contents of the Application to a file.
 		 *
 		 * @param filename the filename
-		 * @return return code (0 success, 0&lt; exception occurred)
+		 * @throws IOException when an IOExcetpion occurs
 		 */
-		@SuppressWarnings("unused")
-		int writeToFile(String filename) {
+		protected void writeToFile(String filename) throws IOException {
+
 			String outputFile = String.format("%s\\%s", user_data, filename);
 
 			try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(outputFile))) {
@@ -534,14 +686,7 @@ public final class Application {
 					oos.writeObject(u);
 
 				oos.writeByte(eof);
-
-			} catch (FileNotFoundException e) {
-				return 1;
-			} catch (IOException e) {
-				e.printStackTrace();
-				return 2;
 			}
-			return 0;
 		}
 
 		/**
@@ -550,23 +695,30 @@ public final class Application {
 		 * @param filename   the filename
 		 * @param components the list that will be filled with Components
 		 * @param commands   the list that will be filled with Commands
-		 * @return return code (0 success, &lt;0 exception occurred)
+		 * 
+		 * @throws IOException               when an IOException occurred
+		 * @throws FileNotFoundException     when the file couldn't be found
+		 * @throws FileCorruptedException    when the contents of the file are corrupted
+		 * @throws IncompatibleFileException when the file data corresponds to a
+		 *                                   previous version of the program
 		 */
 		@SuppressWarnings("unused")
-		int readFromFile(String filename, List<Component> components, List<Command> commands) {
+		protected void readFromFile(String filename, List<Component> components, List<Command> commands)
+				throws FileNotFoundException, IOException, FileCorruptedException, IncompatibleFileException {
+
 			String inputFile = String.format("%s\\%s", user_data, filename);
 
 			try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(inputFile))) {
 
 				// read start
 				if (ois.readByte() != start)
-					return 4;
+					throw new FileCorruptedException(filename);
 
 				// read components
 				int count = ois.readInt();
 				for (int i = 0; i < count; ++i) {
 					Component c = (Component) ois.readObject();
-					ComponentFactory.attachListeners(c);
+					ComponentFactory.restoreSerialisedComponent(c);
 					components.add(c);
 				}
 
@@ -574,58 +726,19 @@ public final class Application {
 				count = ois.readInt();
 				for (int i = 0; i < count; ++i) {
 					Command c = (Command) ois.readObject();
-					c.context = context;
+					c.context(context);
 					commands.add(c);
 				}
 
 				// read eof
-				if (ois.read() != eof)
-					return 4;
+				if (ois.readByte() != eof)
+					throw new FileCorruptedException(filename);
 
-			} catch (InvalidClassException e) {
-				return 5;
-			} catch (EOFException e) {
-				e.printStackTrace();
-				return 4;
-			} catch (FileNotFoundException e) {
-				return 1;
-			} catch (StreamCorruptedException e) {
-				e.printStackTrace();
-				return 4;
-			} catch (IOException e) {
-				e.printStackTrace();
-				return 2;
 			} catch (ClassNotFoundException e) {
-				e.printStackTrace();
-				return 3;
+				throw new FileCorruptedException(filename);
+			} catch (InvalidClassException e) {
+				throw new IncompatibleFileException(filename, e);
 			}
-			return 0;
-		}
-
-		@SuppressWarnings("unused")
-		private static JFileChooser createFileChooser() {
-			JFileChooser jfc = new JFileChooser(new File(user_data));
-			jfc.setFileHidingEnabled(true);
-			jfc.removeChoosableFileFilter(jfc.getAcceptAllFileFilter());
-			jfc.setFileFilter(new FileFilter() {
-				@Override
-				public String getDescription() {
-					return ".sct SimpleCadTool file";
-				}
-
-				@Override
-				public boolean accept(File f) {
-					return f.toString().endsWith(".sct");
-				}
-			});
-			//			jfc.setFileSystemView(new FileSystemView() {
-			//
-			//				@Override
-			//				public File createNewFolder(File containingDir) throws IOException {
-			//					return null;
-			//				}
-			//			});
-			return jfc;
 		}
 	}
 }
