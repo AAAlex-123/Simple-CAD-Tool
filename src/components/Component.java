@@ -54,7 +54,7 @@ public abstract class Component extends JComponent {
 
 	/**
 	 * Sets the static ID to the new value (use cautiously).
-	 * 
+	 *
 	 * @param newID the new ID
 	 */
 	public static void setGlobalID(int newID) {
@@ -69,7 +69,8 @@ public abstract class Component extends JComponent {
 	 */
 	public void setID(int newID) {
 		if (UIDset)
-			throw new RuntimeException("This Component's UID has already been set once after construction");
+			throw new RuntimeException(
+					"This Component's UID has already been set once after construction");
 
 		UID = newID;
 		UIDset = true;
@@ -173,6 +174,7 @@ public abstract class Component extends JComponent {
 	 * Returns whether or not the application should remove this Component.
 	 *
 	 * @return true if the Component should be removed, false otherwise.
+	 *
 	 * @see Component#toBeRemoved
 	 */
 	final boolean toRemove() {
@@ -181,17 +183,11 @@ public abstract class Component extends JComponent {
 
 	/*
 	 * Restoration:
-	 * 
-	 * after serialize:
-	 * 	attachListeners()
-	 * 	requestFocus()
-	 *	Gate: addFunctions()
 	 *
-	 * after delete:
-	 * 	toBeRemoved = false
-	 * 	requestFocus()
-	 * 	Gate: for loop {}
-	 * 	Branch: connect()
+	 * after serialize: attachListeners() requestFocus() Gate: addFunctions()
+	 *
+	 * after delete: toBeRemoved = false requestFocus() Gate: for loop {} Branch:
+	 * connect()
 	 */
 
 	/** Restores the state of the Component after it was destroyed */
@@ -220,6 +216,7 @@ public abstract class Component extends JComponent {
 	 * Returns the active state of the Component's pin at the specified index.
 	 *
 	 * @param index the Component's Pin index
+	 *
 	 * @return true if active, false otherwise
 	 */
 	protected abstract boolean getActive(int index);
@@ -297,7 +294,8 @@ public abstract class Component extends JComponent {
 	 */
 	protected void removeOut(Branch branch, int index) {
 		throw new UnsupportedOperationException(String.format(
-				"Components of type %s don't support removeOut(Branch, int)", type().description()));
+				"Components of type %s don't support removeOut(Branch, int)",
+				type().description()));
 	}
 
 	/**
@@ -333,7 +331,8 @@ public abstract class Component extends JComponent {
 
 	@Override
 	public final String toString() {
-		return String.format("%s: %d-%d, UID: %d, hidden: %s", type().description(), inCount(), outCount(), UID(),
+		return String.format("%s: %d-%d, UID: %d, hidden: %s", type().description(), inCount(),
+				outCount(), UID(),
 				hidden());
 	}
 
@@ -350,7 +349,7 @@ public abstract class Component extends JComponent {
 	/** bit to make component dragable, keyboard-usable and focusable */
 	protected static final byte DRAG_KB_FOCUS = 0x01;
 	/** bit to make component (de)activate on click */
-	protected static final byte ACTIVATE = 0x02;
+	protected static final byte ACTIVATE      = 0x02;
 
 	/** Default constructor */
 	Component() {
@@ -360,15 +359,15 @@ public abstract class Component extends JComponent {
 	/**
 	 * Constructor specifying location, dimensions and ID.
 	 *
-	 * @param x   the Component's X position
-	 * @param y   the Component's Y position
-	 * @param w   the Component's width
-	 * @param h   the Component's height
-	 * @param UID the Component's ID
+	 * @param x  the Component's X position
+	 * @param y  the Component's Y position
+	 * @param w  the Component's width
+	 * @param h  the Component's height
+	 * @param id the Component's ID
 	 */
-	private Component(int x, int y, int w, int h, int UID) {
+	private Component(int x, int y, int w, int h, int id) {
 		setBounds(x, y, w, h);
-		this.UID = UID;
+		this.UID = id;
 		attachListeners();
 	}
 
@@ -426,9 +425,11 @@ public abstract class Component extends JComponent {
 
 			// check for drawing area bounds
 			int newx = getX(), newy = getY();
-			if ((dx != 0) && ((getX() + dx) >= 0) && ((getX() + dx) <= (getParent().getWidth() - getWidth())))
+			if ((dx != 0) && ((getX() + dx) >= 0)
+			        && ((getX() + dx) <= (getParent().getWidth() - getWidth())))
 				newx = (int) Math.floor((getX() + dx) / (double) d) * d;
-			if ((dy != 0) && ((getY() + dy) >= 0) && ((getY() + dy) <= (getParent().getHeight() - getHeight())))
+			if ((dy != 0) && ((getY() + dy) >= 0)
+			        && ((getY() + dy) <= (getParent().getHeight() - getHeight())))
 				newy = (int) Math.floor((getY() + dy) / (double) d) * d;
 
 			// update location
@@ -441,7 +442,7 @@ public abstract class Component extends JComponent {
 	 * Each Component specifies which listeners should be attached. This method may
 	 * (and should) be defined to call the {@link Component#attachListeners_(byte)
 	 * attachListeners_(byte)} method with the appropriate byte(s).
-	 * 
+	 *
 	 * @see Component#DRAG_KB_FOCUS
 	 * @see Component#ACTIVATE
 	 */
@@ -449,9 +450,9 @@ public abstract class Component extends JComponent {
 
 	/**
 	 * Attaches listeners to this Component based on the {@code flags}.
-	 * 
+	 *
 	 * @param flags a byte whose bits correspond to different listeners
-	 * 
+	 *
 	 * @see Component#attachListeners()
 	 */
 	final void attachListeners_(byte flags) {
@@ -470,7 +471,8 @@ public abstract class Component extends JComponent {
 			@Override
 			public void mouseDragged(MouseEvent e) {
 				// center on mouse
-				setLocation(getX() + (e.getX() - (getWidth() / 2)), getY() + (e.getY() - (getHeight() / 2)));
+				setLocation(getX() + (e.getX() - (getWidth() / 2)),
+						getY() + (e.getY() - (getHeight() / 2)));
 				e.consume();
 			}
 		});
@@ -543,7 +545,7 @@ public abstract class Component extends JComponent {
 
 	/**
 	 * Draws the ID of the Component with a given {@code Graphics} object.
-	 * 
+	 *
 	 * @param g the Graphics object
 	 */
 	protected void drawID(Graphics g) {
@@ -560,11 +562,13 @@ public abstract class Component extends JComponent {
 	 *
 	 * @param branch the Branch (used for safety, only index is necessary)
 	 * @param index  the Branch's index (used for safety, only Branch is necessary)
+	 *
 	 * @return a Point with the coordinates of the Branch
 	 */
 	protected Point getBranchInputCoords(Branch branch, int index) {
 		throw new UnsupportedOperationException(String
-				.format("Component of type %s don't support getBranchInputCoords(Branch, int)", type().description()));
+				.format("Component of type %s don't support getBranchInputCoords(Branch, int)",
+						type().description()));
 	}
 
 	/**
@@ -573,10 +577,12 @@ public abstract class Component extends JComponent {
 	 *
 	 * @param branch the Branch (used for safety, only index is necessary)
 	 * @param index  the Branch's index (used for safety, only Branch is necessary)
+	 *
 	 * @return a Point with the coordinates of the Branch
 	 */
 	protected Point getBranchOutputCoords(Branch branch, int index) {
 		throw new UnsupportedOperationException(String
-				.format("Component of type %s don't support getBranchOutputCoords(Branch, int)", type().description()));
+				.format("Component of type %s don't support getBranchOutputCoords(Branch, int)",
+						type().description()));
 	}
 }
