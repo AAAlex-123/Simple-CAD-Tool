@@ -27,11 +27,11 @@ public final class Requirement<V> implements Serializable {
 	/**
 	 * Constructs a Requirement with a given {@code key}.
 	 * 
-	 * @param key the key
+	 * @param reqKey the key
 	 */
-	public Requirement(String key) {
+	public Requirement(String reqKey) {
 		fulfilled = false;
-		this.key = key;
+		this.key = reqKey;
 		value = null;
 		stringType = null;
 	}
@@ -41,14 +41,14 @@ public final class Requirement<V> implements Serializable {
 	 * Note that the {@code stringType} will have an effect only when the value is
 	 * of type {@code String}.
 	 * 
-	 * @param key        the key
-	 * @param stringType the type
+	 * @param reqKey        the key
+	 * @param reqType the type
 	 */
-	public Requirement(String key, StringType stringType) {
+	public Requirement(String reqKey, StringType reqType) {
 		fulfilled = false;
-		this.key = key;
+		this.key = reqKey;
 		value = null;
-		this.stringType = stringType;
+		this.stringType = reqType;
 	}
 
 	/**
