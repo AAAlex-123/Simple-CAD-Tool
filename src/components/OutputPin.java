@@ -27,27 +27,27 @@ final class OutputPin extends Component {
 		try {
 			file = new File(sprite.replace("{state}", "on"));
 			temp_on = ImageIO.read(file);
-		} catch (@SuppressWarnings("unused") IOException e) {
-			System.err.printf("Could not load image %s", file);
+		} catch (IOException e) {
+			System.err.printf("Could not load image %s%n", file);
 		}
 
 		try {
 			file = new File(sprite.replace("{state}", "off"));
 			temp_off = ImageIO.read(file);
-		} catch (@SuppressWarnings("unused") IOException e) {
-			System.err.printf("Could not load image %s", file);
+		} catch (IOException e) {
+			System.err.printf("Could not load image %s%n", file);
 		}
 
 		image_on = temp_on;
 		image_off = temp_off;
 	}
 
-	private Branch inputBranch;
+	private Branch  inputBranch;
 	private boolean active;
 
-	// information about the enclosing Gate necessary for signal transmiion
+	// information about the enclosing Gate necessary for signal transmission
 	private Gate outerGate;
-	private int outerGateIndex;
+	private int  outerGateIndex;
 
 	/** Constructs the OuputPin */
 	OutputPin() {
@@ -95,12 +95,10 @@ final class OutputPin extends Component {
 	}
 
 	@Override
-	protected void restoreDeletedSelf() {
-	}
+	protected void restoreDeletedSelf() {}
 
 	@Override
-	protected void restoreSerialisedSelf() {
-	}
+	protected void restoreSerialisedSelf() {}
 
 	@Override
 	protected boolean getActive(int index) {
@@ -196,3 +194,4 @@ final class OutputPin extends Component {
 		return new Point(getX(), getY() + (getHeight() / 2));
 	}
 }
+
