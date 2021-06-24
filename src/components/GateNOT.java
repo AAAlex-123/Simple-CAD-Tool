@@ -26,7 +26,7 @@ final class GateNOT extends PrimitiveGate {
 		try {
 			file = new File(sprite);
 			temp = ImageIO.read(file);
-		} catch (@SuppressWarnings("unused") IOException e) {
+		} catch (IOException e) {
 			System.err.printf("Could not load image %s", file);
 		}
 
@@ -35,7 +35,7 @@ final class GateNOT extends PrimitiveGate {
 
 	/**
 	 * Constructs the NOT Gate with the given number of inputs and outputs.
-	 * 
+	 *
 	 * @param n the number of pairs of pins.
 	 */
 	GateNOT(int n) {
