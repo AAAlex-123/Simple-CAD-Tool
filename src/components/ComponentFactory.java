@@ -37,6 +37,7 @@ public final class ComponentFactory {
 	 * Creates an {@code InputPin}.
 	 *
 	 * @return the InputPin
+	 * 
 	 * @see ComponentType#INPUT_PIN
 	 */
 	public static Component createInputPin() {
@@ -47,6 +48,7 @@ public final class ComponentFactory {
 	 * Creates an {@code OutputPin}.
 	 *
 	 * @return the OutputPin
+	 * 
 	 * @see ComponentType#OUTPUT_PIN
 	 */
 	public static Component createOutputPin() {
@@ -61,12 +63,16 @@ public final class ComponentFactory {
 	 * @param indexIn  the index of the pin on the input gate
 	 * @param out      the Branch's input
 	 * @param indexOut the index of the pin on the output gate
+	 * 
 	 * @return the created Branch
+	 * 
 	 * @throws MalformedBranchException in the case of connecting invalid components
+	 * 
 	 * @see ComponentType#BRANCH
 	 */
-	public static Component connectComponents(Component in, int indexIn, Component out, int indexOut)
-			throws MalformedBranchException {
+	public static Component connectComponents(Component in, int indexIn, Component out,
+	        int indexOut)
+	        throws MalformedBranchException {
 		return new Branch(in, indexIn, out, indexOut);
 	}
 
@@ -76,7 +82,9 @@ public final class ComponentFactory {
 	 *
 	 * @param type    the type of the Primitive Gate
 	 * @param inCount the number of inputs
+	 * 
 	 * @return the Primitive Gate
+	 * 
 	 * @see ComponentType#GATEAND
 	 * @see ComponentType#GATEOR
 	 * @see ComponentType#GATENOT
@@ -106,11 +114,13 @@ public final class ComponentFactory {
 	 * @param inputPins   the new Gate's input pins
 	 * @param outputPins  the new Gate's output pins
 	 * @param description the new Gate's description
+	 * 
 	 * @return the created Gate
 	 * 
 	 * @see ComponentType#GATE
 	 */
-	public static Component createGate(Component[] inputPins, Component[] outputPins, String description) {
+	public static Component createGate(Component[] inputPins, Component[] outputPins,
+	        String description) {
 
 		// check component type
 		foreach(inputPins, t -> checkType(t, INPUT_PIN));
@@ -133,6 +143,7 @@ public final class ComponentFactory {
 	 * Destroys a {@code Component}.
 	 *
 	 * @param c the Component to delete
+	 * 
 	 * @see Component#destroy()
 	 */
 	public static void destroyComponent(Component c) {
@@ -144,7 +155,9 @@ public final class ComponentFactory {
 	 * Application. Only destroyed {@code Components} can be removed.
 	 *
 	 * @param c the component to check
+	 * 
 	 * @return boolean
+	 * 
 	 * @see Component#toBeRemoved
 	 */
 	public static boolean toRemove(Component c) {
@@ -167,6 +180,7 @@ public final class ComponentFactory {
 	 * Returns the state of the {@code OutputPin}.
 	 *
 	 * @param outputPin the OutputPin
+	 * 
 	 * @return true or false (active or inactive)
 	 */
 	public static boolean getActive(Component outputPin) {
