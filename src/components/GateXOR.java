@@ -22,7 +22,7 @@ final class GateXOR extends PrimitiveGate {
 		try {
 			file = new File(sprite);
 			temp = ImageIO.read(file);
-		} catch (@SuppressWarnings("unused") IOException e) {
+		} catch (IOException e) {
 			System.err.printf("Could not load image %s", file);
 		}
 
@@ -31,7 +31,7 @@ final class GateXOR extends PrimitiveGate {
 
 	/**
 	 * Constructs the XOR Gate with the given number of inputs and one output.
-	 * 
+	 *
 	 * @param in the number of input pins
 	 */
 	GateXOR(int in) {
