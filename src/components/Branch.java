@@ -19,8 +19,8 @@ final class Branch extends Component {
 
 	private static final long serialVersionUID = 3L;
 
-	private final Component in, out;
-	private final int indexIn, indexOut;
+	private final Component	in, out;
+	private final int		indexIn, indexOut;
 
 	private boolean active = false;
 
@@ -32,26 +32,30 @@ final class Branch extends Component {
 	/**
 	 * Constructs a {@code Branch} between two Components at the specified indexes.
 	 *
-	 * @param in       the Branch's input
-	 * @param indexIn  the index of the pin on the {@code in} component
-	 * @param out      the Branch's output
-	 * @param indexOut the index of the pin on the {@code out} component
-	 * 
+	 * @param inComponent  the Branch's input
+	 * @param inIndex      the index of the pin on the {@code in} component
+	 * @param outComponent the Branch's output
+	 * @param outIndex     the index of the pin on the {@code out} component
+	 *
 	 * @throws MalformedBranchException in the case of an invalid connection
 	 */
-	Branch(Component in, int indexIn, Component out, int indexOut) throws MalformedBranchException {
-		if ((in == null) || (out == null) || (in.type() == OUTPUT_PIN) || (out.type() == INPUT_PIN)
-				|| (in.type() == BRANCH) || (out.type() == BRANCH))
-			throw new MalformedBranchException(in, out);
-		if (indexIn >= in.outCount())
-			throw new MalformedBranchException(in, indexIn);
-		if (indexOut >= out.inCount())
-			throw new MalformedBranchException(out, indexOut);
+	Branch(Component inComponent, int inIndex, Component outComponent, int outIndex)
+			throws MalformedBranchException {
+		if (
+				(inComponent == null) || (outComponent == null) || (inComponent.type() == OUTPUT_PIN)
+				|| (outComponent.type() == INPUT_PIN)
+				|| (inComponent.type() == BRANCH) || (outComponent.type() == BRANCH)
+				)
+			throw new MalformedBranchException(inComponent, outComponent);
+		if (inIndex >= inComponent.outCount())
+			throw new MalformedBranchException(inComponent, inIndex);
+		if (outIndex >= outComponent.inCount())
+			throw new MalformedBranchException(outComponent, outIndex);
 
-		this.in = in;
-		this.out = out;
-		this.indexIn = indexIn;
-		this.indexOut = indexOut;
+		this.in = inComponent;
+		this.out = outComponent;
+		this.indexIn = inIndex;
+		this.indexOut = outIndex;
 
 		connect();
 	}
@@ -96,8 +100,7 @@ final class Branch extends Component {
 	}
 
 	@Override
-	protected void restoreSerialisedSelf() {
-	}
+	protected void restoreSerialisedSelf() {}
 
 	@Override
 	protected boolean getActive(int index) {
@@ -162,6 +165,7 @@ final class Branch extends Component {
 		direction = ((p2.x - p1.x) * (p2.y - p1.y)) > 0 ? 1 : -1;
 		// components with a dimension = 0 aren't drawn and text can't be drawn on a
 		// small space so add extra width/height here and remove it when drawing
-		setBounds(min(p1.x, p2.x) - 5, min(p1.y, p2.y) - 5, abs(p2.x - p1.x) + 11, abs(p2.y - p1.y) + 11);
+		setBounds(min(p1.x, p2.x) - 5, min(p1.y, p2.y) - 5, abs(p2.x - p1.x) + 11,
+				abs(p2.y - p1.y) + 11);
 	}
 }
