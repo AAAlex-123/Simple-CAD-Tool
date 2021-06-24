@@ -30,15 +30,15 @@ final class InputPin extends Component {
 		try {
 			file = new File(sprite.replace("{state}", "on"));
 			temp_on = ImageIO.read(file);
-		} catch (@SuppressWarnings("unused") IOException e) {
-			System.err.printf("Could not load image %s", file);
+		} catch (IOException e) {
+			System.err.printf("Could not load image %s%n", file);
 		}
 
 		try {
 			file = new File(sprite.replace("{state}", "off"));
 			temp_off = ImageIO.read(file);
-		} catch (@SuppressWarnings("unused") IOException e) {
-			System.err.printf("Could not load image %s", file);
+		} catch (IOException e) {
+			System.err.printf("Could not load image %s%n", file);
 		}
 
 		image_on = temp_on;
@@ -46,7 +46,7 @@ final class InputPin extends Component {
 	}
 
 	private final Vector<Branch> outputBranches;
-	private boolean active;
+	private boolean              active;
 
 	/** Constructs an {@code InputPin} */
 	InputPin() {
@@ -90,12 +90,10 @@ final class InputPin extends Component {
 	}
 
 	@Override
-	protected void restoreDeletedSelf() {
-	}
+	protected void restoreDeletedSelf() {}
 
 	@Override
-	protected void restoreSerialisedSelf() {
-	}
+	protected void restoreSerialisedSelf() {}
 
 	@Override
 	protected boolean getActive(int index) {
