@@ -1,237 +1,143 @@
-package application;
-
-import static myUtil.Utility.foreach;
-import static myUtil.Utility.max;
+package application.editor;
 
 import java.awt.BorderLayout;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InvalidClassException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Vector;
 
-import javax.swing.JFrame;
+import javax.swing.BorderFactory;
+import javax.swing.JComponent;
 import javax.swing.JOptionPane;
-import javax.swing.SwingWorker;
-import javax.swing.WindowConstants;
 
+import application.Application;
 import command.Command;
 import components.Component;
 import components.ComponentFactory;
-import components.ComponentType;
-import exceptions.MalformedBranchException;
-import requirement.Requirements;
-import requirement.StringType;
+import myUtil.Utility;
 
 /**
- * A class representing an Application. It aggregates all of the individual
- * components and handles the communications between them. The client has to
- * create an {@code Application} object then call its {@code run} method to
- * start the program.
+ * An Editor to edit a file.
+ *
+ * @author alexm
  */
-public final class Application {
+public final class Editor extends JComponent {
 
-	/** Location for the icons of the menu */
-	public static final String menu_icon_path = "assets\\menu_icons\\";
-	/** Location for the icons of the components */
-	public static final String component_icon_path = "assets\\component_icons\\";
+	private final Application app;
+	private final UI          editorUI;
+	private final EditorTab   editorTab;
+	private final EditorFile  file;
+	private final StatusBar   statusBar;
 
-	private static final String user_data = "user_data\\";
-	private static final String autosaveFname = ".autosave.scad";
-	private boolean tempSaved = true;
-
-	/**
-	 * a spaghetti way to check if the user has opened a file. if not, the first
-	 * save is a save_as
-	 */
-	String current_file;
-
-	// UI elements
-	private final JFrame window;
-	private final UI ui;
-	private final MyMenu menu;
-	private final StatusBar sb;
-
-	/** HashMap containing all of the active Components */
-	private final Map<Integer, Component> hm = new HashMap<>();
-
-	/** An {@link application.UndoableHistory UndoableHistory} instance to keep track of Commands */
+	private final Map<Integer, Component>  componentMap;
 	private final UndoableHistory<Command> undoableHistory;
 
-	/** Constructs the application including its different UI elements */
-	public Application() {
-		window = new JFrame();
+	/**
+	 * Constructs the editor with the given context.
+	 *
+	 * @param context     the Editor's context
+	 * @param initialFile the default file name
+	 */
+	public Editor(Application context, String initialFile) {
+		app = context;
+		editorUI = new UI();
+		editorTab = new EditorTab();
+		file = new EditorFile();
+		statusBar = new StatusBar();
+
+		componentMap = new HashMap<>();
 		undoableHistory = new UndoableHistory<>();
 
-		ui = new UI();
-		sb = new StatusBar();
-		menu = new MyMenu(this);
+		setFile(initialFile);
+		statusBar.addLabel("message");
+		statusBar.addLabel("count");
 
-		sb.addLabel("message");
-		sb.addLabel("count");
-	}
-
-	/** Runs the application */
-	public void run() {
-
-		// configure components only when run to make construction faster
-		window.setLayout(new BorderLayout());
-		window.add(ui, BorderLayout.CENTER);
-		window.add(sb, BorderLayout.SOUTH);
-		window.setJMenuBar(menu);
-
-		addCreateCommand(Command.create(this, ComponentType.INPUT_PIN));
-		addCreateCommand(Command.create(this, ComponentType.OUTPUT_PIN));
-		addCreateCommand(Command.create(this, ComponentType.BRANCH));
-		addCreateCommand(Command.create(this, ComponentType.GATEAND));
-		addCreateCommand(Command.create(this, ComponentType.GATEOR));
-		addCreateCommand(Command.create(this, ComponentType.GATENOT));
-		addCreateCommand(Command.create(this, ComponentType.GATEXOR));
-
-		window.setTitle("Simple CAD Tool");
-		window.setSize(1000, 600);
-		window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-		window.setVisible(true);
-
-		checkForAutosave();
-		(new BackgroundTasks()).execute();
-	}
-
-	/** Terminates the applciation */
-	public void terminate() {
-		System.out.println("bye");
-	}
-
-	private void checkForAutosave() {
-
-		File file = new File(user_data + autosaveFname);
-
-		if (file.isFile() && (file.length() > 0)) {
-			int rv = JOptionPane.showOptionDialog(getFrame(), "Autosave file detected. Would you like to load it?",
-					"Load Autosave",
-					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
-
-			if (rv == JOptionPane.YES_OPTION) {
-
-				Actions.OPEN.specify("filename", autosaveFname)
-				.specify("gatename", "N/A")
-				.specify("filetype", "circuit")
-				.context(this)
-				.execute();
-
-				current_file = null;
-
-			} else if ((rv == JOptionPane.NO_OPTION) || (rv == JOptionPane.CLOSED_OPTION)) {
-
-			}
-		}
-	}
-
-	private class BackgroundTasks extends SwingWorker<Void, Void> {
-
-		@Override
-		protected Void doInBackground() throws Exception {
-			while (!isCancelled()) {
-				try {
-					Thread.sleep(5000);
-				} catch (@SuppressWarnings("unused") InterruptedException ignored) {
-
-				}
-
-				// don't save if there are no recent changes or if there are no Components
-				if (!tempSaved && (hm.size() > 0)) {
-
-					String workingFile = current_file;
-
-					Actions.SAVE.specify("filename", autosaveFname)
-					.context(Application.this)
-					.execute();
-
-					tempSaved = true;
-					current_file = workingFile;
-				}
-			}
-			return null;
-		}
-	}
-
-	/** @return the application's frame */
-	JFrame getFrame() {
-		return window;
+		setLayout(new BorderLayout());
+		setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+		add(editorUI, BorderLayout.CENTER);
 	}
 
 	/**
-	 * Adds a Command for creating Components to the Application.
+	 * Closes the Editor asking for confirmation to save if dirty.
 	 *
-	 * @param c the Command
+	 * @return false if cancel was selected when prompted to save, true otherwise
 	 */
-	public void addCreateCommand(Command c) {
-		menu.addCreateCommand(c);
+	public boolean close() {
+		int res = JOptionPane.YES_OPTION;
+		if (file.isDirty()) {
+			res = JOptionPane.showConfirmDialog(null, "Would you like keep unsaved changed?",
+			        "Close " + file.get(),
+			        JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+
+			if (res == JOptionPane.YES_OPTION) {
+				Actions.SAVE.specify("filename", file.get()).context(this).execute();
+			}
+		}
+		return res == JOptionPane.YES_OPTION;
+	}
+
+	/** @return the Editor's context */
+	Application context() {
+		return app;
 	}
 
 	/**
-	 * Adds a Component to the Application.
+	 * Adds a Component to the Editor.
 	 *
 	 * @param c the Component
 	 */
 	public void addComponent(Component c) {
-		hm.put(c.UID(), c);
-		ui.addComponent(c);
-		sb.setLabelText("count", "Component count: %d", hm.size());
+		componentMap.put(c.UID(), c);
+		editorUI.addComponent(c);
+		statusBar.setLabelText("count", "Component count: %d", componentMap.size());
 	}
 
 	/**
-	 * Removes a Component from the Application.
+	 * Removes a Component from the Editor.
 	 *
 	 * @param c the Component
 	 */
 	public void removeComponent(Component c) {
-		hm.remove(c.UID());
-		ui.removeComponent(c);
-		sb.setLabelText("count", "Component count: %d", hm.size());
+		componentMap.remove(c.UID());
+		editorUI.removeComponent(c);
+		statusBar.setLabelText("count", "Component count: %d", componentMap.size());
 	}
 
 	/**
 	 * Returns the Component with the given ID.
 	 *
 	 * @param UID the ID
+	 *
 	 * @return the Component
-	 * 
-	 * @throws MissingComponentException if no Component with the UID exists
+	 *
+	 * @throws Editor.MissingComponentException if no Component with the UID exists
 	 */
-	public Component getComponent(int UID) throws MissingComponentException {
-		Component c = hm.get(UID);
+	public Component getComponent_(int UID) throws Editor.MissingComponentException {
+		final Component c = componentMap.get(UID);
 		if (c == null)
-			throw new MissingComponentException(UID);
+			throw new Editor.MissingComponentException(UID);
 
 		return c;
 	}
 
-	/** Clears the Application resetting it to its original state */
+	/** Clears the Editor resetting it to its original state */
 	void clear() {
-		List<Component> ls = new ArrayList<>(getComponents());
+		final List<Component> ls = new ArrayList<>(getComponents_());
 
-		foreach(ls, this::removeComponent);
+		Utility.foreach(ls, this::removeComponent);
 
 		undoableHistory.clear();
 
-		Component.resetGlobalID();
+		// Component.resetGlobalID();
 	}
 
 	/**
 	 * Executes a Command.
 	 *
 	 * @param c the Command to execute
+	 *
 	 * @throws Exception when something exceptional happens
 	 */
 	void do_(Command c) throws Exception {
@@ -249,19 +155,98 @@ public final class Application {
 		undoableHistory.redo();
 	}
 
-	/** @return a list of the Application's Components */
-	public List<Component> getComponents() {
-		return new LinkedList<>(hm.values());
+	/**
+	 * Returns a list of the Editor's Components.
+	 *
+	 * @return the list
+	 */
+	public List<Component> getComponents_() {
+		return new LinkedList<>(componentMap.values());
 	}
 
-	/** @return a list of the Application's deleted Components */
-	public List<Component> getDeletedComponents() {
-		List<Component> ls = new LinkedList<>();
-		foreach(hm.values(), c -> {
+	/**
+	 * Returns a list of the Editor's deleted Components.
+	 *
+	 * @return the list
+	 */
+	public List<Component> getDeletedComponents_() {
+		final List<Component> ls = new LinkedList<>();
+		Utility.foreach(componentMap.values(), c -> {
 			if (ComponentFactory.toRemove(c))
 				ls.add(c);
 		});
 		return ls;
+	}
+
+	/**
+	 * Returns a list with the Commands already executed on this Editor.
+	 *
+	 * @return the list
+	 *
+	 * @see UndoableHistory#getPast()
+	 */
+	public List<Undoable> getPastCommands() {
+		return new Vector<>(undoableHistory.getPast());
+	}
+
+	/**
+	 * Returns the statusBar.
+	 *
+	 * @return the statusBar
+	 */
+	public StatusBar getStatusBar() {
+		return statusBar;
+	}
+
+	/**
+	 * Returns the editorTab.
+	 *
+	 * @return the editorTab
+	 */
+	public EditorTab getEditorTab() {
+		return editorTab;
+	}
+
+	/**
+	 * Returns the name of the file that is being edited.
+	 *
+	 * @return the file name
+	 */
+	public String getFile() {
+		return file.get();
+	}
+
+	/**
+	 * Sets the name of the file that is being edited.
+	 *
+	 * @param filename the file name
+	 */
+	void setFile(String filename) {
+		file.set(filename);
+		updateTitle();
+	}
+
+	/**
+	 * Returns the dirty-ness of the editor.
+	 *
+	 * @return the dirty-ness
+	 */
+	boolean isDirty() {
+		return file.isDirty();
+	}
+
+	/**
+	 * Sets the dirty-ness of the Editor.
+	 *
+	 * @param newDirty the new dirty-ness
+	 */
+	void setDirty(boolean newDirty) {
+		file.setDirty(newDirty);
+		updateTitle();
+	}
+
+	private void updateTitle() {
+		editorTab.updateTitle(getFile(), isDirty());
 	}
 
 	/**
@@ -271,8 +256,8 @@ public final class Application {
 	 * @param text the text
 	 * @param args the format arguments
 	 */
-	void status(String text, Object... args) {
-		sb.setLabelText("message", StatusBar.TextType.DEFAULT, text, args);
+	public void status(String text, Object... args) {
+		statusBar.setLabelText("message", StatusBar.TextType.DEFAULT, text, args);
 	}
 
 	/**
@@ -282,25 +267,27 @@ public final class Application {
 	 * @param text the text
 	 * @param args the format arguments
 	 */
-	void error(String text, Object... args) {
-		sb.setLabelText("message", StatusBar.TextType.FAILURE, text, args);
+	public void error(String text, Object... args) {
+		statusBar.setLabelText("message", StatusBar.TextType.FAILURE, text, args);
 	}
 
 	/**
 	 * Updates the 'message' label with the message of the {@code exception}.
-	 * 
+	 *
 	 * @param exception the Exception
 	 */
-	void error(Exception exception) {
+	public void error(Exception exception) {
 		error("%s", exception.getMessage());
 	}
 
 	/** Thrown when no Component with the {@code ID} exists */
 	public static class MissingComponentException extends Exception {
 
+		private static final long serialVersionUID = 1L;
+
 		/**
 		 * Constructs the Exception with information about the {@code ID}.
-		 * 
+		 *
 		 * @param id the id for which there is no Component
 		 */
 		public MissingComponentException(int id) {
