@@ -1,13 +1,15 @@
-package application;
+package application.editor;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+import java.util.Vector;
 
 /**
  * A wrapper for implementing undo and redo functionality.
- * 
+ *
  * @param <T> the type of object that will be stored
+ *
+ * @author alexm
  */
 public final class UndoableHistory<T extends Undoable> {
 
@@ -21,7 +23,7 @@ public final class UndoableHistory<T extends Undoable> {
 
 	/**
 	 * Adds the given {@code Undoable} to the history without executing it.
-	 * 
+	 *
 	 * @param c the undoable
 	 */
 	public void add(T c) {
@@ -66,10 +68,22 @@ public final class UndoableHistory<T extends Undoable> {
 	 * <p>
 	 * Note that this does not return a copy of the history. Any changes to the
 	 * items will be reflected in this UndoableHistory object.
-	 * 
+	 *
 	 * @return a List with the previously executed Undoables
 	 */
-	public List<Undoable> getHistory() {
-		return new ArrayList<>(past);
+	public List<Undoable> getPast() {
+		return new Vector<>(past);
+	}
+
+	/**
+	 * Returns the future part of the history.
+	 * <p>
+	 * Note that this does not return a copy of the history. Any changes to the
+	 * items will be reflected in this UndoableHistory object.
+	 *
+	 * @return a List with the previously unexecuted Undoables
+	 */
+	public List<Undoable> getFuture() {
+		return new Vector<>(future);
 	}
 }
