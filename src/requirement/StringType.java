@@ -2,7 +2,11 @@ package requirement;
 
 import java.util.regex.Pattern;
 
-/** A wrapper for a regular expression that a String value must match */
+/**
+ * A wrapper for a regular expression that a String must match.
+ *
+ * @author alexm
+ */
 public enum StringType {
 
 	/** Type for non-negative integers */
@@ -30,14 +34,15 @@ public enum StringType {
 
 	StringType(String regex, String description) {
 		p = Pattern.compile(regex);
-		this.desc = description;
+		desc = description;
 	}
 
 	/**
 	 * Checks whether or not the String provided matches the regular expression of
 	 * this type.
-	 * 
+	 *
 	 * @param s the String to check
+	 *
 	 * @return true if it matches, false otherwise
 	 */
 	public final boolean isValid(String s) {
