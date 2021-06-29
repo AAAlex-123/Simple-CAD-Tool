@@ -2,40 +2,39 @@ package command;
 
 import static components.ComponentType.INPUT_PIN;
 import static components.ComponentType.OUTPUT_PIN;
-import static myUtil.Utility.foreach;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import application.Application;
+import application.editor.Editor;
 import components.Component;
 import components.ComponentFactory;
+import myUtil.Utility;
 
 /**
- * A Command that creates a composite Gate. That is, a Gate that has a user-made
- * circuit inside of it.
+ * A Command that creates a composite Gate, a Gate with a user-made circuit
+ *
+ * @author alexm
  */
 class CreateGateCommand extends Command {
 
-	private static final long serialVersionUID = 5L;
+	private static final long serialVersionUID = 6L;
 
-	// the sequence of Commands required to create the Gate
-	private final List<Command> commands;
-	// the description that will be displayed in the UI
-	private final String description;
+	private final List<Command> commands;    // sequence of Commands to create the Gate
+	private final String        description; // displayed in the UI
 
 	private Component createdComponent;
-	private int componentID;
+	private int       componentID;
 
 	/**
 	 * Creates the Command given an Application and a list of Commands
 	 *
-	 * @param app  the context of the Command
-	 * @param cmds the sub-commands that will be executed
-	 * @param desc the description of this Command
+	 * @param editor the context of the Command
+	 * @param cmds   the sub-commands that will be executed
+	 * @param desc   the description of this Command
 	 */
-	CreateGateCommand(Application app, List<Command> cmds, String desc) {
-		super(app);
+	CreateGateCommand(Editor editor, List<Command> cmds, String desc) {
+		super(editor);
 		commands = cmds;
 		description = desc;
 		componentID = -1;
@@ -43,9 +42,12 @@ class CreateGateCommand extends Command {
 
 	@Override
 	public Command clone() {
-		CreateGateCommand cgc = new CreateGateCommand(context, commands, description);
+		final CreateGateCommand cgc = new CreateGateCommand(context, commands,
+				description);
+
 		if (createdComponent != null)
 			cgc.componentID = createdComponent.UID();
+
 		return cgc;
 	}
 
@@ -54,34 +56,36 @@ class CreateGateCommand extends Command {
 		if (createdComponent != null) {
 			context.addComponent(createdComponent);
 			ComponentFactory.restoreDeletedComponent(createdComponent);
+
 		} else {
-
 			// execute the sequence of commands to create the circuit in a temporary context
-			Application tempContext = new Application();
+			final Editor tempContext = new Editor(null, "");
 
-			foreach(commands, c -> {
-				Command cloned = c.clone();
+			Utility.foreach(commands, c -> {
+				final Command cloned = c.clone();
 				cloned.context(tempContext);
+
 				try {
 					cloned.execute();
-				} catch (Exception e) {
+				} catch (final Exception e) {
 					// this Command has executed successfully before; this statement can't throw
 					throw new RuntimeException(e);
 				}
 			});
 
 			// get arrays of the InputPins and the OutputPins from the temporary context
-			List<Component> ins = new ArrayList<>(), outs = new ArrayList<>();
-			foreach(tempContext.getComponents(), c -> {
+			final List<Component> ins = new ArrayList<>(), outs = new ArrayList<>();
+			Utility.foreach(tempContext.getComponents_(), c -> {
 				if (c.type() == INPUT_PIN)
 					ins.add(c);
 				else if (c.type() == OUTPUT_PIN)
 					outs.add(c);
 			});
 
-			Component[] in = new Component[ins.size()], out = new Component[outs.size()];
+			final Component[] in = new Component[ins.size()], out = new Component[outs.size()];
 			for (int i = 0; i < in.length; ++i)
 				in[i] = ins.get(i);
+
 			for (int i = 0; i < out.length; ++i)
 				out[i] = outs.get(i);
 
@@ -89,6 +93,7 @@ class CreateGateCommand extends Command {
 			createdComponent = ComponentFactory.createGate(in, out, description);
 			if (componentID != -1)
 				createdComponent.setID(componentID);
+
 			context.addComponent(createdComponent);
 		}
 	}
