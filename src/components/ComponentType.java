@@ -84,13 +84,13 @@ public enum ComponentType {
 
 	private String desc;
 
-	private ComponentType(String desc) {
-		this.desc = desc;
+	private ComponentType(String description) {
+		this.desc = description;
 	}
 
 	/**
 	 * Returns the description of this ComponentType.
-	 * 
+	 *
 	 * @return the description
 	 */
 	public String description() {

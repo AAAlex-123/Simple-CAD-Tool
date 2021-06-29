@@ -215,9 +215,9 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 
 		private final Requirements<String> reqs;
 
-		RequirementsDialog(String title, String desc, Requirements<String> reqs, Frame parent) {
+		RequirementsDialog(String title, String desc, Requirements<String> dialogsReqs, Frame parent) {
 			super(parent, title, true);
-			this.reqs = reqs;
+			this.reqs = dialogsReqs;
 
 			setLayout(new BorderLayout());
 			setResizable(false);
@@ -239,12 +239,12 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 
 			// --- options panel (right) ---
 			optionsPanel = new JPanel();
-			optionsPanel.setLayout(new GridLayout(reqs.requirements.size(), 2, 15, 15));
-			labels = new JLabel[reqs.requirements.size()];
-			textAreas = new JTextField[reqs.requirements.size()];
+			optionsPanel.setLayout(new GridLayout(dialogsReqs.requirements.size(), 2, 15, 15));
+			labels = new JLabel[dialogsReqs.requirements.size()];
+			textAreas = new JTextField[dialogsReqs.requirements.size()];
 			int i = 0;
 			// add text areas
-			for (Requirement<String> r : reqs) {
+			for (Requirement<String> r : dialogsReqs) {
 				labels[i] = new JLabel(r.key());
 				textAreas[i] = new JTextField(10);
 				textAreas[i].setText(r.value());
@@ -293,7 +293,7 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 				r.fulfil(textAreas[i].getText());
 
 				if (!r.fulfilled()) {
-					textAreas[i].setText(r.stringType.description);
+					textAreas[i].setText(r.stringType.desc);
 					sb.setLabelText("message", "Give correct values!");
 					textAreas[i].requestFocus();
 				}
@@ -302,7 +302,6 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 			return reqs.fulfilled();
 		}
 
-		@SuppressWarnings("unused")
 		private void addListeners() {
 
 			Action pressOK = new AbstractAction() {

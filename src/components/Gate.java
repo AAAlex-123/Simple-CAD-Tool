@@ -35,8 +35,8 @@ class Gate extends Component {
 		try {
 			file = new File(sprite);
 			temp = ImageIO.read(file);
-		} catch (@SuppressWarnings("unused") IOException e) {
-			System.err.printf("Could not load image %s", file);
+		} catch (IOException e) {
+			System.err.printf("Could not load image %s%n", file);
 		}
 
 		image = temp;
@@ -190,7 +190,8 @@ class Gate extends Component {
 	final void outputChanged(int index) {
 		checkIndex(index, outCount());
 
-		foreach(outputBranches.get(index), b -> b.wake_up(outputPins[index].getActive(0), hidden()));
+		foreach(outputBranches.get(index),
+		        b -> b.wake_up(outputPins[index].getActive(0), hidden()));
 	}
 
 	@Override
@@ -238,6 +239,7 @@ class Gate extends Component {
 	 * only be called by primitive gates that contain multiple gates e.g. NOT.
 	 *
 	 * @param index the index
+	 *
 	 * @return true if a branch is connected, false otherwise
 	 */
 	boolean checkBranch(int index) {
@@ -280,7 +282,9 @@ class Gate extends Component {
 		g.drawString(description, 7, (getHeight() / 2) + 5);
 
 		for (int i = 0; i < inputPins.length; ++i) {
-			g.setColor(inputBranches[i] != null ? inputBranches[i].getActive(0) ? Color.GREEN : Color.RED : Color.RED);
+			g.setColor(inputBranches[i] != null
+			        ? inputBranches[i].getActive(0) ? Color.GREEN : Color.RED
+			        : Color.RED);
 			drawPin(g, new Point(dxi.apply(i), dyi.apply(i)));
 		}
 
@@ -292,7 +296,7 @@ class Gate extends Component {
 
 	/**
 	 * Draws the sprite of the Gate.
-	 * 
+	 *
 	 * @param g the Graphics object with which to draw
 	 */
 	protected final void drawSprite(Graphics g) {

@@ -24,13 +24,13 @@ public enum StringType {
 	ANY(".+", "Non-empty string");
 
 	/** A human-readable description for the regex of this Type */
-	final String description;
+	final String desc;
 
 	private final Pattern p;
 
 	StringType(String regex, String description) {
 		p = Pattern.compile(regex);
-		this.description = description;
+		this.desc = description;
 	}
 
 	/**
@@ -46,6 +46,6 @@ public enum StringType {
 
 	@Override
 	public String toString() {
-		return String.format("%s: %s", super.toString(), description);
+		return String.format("%s: %s", super.toString(), desc);
 	}
 }
