@@ -1,4 +1,4 @@
-package application;
+package application.editor;
 
 import java.awt.Color;
 import java.awt.GridLayout;
@@ -9,7 +9,11 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
-/** Convenient way to display multiple messages in JLabels */
+/**
+ * Convenient way to display multiple messages in JLabels
+ *
+ * @author alexm
+ */
 public final class StatusBar extends JPanel {
 
 	private final Map<String, JLabel> map;
@@ -43,7 +47,7 @@ public final class StatusBar extends JPanel {
 
 		/**
 		 * Formats the text on the {@code label} according to the type.
-		 * 
+		 *
 		 * @param label the label
 		 */
 		protected abstract void format(JLabel label);
@@ -57,7 +61,7 @@ public final class StatusBar extends JPanel {
 
 	/**
 	 * Adds a new Label to the Status Bar with default formatting.
-	 * 
+	 *
 	 * @param labelID the Label's ID
 	 */
 	public void addLabel(String labelID) {
@@ -66,25 +70,26 @@ public final class StatusBar extends JPanel {
 
 	/**
 	 * Adds a new Label to the Status Bar with the given formatting.
-	 * 
+	 *
 	 * @param labelID the Label's ID
 	 * @param type    the Label's text type
 	 */
 	public void addLabel(String labelID, TextType type) {
-		JLabel newLabel = new JLabel(" ");
-		type.format(newLabel);
+		final JLabel newLabel = new JLabel(" ");
 		newLabel.setHorizontalAlignment(SwingConstants.LEFT);
+		type.format(newLabel);
+
 		map.put(labelID, newLabel);
 		add(newLabel);
 	}
 
 	/**
 	 * Removes a Label from the Status Bar.
-	 * 
+	 *
 	 * @param labelID the Label's ID
 	 */
 	public void removeLabel(String labelID) {
-		JLabel label = map.get(labelID);
+		final JLabel label = map.get(labelID);
 		if (label == null)
 			throw new MissingLabelException(labelID);
 
@@ -95,15 +100,15 @@ public final class StatusBar extends JPanel {
 	 * Sets the text that the Label with the {@code labelID} displays without
 	 * changing its formatting. The {@code text} is formatted as if String.format
 	 * was called with {@code args}.
-	 * 
+	 *
 	 * @param labelID the ID of the Label
 	 * @param text    the text
 	 * @param args    the format arguments for the text
-	 * 
+	 *
 	 * @throws MissingLabelException when no such label exists
 	 */
 	public void setLabelText(String labelID, String text, Object... args) {
-		JLabel label = map.get(labelID);
+		final JLabel label = map.get(labelID);
 		if (label == null)
 			throw new MissingLabelException(labelID);
 
@@ -114,18 +119,18 @@ public final class StatusBar extends JPanel {
 	 * Sets the text that the Label with the {@code labelID} displays and changes
 	 * the appearance according to the {@code type} of the message. The {@code text}
 	 * is formatted as if String.format was called with {@code args}.
-	 * 
+	 *
 	 * @param labelID the ID of the Label
 	 * @param type    the type of the text, one of {@link TextType}
 	 * @param text    the text
 	 * @param args    the format arguments for the text
-	 * 
+	 *
 	 * @throws MissingLabelException when no such label exists
-	 * 
+	 *
 	 * @see TextType
 	 */
 	public void setLabelText(String labelID, TextType type, String text, Object... args) {
-		JLabel label = map.get(labelID);
+		final JLabel label = map.get(labelID);
 		if (label == null)
 			throw new MissingLabelException(labelID);
 
@@ -138,7 +143,7 @@ public final class StatusBar extends JPanel {
 
 		/**
 		 * Constructs the Exception with information about the {@code labelID}.
-		 * 
+		 *
 		 * @param labelID the id for which there is no label
 		 */
 		public MissingLabelException(String labelID) {
