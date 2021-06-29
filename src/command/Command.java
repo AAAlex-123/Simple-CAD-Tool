@@ -4,63 +4,66 @@ import java.awt.Frame;
 import java.io.Serializable;
 import java.util.List;
 
-import application.Application;
-import application.Undoable;
+import application.editor.Editor;
+import application.editor.Undoable;
 import components.ComponentType;
 import requirement.Requirements;
 
-/** An implementation of the Undoable interface, specific to this Application */
-public abstract class Command implements Undoable, Serializable {
+/**
+ * An implementation of the Undoable interface, specific to this Application
+ *
+ * @author alexm
+ */
+public abstract class Command implements Undoable, Serializable, Cloneable {
 
-	private static final long serialVersionUID = 3L;
+	private static final long serialVersionUID = 4L;
 
 	/**
 	 * Creates a Command that creates a Component of the given
 	 * {@code ComponentType}.
-	 * 
-	 * @param app           the Command's context
+	 *
 	 * @param componentType the type of the Component
+	 *
 	 * @return the Command
 	 */
-	public static Command create(Application app, ComponentType componentType) {
-		return new CreateCommand(app, componentType);
+	public static Command create(ComponentType componentType) {
+		return new CreateCommand(null, componentType);
 	}
 
 	/**
 	 * Creates a Command that creates a composite Gate.
-	 * 
-	 * @param app         the Command's context
+	 *
 	 * @param commands    the Command's instructions to create the composite
 	 * @param description the Command's description
+	 *
 	 * @return the Command
 	 */
-	public static Command create(Application app, List<Command> commands, String description) {
-		return new CreateGateCommand(app, commands, description);
+	public static Command create(List<Command> commands, String description) {
+		return new CreateGateCommand(null, commands, description);
 	}
 
 	/**
 	 * Creates a Command that deletes a Component.
-	 * 
-	 * @param app the Command's context
+	 *
 	 * @return the Command
 	 */
-	public static Command delete(Application app) {
-		return new DeleteCommand(app);
+	public static Command delete() {
+		return new DeleteCommand(null);
 	}
 
 	/** The Command's requirements; what it needs to execute. */
 	protected Requirements<String> requirements;
 
 	/** The Command's context; where it will act. */
-	protected transient Application context;
+	protected transient Editor context;
 
 	/**
-	 * Constructs the Command with the given {@code Application}.
+	 * Constructs the Command with the given {@code editor} as its context.
 	 *
-	 * @param app the Command's context
+	 * @param editor the context
 	 */
-	public Command(Application app) {
-		context = app;
+	public Command(Editor editor) {
+		context = editor;
 		requirements = new Requirements<>();
 	}
 
@@ -74,17 +77,20 @@ public abstract class Command implements Undoable, Serializable {
 	public abstract Command clone();
 
 	/**
-	 * Fulfils the Command's requirements with a dialog.
-	 * 
-	 * @param parent the parent of the dialog
+	 * Fulfils the Command's requirements with a dialog while also specifying its
+	 * context.
+	 *
+	 * @param parent     the parent of the dialog
+	 * @param newContext the Command's context
 	 */
-	public final void fillRequirements(Frame parent) {
+	public final void fillRequirements(Frame parent, Editor newContext) {
 		requirements.fulfillWithDialog(parent, toString());
+		context(newContext);
 	}
 
 	/**
 	 * Returns whether or not this Command is ready to execute.
-	 * 
+	 *
 	 * @return true if ready to execute, false otherwise
 	 */
 	public final boolean canExecute() {
@@ -93,10 +99,10 @@ public abstract class Command implements Undoable, Serializable {
 
 	/**
 	 * Sets the Command's context.
-	 * 
+	 *
 	 * @param c the context
 	 */
-	public final void context(Application c) {
+	public final void context(Editor c) {
 		context = c;
 	}
 
