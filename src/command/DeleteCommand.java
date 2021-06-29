@@ -1,20 +1,22 @@
 package command;
 
-import static myUtil.Utility.foreach;
-
 import java.util.List;
 import java.util.Vector;
 
-import application.Application;
-import application.Application.MissingComponentException;
+import application.editor.Editor;
 import components.Component;
 import components.ComponentFactory;
+import myUtil.Utility;
 import requirement.StringType;
 
-/** A Command that deletes a Component */
+/**
+ * A Command that deletes a Component
+ *
+ * @author alexm
+ */
 class DeleteCommand extends Command {
 
-	private static final long serialVersionUID = 4L;
+	private static final long serialVersionUID = 5L;
 
 	private Component componentToDelete;
 
@@ -23,44 +25,46 @@ class DeleteCommand extends Command {
 	/**
 	 * Creates a Command that deletes a Component in the given {@code Application}.
 	 *
-	 * @param app the context of this Command.
+	 * @param editor the context of this Command.
 	 */
-	DeleteCommand(Application app) {
-		super(app);
+	DeleteCommand(Editor editor) {
+		super(editor);
 		deleteCommands = new Vector<>();
 		requirements.add("id", StringType.NON_NEG_INTEGER);
 	}
 
 	@Override
 	public Command clone() {
-		Command newCommand = new DeleteCommand(context);
+		final Command newCommand = new DeleteCommand(context);
 		newCommand.requirements = requirements;
 
 		return newCommand;
 	}
 
 	@Override
-	public void execute() throws MissingComponentException {
-		int id = Integer.valueOf(requirements.getV("id"));
-		componentToDelete = context.getComponent(id);
+	public void execute() throws Editor.MissingComponentException {
+		final int id = Integer.parseInt(requirements.getV("id"));
+		componentToDelete = context.getComponent_(id);
 
 		ComponentFactory.destroyComponent(componentToDelete);
 		context.removeComponent(componentToDelete);
 
-		foreach(context.getDeletedComponents(), c -> {
-			DeleteCommand dC = new DeleteCommand(context);
+		Utility.foreach(context.getDeletedComponents_(), c -> {
+			final DeleteCommand dC = new DeleteCommand(context);
 			deleteCommands.add(dC);
 
 			// component is already deleted the command isn't executed
 			// instead it is just set up so it can be undone successfully
-			String compID = String.valueOf(c.UID());
+			final String compID = String.valueOf(c.UID());
 			dC.requirements.fulfil("id", compID);
+
 			try {
 				// the Component for sure exists; this statement can't throw
-				dC.componentToDelete = context.getComponent(Integer.valueOf(compID));
-			} catch (MissingComponentException e) {
+				dC.componentToDelete = context.getComponent_(Integer.parseInt(compID));
+			} catch (final Editor.MissingComponentException e) {
 				throw new RuntimeException(e);
 			}
+
 			context.removeComponent(c);
 		});
 	}
@@ -69,7 +73,7 @@ class DeleteCommand extends Command {
 	public void unexecute() {
 		ComponentFactory.restoreDeletedComponent(componentToDelete);
 		context.addComponent(componentToDelete);
-		foreach(deleteCommands, Command::unexecute);
+		Utility.foreach(deleteCommands, Command::unexecute);
 	}
 
 	@Override
