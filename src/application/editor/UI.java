@@ -1,18 +1,23 @@
-package application;
+package application.editor;
 
 import java.awt.Color;
-import java.awt.Graphics;
 
+import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 
 import components.Component;
 
-/** A UI. Will probably be replaced by an Editor */
-class UI extends JPanel {
+/**
+ * The UI the Editor uses to display Components.
+ *
+ * @author alexm
+ */
+final class UI extends JPanel {
 
 	/** Creates the UI that displays components */
 	UI() {
 		setLayout(null);
+		setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
 	}
 
 	/**
@@ -33,12 +38,5 @@ class UI extends JPanel {
 	void removeComponent(Component c) {
 		remove(c);
 		repaint();
-	}
-
-	@Override
-	public void paintComponent(Graphics g) {
-		super.paintComponent(g);
-		g.setColor(Color.BLACK);
-		g.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
 	}
 }
