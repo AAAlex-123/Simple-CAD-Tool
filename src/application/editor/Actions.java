@@ -214,71 +214,59 @@ public enum Actions {
 		@Override
 		public void execute() {
 			context.status("Someone doesn't know how to use a UI...");
-			final int[] res = new int[16];
-			int i = -1;
-			res[++i] = JOptionPane.showConfirmDialog(null,
-			        "PLEASE NOTE THAT THIS HELP IS KINDA CRAPPY");
-			res[++i] = JOptionPane.showConfirmDialog(null,
-			        "but i wont fix it rn, it will probably be replaced with something fancier in the future");
-			res[++i] = JOptionPane.showConfirmDialog(null, "use the menus");
-			res[++i] = JOptionPane.showConfirmDialog(null,
-			        "file: read buttons click buttons");
-			res[++i] = JOptionPane.showConfirmDialog(null,
-			        "open opens to edit, import imports as a component that can be placed, clear deletes everything");
-			res[++i] = JOptionPane.showConfirmDialog(null,
-			        "WARNING: TO SAVE AS A COMPONENT AND THEN IMPORT IT  A L W A Y S  CLEAR FIRST");
-			res[++i] = JOptionPane.showConfirmDialog(null,
-			        "i am not to be held responsible for the error messages you will create if you don't follow the previous warning");
-			res[++i] = JOptionPane.showConfirmDialog(null,
-			        "edit: edit components without mouse; currently only turn pins on/off");
-			res[++i] = JOptionPane.showConfirmDialog(null,
-			        "create: click the type of component. Some components require additional parameters (i hope you know regex)");
-			res[++i] = JOptionPane.showConfirmDialog(null,
-			        "delete: click 'component'. Then specify the ID.");
-			res[++i] = JOptionPane.showConfirmDialog(null,
-			        "'help' displays this helpful help message");
-			res[++i] = JOptionPane.showConfirmDialog(null, "everything has keybinds");
-			res[++i] = JOptionPane.showConfirmDialog(null,
-			        "When filling in parameters, (shift + )tab to move (backward)forward, enter for ok, escape to cancel");
-			res[++i] = JOptionPane.showConfirmDialog(null,
-			        "click on input pins to turn them on and off and drag components (not branches) to move them around");
-			res[++i] = JOptionPane.showConfirmDialog(null,
-			        "example branch: from 1st pin of component with id=1 to 3rd pin of component with id=2:'in id'=1 'in index'=0 'out id'=2 'out index'=2");
-			res[++i] = JOptionPane.showConfirmDialog(null,
-			        "to start, open file `nand` and play around with it (undo is saved when saving files). WITHOUT SAVING, import file `nand` with custom component name, place it, and see your nand come to life");
+			final String[] messages = {
+			        "Not-so-good help ahead, brance yourselves",
+			        "Create new Editor / Close current Editor",
+			        "Open a file in current Editor",
+			        "Save the current file to disk / Save with a different name",
+			        "Clear the Editor",
+			        "Import a file as a custom Component",
+			        "Undo/Redo last/previous action",
+			        "Turn on/off InputPin / Focus Component",
+			        "Creates a Component (by type and parameters)",
+			        "Deletes a Component (by identifier)",
+			        "Display these messages",
+			        "Drag to move, click to turn on/off",
+			        "Move with arrows (fast with ctrl), turn on/off with space",
+			};
 
-			// yes=0 no=1 cancel=2 x=-1
+			final String[] titles = {
+			        "Disclaimer",
+			        "File: New / Close",
+			        "File: Open",
+			        "File: Save / Save as",
+			        "File: Clear",
+			        "File: Import",
+			        "File: Undo / Redo",
+			        "Edit: Turn on/off / Focus",
+			        "Create",
+			        "Delete",
+			        "Help",
+			        "Mouse Actions",
+			        "Keyboard Actions",
+			};
 
-			int count;
-			count = 0;
-			for (i = 0; i < res.length; ++i)
-				if (res[i] == -1) { count++; }
-			final int x = count;
-			count = 0;
-			for (i = 0; i < res.length; ++i)
-				if (res[i] == 0) { count++; }
-			final int y = count;
-			count = 0;
-			for (i = 0; i < res.length; ++i)
-				if (res[i] == 1) { count++; }
-			final int n = count;
-			count = 0;
-			for (i = 0; i < res.length; ++i)
-				if (res[i] == 2) { count++; }
-			final int c = count;
-			final int res1 = JOptionPane.showConfirmDialog(null,
-			        String.format("fun fact: you clicked: %d yes, %d no, %d cancel, %d 'x'",
-			                y, n, c, x));
+			// yes=0 no=1 cancel=2 x=-1 (+1)
+			final int[] res = { 0, 0, 0, 0 };
 
-			if (res1 == -1) {
-				JOptionPane.showConfirmDialog(null, String.format("(%d 'x')", x + 1));
-			} else if (res1 == 0) {
-				JOptionPane.showConfirmDialog(null, String.format("(%d yes)", y + 1));
-			} else if (res1 == 1) {
-				JOptionPane.showConfirmDialog(null, String.format("(%d no)", n + 1));
-			} else if (res1 == 2) {
-				JOptionPane.showConfirmDialog(null, String.format("(%d cancel)", c + 1));
+			for (int i = 0; i < messages.length; i++) {
+				++res[1 + JOptionPane.showConfirmDialog(null, messages[i], titles[i],
+				        JOptionPane.YES_NO_CANCEL_OPTION)];
 			}
+
+			final int y = res[1], n = res[2], c = res[3], x = res[0];
+			final int res1 = JOptionPane.showConfirmDialog(null, String
+			        .format("You clicked: %d yes, %d no, %d cancel, %d 'x'", y, n, c, x),
+			        "Fun Fact", JOptionPane.YES_NO_CANCEL_OPTION);
+
+			if (res1 == -1)
+				JOptionPane.showConfirmDialog(null, String.format("(actually %d 'x')", x + 1));
+			else if (res1 == 0)
+				JOptionPane.showConfirmDialog(null, String.format("(actually %d yes)", y + 1));
+			else if (res1 == 1)
+				JOptionPane.showConfirmDialog(null, String.format("(actually %d no)", n + 1));
+			else if (res1 == 2)
+				JOptionPane.showConfirmDialog(null, String.format("(actually %d cancel)", c + 1));
 		}
 	};
 
