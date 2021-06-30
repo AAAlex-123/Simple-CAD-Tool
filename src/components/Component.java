@@ -27,63 +27,19 @@ import exceptions.InvalidIndexException;
  * they are created and deleted. This Application will be referenced throughout
  * the documentation.
  */
-public abstract class Component extends JComponent {
+public abstract class Component extends JComponent implements Identifiable<String> {
 
-	private static final long serialVersionUID = 3L;
+	private static final long serialVersionUID = 5L;
 
-	/**
-	 * A static increasing ID. During construction, each Component is assigned one.
-	 * Note that because some Components consist internally of other Components, the
-	 * IDs assigned may not be consecutive.
-	 */
-	private static int staticID = 0;
+	private String componentID;
 
-	/**
-	 * Unique ID for this Component. It is automatically assigned during
-	 * construction and can be set only once afterwards.
-	 */
-	private int UID;
-
-	/** True if the UID has been assigned once after construction */
-	private boolean UIDset = false;
-
-	/** Sets the static ID to 0 */
-	public static void resetGlobalID() {
-		setGlobalID(0);
+	@Override
+	public final String getID() {
+		return componentID;
 	}
 
-	/**
-	 * Sets the static ID to the new value (use cautiously).
-	 *
-	 * @param newID the new ID
-	 */
-	public static void setGlobalID(int newID) {
-		staticID = newID;
-	}
-
-	/**
-	 * Allows for this Component's {@link Component#UID UID} to be set once after
-	 * construction.
-	 *
-	 * @param newID the new ID;
-	 */
-	public void setID(int newID) {
-		if (UIDset)
-			throw new RuntimeException(
-					"This Component's UID has already been set once after construction");
-
-		UID = newID;
-		UIDset = true;
-	}
-
-	/**
-	 * Returns this Component's {@link Component#UID UID}.
-	 *
-	 * @return the UID
-	 */
-	public int UID() {
-		return UID;
-	}
+	@Override
+	public final void setID(String id) {
 
 	// ===== CIRCUITING =====
 
@@ -332,7 +288,7 @@ public abstract class Component extends JComponent {
 	@Override
 	public final String toString() {
 		return String.format("%s: %d-%d, UID: %d, hidden: %s", type().description(), inCount(),
-				outCount(), UID(),
+				outCount(), getID(),
 				hidden());
 	}
 
@@ -550,7 +506,7 @@ public abstract class Component extends JComponent {
 	 */
 	protected void drawID(Graphics g) {
 		g.setColor(hidden() ? Color.ORANGE : focused ? Color.CYAN : Color.BLACK);
-		g.drawString(String.valueOf(UID()), 0, getHeight() - 1);
+		g.drawString(getID(), 0, getHeight() - 1);
 	}
 
 	/** Specifies how this Component should react when it's moved or resized. */
