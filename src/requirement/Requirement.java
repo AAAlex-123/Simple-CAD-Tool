@@ -107,12 +107,12 @@ public final class Requirement<V> implements Serializable {
 	public void fulfil(V v) {
 		offer(v);
 		fulfilled = !((v instanceof String) && (stringType != null)
-		        && !stringType.isValid((String) v));
+				&& !stringType.isValid((String) v));
 	}
 
 	/**
 	 * Calls {@link Requirement#fulfil(Object) fulfil(V)} and additionally marks
-	 * this Requirement as locked, meaning that its value cannot be altered.
+	 * this Requirement as finalised, meaning that its value cannot be altered.
 	 * <p>
 	 * This method is intended for providing a strict default or for making sure the
 	 * value is final.
@@ -136,16 +136,16 @@ public final class Requirement<V> implements Serializable {
 		return fulfilled;
 	}
 
-	/** @return {@code true} if locked, {@code false} otherwise */
-	boolean finalised() {
+	/** @return {@code true} if finalised, {@code false} otherwise */
+	public boolean finalised() {
 		return finalised;
 	}
 
 	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder(String.format(
-		        "Requirement: %s%n\tValue:     %s%n\tFulfilled: %s%n\tFinalise:  %s%n", key, value,
-		        fulfilled() ? "yes" : "no", finalised() ? "yes" : "no"));
+				"Requirement: %s%n\tValue:     %s%n\tFulfilled: %s%n\tFinalise:  %s%n", key, value,
+				fulfilled() ? "yes" : "no", finalised() ? "yes" : "no"));
 
 		if (stringType != null)
 			sb.append(String.format("\tType:      %s%n", stringType));
