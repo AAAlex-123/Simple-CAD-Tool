@@ -24,9 +24,8 @@ import myUtil.Utility;
 import requirement.Requirements;
 
 /**
- * A Command that creates a {@code Component}. Assuming that all of the
- * {@code requirements} are set correctly, a {@code Component} of the correct
- * type is created and added to the {@code context}.
+ * A Command that creates a basic {@code Component} and subsequently adds it to
+ * the {@code context}.
  *
  * @author alexm
  */
@@ -47,7 +46,7 @@ class CreateCommand extends Command {
 	/**
 	 * Creates the Command initialising its {@code requirements}.
 	 *
-	 * @param editor the Application where this Command will act
+	 * @param editor the {@code context} of this Command
 	 * @param type   the type of Components this Command creates
 	 */
 	CreateCommand(Editor editor, ComponentType type) {
@@ -119,23 +118,23 @@ class CreateCommand extends Command {
 				break;
 			case GATEAND:
 				createdComponent = ComponentFactory.createPrimitiveGate(GATEAND,
-				        Integer.parseInt(requirements.getV("in count")));
+						Integer.parseInt(requirements.getV("in count")));
 				break;
 			case GATEOR:
 				createdComponent = ComponentFactory.createPrimitiveGate(GATEOR,
-				        Integer.parseInt(requirements.getV("in count")));
-			break;
+						Integer.parseInt(requirements.getV("in count")));
+				break;
 			case GATENOT:
 				createdComponent = ComponentFactory.createPrimitiveGate(GATENOT,
-				        Integer.parseInt(requirements.getV("in count")));
+						Integer.parseInt(requirements.getV("in count")));
 				break;
 			case GATEXOR:
 				createdComponent = ComponentFactory.createPrimitiveGate(GATEXOR,
-				        Integer.parseInt(requirements.getV("in count")));
+						Integer.parseInt(requirements.getV("in count")));
 				break;
 			case GATE:
 				throw new RuntimeException(String.format(
-				        "Cannot directly create Components of type %s", ComponentType.GATE));
+						"Cannot directly create Components of type %s", ComponentType.GATE));
 			default:
 				break;
 			}
