@@ -153,7 +153,7 @@ final class Branch extends Component {
 	@Override
 	protected void drawID(Graphics g) {
 		g.setColor(Color.BLACK);
-		g.drawString(String.valueOf(UID()), (getWidth() / 2) - 4, (getHeight() / 2) + 5);
+		g.drawString(getID(), (getWidth() / 2) - 4, (getHeight() / 2) + 5);
 	}
 
 	@Override
