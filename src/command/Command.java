@@ -15,6 +15,11 @@ import requirement.Requirements;
  * {@link requirement.Requirement requirements}, act on a
  * {@link application.editor.Editor context} and manipulate
  * {@link components.Component Components} by creating or deleting them.
+ * <p>
+ * <b>Note:</b> the Command does not check if the {@code requirements} are set.
+ * If they are not, the Command neither prints an error message nor attempts to
+ * recover and continue execution. It's up to the caller to ensure that the
+ * {@code requirements} are set properly.
  *
  * @author alexm
  */
