@@ -16,11 +16,6 @@ import requirement.Requirements;
 /**
  * A Command that creates a composite {@code Component} (a {@code Gate}) and
  * subsequently adds it to the {@code context}.
- * <p>
- * <b>Note:</b> the Command does not check if the {@code requirements} are set.
- * If they are not, the Command neither prints an error message nor attempts to
- * recover and continue execution. It's up to the caller to ensure that the
- * {@code requirements} are set properly.
  *
  * @author alexm
  */
@@ -34,8 +29,8 @@ class CreateGateCommand extends CreateCommand {
 	/**
 	 * Creates the Command.
 	 *
-	 * @param editor the context of the Command
-	 * @param cmds   the sub-commands that will be executed
+	 * @param editor the {@code context} of the Command
+	 * @param cmds   the sequence of Commands that will be executed
 	 * @param desc   the description of this Command
 	 */
 	CreateGateCommand(Editor editor, List<Command> cmds, String desc) {
