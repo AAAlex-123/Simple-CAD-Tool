@@ -9,54 +9,49 @@ import java.util.List;
 import application.editor.Editor;
 import components.Component;
 import components.ComponentFactory;
+import components.ComponentType;
 import myUtil.Utility;
+import requirement.Requirements;
 
 /**
- * A Command that creates a composite Gate, a Gate with a user-made circuit
+ * A Command that creates a composite {@code Component} (a {@code Gate}) and
+ * subsequently adds it to the {@code context}.
  *
  * @author alexm
  */
-class CreateGateCommand extends Command {
+class CreateGateCommand extends CreateCommand {
 
 	private static final long serialVersionUID = 6L;
 
 	private final List<Command> commands;    // sequence of Commands to create the Gate
-	private final String        description; // displayed in the UI
-
-	private Component createdComponent;
-	private int       componentID;
+	private final String        description; // displayed in the pop-up and the Editor
 
 	/**
-	 * Creates the Command given an Application and a list of Commands
+	 * Creates the Command.
 	 *
-	 * @param editor the context of the Command
-	 * @param cmds   the sub-commands that will be executed
+	 * @param editor the {@code context} of the Command
+	 * @param cmds   the sequence of Commands that will be executed
 	 * @param desc   the description of this Command
 	 */
 	CreateGateCommand(Editor editor, List<Command> cmds, String desc) {
-		super(editor);
+		super(editor, ComponentType.GATE);
 		commands = cmds;
 		description = desc;
-		componentID = -1;
 	}
 
 	@Override
 	public Command clone() {
-		final CreateGateCommand cgc = new CreateGateCommand(context, commands,
-				description);
-
-		if (createdComponent != null)
-			cgc.componentID = createdComponent.UID();
-
-		return cgc;
+		final CreateGateCommand newCommand = new CreateGateCommand(context, commands, description);
+		newCommand.requirements = new Requirements<>(requirements);
+		return newCommand;
 	}
 
 	@Override
 	public void execute() {
 		if (createdComponent != null) {
+			// when re-executed, simply restore the already-created Component
 			context.addComponent(createdComponent);
 			ComponentFactory.restoreDeletedComponent(createdComponent);
-
 		} else {
 			// execute the sequence of commands to create the circuit in a temporary context
 			final Editor tempContext = new Editor(null, "");
@@ -91,9 +86,7 @@ class CreateGateCommand extends Command {
 
 			// create the composite Gate and add it to the real context
 			createdComponent = ComponentFactory.createGate(in, out, description);
-			if (componentID != -1)
-				createdComponent.setID(componentID);
-
+			createdComponent.setID(requirements.getV("name"));
 			context.addComponent(createdComponent);
 		}
 	}

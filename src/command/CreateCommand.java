@@ -5,13 +5,17 @@ import static components.ComponentType.GATEAND;
 import static components.ComponentType.GATENOT;
 import static components.ComponentType.GATEOR;
 import static components.ComponentType.GATEXOR;
+import static requirement.StringType.ANY;
+import static requirement.StringType.CUSTOM;
 import static requirement.StringType.NON_NEG_INTEGER;
 import static requirement.StringType.POS_INTEGER;
 
+import java.awt.Frame;
 import java.util.ArrayList;
 import java.util.List;
 
 import application.editor.Editor;
+import application.editor.MissingComponentException;
 import components.Component;
 import components.ComponentFactory;
 import components.ComponentType;
@@ -20,39 +24,41 @@ import myUtil.Utility;
 import requirement.Requirements;
 
 /**
- * A Command that creates a Component
+ * A Command that creates a basic {@code Component} and subsequently adds it to
+ * the {@code context}.
  *
  * @author alexm
  */
 class CreateCommand extends Command {
 
-	private static final long serialVersionUID = 5L;
-	private static final int  ID_NOT_SET       = -1;
+	private static final long serialVersionUID = 6L;
 
 	private final ComponentType componentType;
 
-	private Component createdComponent;
-	private int       componentID;     // used for composites
+	/**
+	 * The {@code Component} created by this {@code Command}. It is used to make
+	 * sure that the {@code Command} can be properly undone.
+	 */
+	protected Component createdComponent;
 
 	private final List<Command> deleteCommands;
 
 	/**
-	 * Creates a Command that creates a specific ComponentType in the given context.
+	 * Creates the Command initialising its {@code requirements}.
 	 *
-	 * @param editor the Application where this Command will act
-	 * @param cType  the type of Components this Command creates
+	 * @param editor the {@code context} of this Command
+	 * @param type   the type of Components this Command creates
 	 */
-	CreateCommand(Editor editor, ComponentType cType) {
+	CreateCommand(Editor editor, ComponentType type) {
 		super(editor);
-		componentType = cType;
-		componentID = CreateCommand.ID_NOT_SET;
+		componentType = type;
 		deleteCommands = new ArrayList<>();
 
-		switch (cType) {
+		switch (componentType) {
 		case BRANCH:
-			requirements.add("in id", NON_NEG_INTEGER);
+			requirements.add("in id", ANY);
 			requirements.add("in index", NON_NEG_INTEGER);
-			requirements.add("out id", NON_NEG_INTEGER);
+			requirements.add("out id", ANY);
 			requirements.add("out index", NON_NEG_INTEGER);
 			break;
 		case GATEAND:
@@ -66,22 +72,32 @@ class CreateCommand extends Command {
 		default:
 			break;
 		}
+		requirements.add("name", CUSTOM);
 	}
 
 	@Override
 	public Command clone() {
 		final CreateCommand newCommand = new CreateCommand(context, componentType);
-		if (createdComponent != null)
-			newCommand.componentID = createdComponent.UID();
-
 		newCommand.requirements = new Requirements<>(requirements);
-
 		return newCommand;
 	}
 
 	@Override
-	public void execute() throws Editor.MissingComponentException, MalformedBranchException {
+	public void fillRequirements(Frame parent, Editor newContext) {
+		context(newContext);
+
+		// alter the `CUSTOM` type for this specific use
+		CUSTOM.alter(constructRegex(), "Available, no spaces");
+
+		// provide preset
+		requirements.get("name").offer(context.getNextID(componentType));
+		super.fillRequirements(parent, newContext);
+	}
+
+	@Override
+	public void execute() throws MissingComponentException, MalformedBranchException {
 		if (createdComponent != null) {
+			// when re-executed, simply restore the already-created Component
 			context.addComponent(createdComponent);
 			ComponentFactory.restoreDeletedComponent(createdComponent);
 		} else {
@@ -93,16 +109,12 @@ class CreateCommand extends Command {
 				createdComponent = ComponentFactory.createOutputPin();
 				break;
 			case BRANCH:
-				final Component in = context
-				.getComponent_(Integer.parseInt(requirements.getV("in id")));
-				final Component out = context
-						.getComponent_(Integer.parseInt(requirements.getV("out id")));
+				final Component in = context.getComponent_(requirements.getV("in id"));
+				final Component out = context.getComponent_(requirements.getV("out id"));
+				final int inIndex = Integer.parseInt(requirements.getV("in index"));
+				final int outIndex = Integer.parseInt(requirements.getV("out index"));
 
-				createdComponent = ComponentFactory.connectComponents(
-						in,
-						Integer.parseInt(requirements.getV("in index")),
-						out,
-						Integer.parseInt(requirements.getV("out index")));
+				createdComponent = ComponentFactory.connectComponents(in, inIndex, out, outIndex);
 				break;
 			case GATEAND:
 				createdComponent = ComponentFactory.createPrimitiveGate(GATEAND,
@@ -127,16 +139,14 @@ class CreateCommand extends Command {
 				break;
 			}
 
-			if (componentID != CreateCommand.ID_NOT_SET)
-				createdComponent.setID(componentID);
-
+			createdComponent.setID(requirements.getV("name"));
 			context.addComponent(createdComponent);
 		}
 
 		// delete the branch that may have been deleted when creating this branch
 		// there can't be more than two branches deleted when creating a branch
 		if (createdComponent.type() == BRANCH) {
-			final List<Component> ls = context.getDeletedComponents_();
+			final List<Component> ls = context.getDeletedComponents();
 
 			if (ls.size() == 0)
 				return;
@@ -147,7 +157,7 @@ class CreateCommand extends Command {
 
 			final Command d = new DeleteCommand(context);
 			deleteCommands.add(d);
-			d.requirements.fulfil("id", String.valueOf(ls.get(0).UID()));
+			d.requirements.fulfil("id", String.valueOf(ls.get(0).getID()));
 
 			try {
 				// the Component with that id for sure exists; this statement can't throw
@@ -160,6 +170,7 @@ class CreateCommand extends Command {
 
 	@Override
 	public void unexecute() {
+		// restore the previously deleted Branches
 		if (componentType == BRANCH) {
 			Utility.foreach(deleteCommands, Command::unexecute);
 			deleteCommands.clear();
@@ -172,5 +183,18 @@ class CreateCommand extends Command {
 	@Override
 	public String toString() {
 		return "Create " + componentType.description();
+	}
+
+	private String constructRegex() {
+		// Construct the following regex: ^(?!foo$|bar$|)[^\s]*$
+		// to match IDs that don't contain blanks and are not in use
+		final StringBuilder regex = new StringBuilder("^(?!$");
+		Utility.foreach(context.getComponents_(), c -> {
+			regex.append("|");
+			regex.append(c.getID());
+			regex.append("$");
+		});
+		regex.append(")[^\\s]*$");
+		return regex.toString();
 	}
 }
