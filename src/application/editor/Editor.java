@@ -1,11 +1,17 @@
 package application.editor;
 
+import static components.ComponentType.BRANCH;
+import static components.ComponentType.GATE;
+import static components.ComponentType.GATEAND;
+import static components.ComponentType.GATENOT;
+import static components.ComponentType.GATEOR;
+import static components.ComponentType.GATEXOR;
+import static components.ComponentType.INPUT_PIN;
+import static components.ComponentType.OUTPUT_PIN;
+
 import java.awt.BorderLayout;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
@@ -16,10 +22,21 @@ import application.Application;
 import command.Command;
 import components.Component;
 import components.ComponentFactory;
+import components.ComponentType;
 import myUtil.Utility;
 
 /**
- * An Editor to edit a file.
+ * An Editor to edit a file. The Editor manages {@link components.Component
+ * Components} with the help of an {@link ItemManager} (which takes care of
+ * creating and deleting them) and a {@link UI} (which displays them on the
+ * screen). Additional information is displayed at the bottom of the screen
+ * using the Editor's {@link StatusBar}.
+ * <p>
+ * Component creation and deletion is accomplished using {@link command.Command
+ * Commands} which are managed using a {@link UndoableHistory}.
+ * <p>
+ * Every Action the Editor takes is encapsulated in an {@link Actions Action}
+ * instance.
  *
  * @author alexm
  */
@@ -27,55 +44,65 @@ public final class Editor extends JComponent {
 
 	private final Application app;
 	private final UI          editorUI;
-	private final EditorTab   editorTab;
-	private final EditorFile  file;
+	private final FileLabel   fileLabel;
+	private String            filename;
+	private boolean           dirty;
 	private final StatusBar   statusBar;
 
-	private final Map<Integer, Component>  componentMap;
+	private final ItemManager<Component>   components;
 	private final UndoableHistory<Command> undoableHistory;
 
 	/**
-	 * Constructs the editor with the given context.
+	 * Constructs the Editor with the given context.
 	 *
-	 * @param context     the Editor's context
-	 * @param initialFile the default file name
+	 * @param app         the Editor's context
+	 * @param initialFile the initial file name
 	 */
-	public Editor(Application context, String initialFile) {
-		app = context;
+	public Editor(Application app, String initialFile) {
+		this.app = app;
 		editorUI = new UI();
-		editorTab = new EditorTab();
-		file = new EditorFile();
+		fileLabel = new FileLabel();
+		filename = initialFile;
+		dirty = true;
 		statusBar = new StatusBar();
 
-		componentMap = new HashMap<>();
+		components = new ItemManager<>();
 		undoableHistory = new UndoableHistory<>();
 
-		setFile(initialFile);
+		// configure the components of the editor
 		statusBar.addLabel("message");
 		statusBar.addLabel("count");
 
 		setLayout(new BorderLayout());
 		setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 		add(editorUI, BorderLayout.CENTER);
+
+		components.addGenerator(INPUT_PIN.description(), "in%d");
+		components.addGenerator(OUTPUT_PIN.description(), "out%d");
+		components.addGenerator(BRANCH.description(), "br%d");
+		components.addGenerator(GATE.description(), "custom%d");
+		components.addGenerator(GATEAND.description(), "and%d");
+		components.addGenerator(GATEOR.description(), "or%d");
+		components.addGenerator(GATENOT.description(), "not%d");
+		components.addGenerator(GATEXOR.description(), "xor%d");
 	}
 
 	/**
 	 * Closes the Editor asking for confirmation to save if dirty.
 	 *
-	 * @return false if cancel was selected when prompted to save, true otherwise
+	 * @return {@code false} if cancel was selected, {@code true} otherwise
 	 */
 	public boolean close() {
 		int res = JOptionPane.YES_OPTION;
-		if (file.isDirty()) {
+		if (isDirty()) {
 			res = JOptionPane.showConfirmDialog(null, "Would you like keep unsaved changed?",
-			        "Close " + file.get(),
-			        JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+					"Close " + filename, JOptionPane.YES_NO_CANCEL_OPTION,
+					JOptionPane.WARNING_MESSAGE);
 
-			if (res == JOptionPane.YES_OPTION) {
-				Actions.SAVE.specify("filename", file.get()).context(this).execute();
-			}
+			if (res == JOptionPane.YES_OPTION)
+				Actions.SAVE.specify("filename", filename).context(this).execute();
 		}
-		return res == JOptionPane.YES_OPTION;
+		return (res == JOptionPane.YES_OPTION) || (res == JOptionPane.NO_OPTION);
 	}
 
 	/** @return the Editor's context */
@@ -84,136 +111,140 @@ public final class Editor extends JComponent {
 	}
 
 	/**
-	 * Adds a Component to the Editor.
+	 * Adds a {@code Component} to the {@code Editor}.
 	 *
-	 * @param c the Component
+	 * @param component the Component
 	 */
-	public void addComponent(Component c) {
-		componentMap.put(c.UID(), c);
-		editorUI.addComponent(c);
-		statusBar.setLabelText("count", "Component count: %d", componentMap.size());
+	public void addComponent(Component component) {
+		components.add(component);
+		editorUI.addComponent(component);
+		statusBar.setLabelText("count", "Component count: %d", components.size());
 	}
 
 	/**
-	 * Removes a Component from the Editor.
+	 * Removes a {@code Component} from the {@code Editor}.
 	 *
-	 * @param c the Component
+	 * @param component the Component
 	 */
-	public void removeComponent(Component c) {
-		componentMap.remove(c.UID());
-		editorUI.removeComponent(c);
-		statusBar.setLabelText("count", "Component count: %d", componentMap.size());
+	public void removeComponent(Component component) {
+		components.remove(component);
+		editorUI.removeComponent(component);
+		statusBar.setLabelText("count", "Component count: %d", components.size());
 	}
 
 	/**
-	 * Returns the Component with the given ID.
+	 * Returns the {@code Component} with the given ID.
 	 *
-	 * @param UID the ID
+	 * @param ID the ID
 	 *
 	 * @return the Component
 	 *
-	 * @throws Editor.MissingComponentException if no Component with the UID exists
+	 * @throws MissingComponentException if no Component with the ID exists
 	 */
-	public Component getComponent_(int UID) throws Editor.MissingComponentException {
-		final Component c = componentMap.get(UID);
-		if (c == null)
-			throw new Editor.MissingComponentException(UID);
-
-		return c;
-	}
-
-	/** Clears the Editor resetting it to its original state */
-	void clear() {
-		final List<Component> ls = new ArrayList<>(getComponents_());
-
-		Utility.foreach(ls, this::removeComponent);
-
-		undoableHistory.clear();
-
-		// Component.resetGlobalID();
+	public Component getComponent_(String ID) throws MissingComponentException {
+		return components.get(ID);
 	}
 
 	/**
-	 * Executes a Command.
+	 * Returns a list of the Editor's {@code Components}.
+	 * <p>
+	 * <b>Note</b> that this does <i>not</i> return a copy of the items. Any changes
+	 * to the Components will be reflected in the Editor.
+	 *
+	 * @return the list
+	 */
+	public List<Component> getComponents_() {
+		return components.getall();
+	}
+
+	/**
+	 * Returns a list of the Editor's deleted {@code Components}.
+	 * <p>
+	 * <b>Note</b> that this does <i>not</i> return a copy of the items. Any changes
+	 * to the Components will be reflected in the Editor.
+	 *
+	 * @return the list
+	 */
+	public List<Component> getDeletedComponents() {
+		return components.getall((c) -> ComponentFactory.toRemove(c));
+	}
+
+	/**
+	 * Returns the next generated ID for the given {@code ComponentType}.
+	 *
+	 * @param type the type of the Component
+	 *
+	 * @return the next ID
+	 */
+	public String getNextID(ComponentType type) {
+		return components.getNextID(type.description());
+	}
+
+	/** Clears the {@code Editor} resetting it to its original state */
+	void clear() {
+		Utility.foreach(new ArrayList<>(getComponents_()), this::removeComponent);
+		undoableHistory.clear();
+	}
+
+	/**
+	 * Executes a {@code Command}.
 	 *
 	 * @param c the Command to execute
 	 *
 	 * @throws Exception when something exceptional happens
 	 */
-	void do_(Command c) throws Exception {
+	void execute(Command c) throws Exception {
 		c.execute();
 		undoableHistory.add(c);
 	}
 
-	/** Undoes the most recent Command */
+	/** Undoes the most recent {@code Command} */
 	void undo() {
 		undoableHistory.undo();
 	}
 
-	/** Re-does the most recently undone Command */
+	/** Re-does the most recently undone {@code Command} */
 	void redo() {
 		undoableHistory.redo();
 	}
 
 	/**
-	 * Returns a list of the Editor's Components.
+	 * Returns a list with the {@code Commands} executed on this {@code Editor}.
+	 * <p>
+	 * <b>Note</b> that this does <i>not</i> return a copy of the Commands. Any
+	 * changes to the Commands will be reflected in the {@code Editor}.
 	 *
 	 * @return the list
-	 */
-	public List<Component> getComponents_() {
-		return new LinkedList<>(componentMap.values());
-	}
-
-	/**
-	 * Returns a list of the Editor's deleted Components.
-	 *
-	 * @return the list
-	 */
-	public List<Component> getDeletedComponents_() {
-		final List<Component> ls = new LinkedList<>();
-		Utility.foreach(componentMap.values(), c -> {
-			if (ComponentFactory.toRemove(c))
-				ls.add(c);
-		});
-		return ls;
-	}
-
-	/**
-	 * Returns a list with the Commands already executed on this Editor.
-	 *
-	 * @return the list
-	 *
-	 * @see UndoableHistory#getPast()
 	 */
 	public List<Undoable> getPastCommands() {
 		return new Vector<>(undoableHistory.getPast());
 	}
 
 	/**
-	 * Returns the statusBar.
+	 * Returns the Editor's {@code StatusBar}.
 	 *
-	 * @return the statusBar
+	 * @return the StatusBar
 	 */
 	public StatusBar getStatusBar() {
 		return statusBar;
 	}
 
 	/**
-	 * Returns the editorTab.
+	 * Returns the File LabeL.
 	 *
-	 * @return the editorTab
+	 * @return the fileLabel
 	 */
-	public EditorTab getEditorTab() {
-		return editorTab;
+	public FileLabel getFileLabel() {
+		return fileLabel;
 	}
 
 	/**
 	 * Returns the name of the file that is being edited.
 	 *
-	 * @return the file name
+	 * @return the filename
 	 */
 	public String getFile() {
-		return file.get();
+		return filename;
 	}
 
 	/**
@@ -222,31 +253,31 @@ public final class Editor extends JComponent {
 	 * @param filename the file name
 	 */
 	void setFile(String filename) {
-		file.set(filename);
+		this.filename = filename;
 		updateTitle();
 	}
 
 	/**
-	 * Returns the dirty-ness of the editor.
+	 * Returns the dirtiness of the editor.
 	 *
-	 * @return the dirty-ness
+	 * @return the dirtiness
 	 */
 	boolean isDirty() {
-		return file.isDirty();
+		return dirty;
 	}
 
 	/**
-	 * Sets the dirty-ness of the Editor.
+	 * Sets the dirtiness of the Editor.
 	 *
-	 * @param newDirty the new dirty-ness
+	 * @param newDirty the new dirtiness
 	 */
 	void setDirty(boolean newDirty) {
-		file.setDirty(newDirty);
+		dirty = newDirty;
 		updateTitle();
 	}
 
 	private void updateTitle() {
-		editorTab.updateTitle(getFile(), isDirty());
+		fileLabel.updateText(getFile(), isDirty());
 	}
 
 	/**
@@ -278,20 +309,5 @@ public final class Editor extends JComponent {
 	 */
 	public void error(Exception exception) {
 		error("%s", exception.getMessage());
-	}
-
-	/** Thrown when no Component with the {@code ID} exists */
-	public static class MissingComponentException extends Exception {
-
-		private static final long serialVersionUID = 1L;
-
-		/**
-		 * Constructs the Exception with information about the {@code ID}.
-		 *
-		 * @param id the id for which there is no Component
-		 */
-		public MissingComponentException(int id) {
-			super(String.format("No Component with ID %d exists", id));
-		}
 	}
 }
