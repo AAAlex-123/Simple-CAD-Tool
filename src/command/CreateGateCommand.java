@@ -99,6 +99,6 @@ class CreateGateCommand extends CreateCommand {
 
 	@Override
 	public String toString() {
-		return "Create " + description;
+		return description;
 	}
 }
