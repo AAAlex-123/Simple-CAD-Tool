@@ -7,7 +7,7 @@ import java.util.Vector;
 /**
  * A wrapper for implementing undo and redo functionality.
  *
- * @param <T> the type of object that will be stored
+ * @param <T> the type of {@link Undoable} object that will be stored
  *
  * @author alexm
  */
@@ -22,7 +22,7 @@ public final class UndoableHistory<T extends Undoable> {
 	}
 
 	/**
-	 * Adds the given {@code Undoable} to the history without executing it.
+	 * Adds the given {@code Undoable} to the history <i>without</i> executing it.
 	 *
 	 * @param c the undoable
 	 */
@@ -34,25 +34,30 @@ public final class UndoableHistory<T extends Undoable> {
 			future.clear();
 	}
 
-	/** Undoes the last {@code Undoable} */
+	/**
+	 * Undoes the last {@code Undoable}. If there are no {@code Undoables} to be
+	 * undone this method does nothing.
+	 */
 	public void undo() {
-		if (!past.isEmpty()) {
+		if (canUndo()) {
 			T last = past.pop();
 			last.unexecute();
 			future.push(last);
 		}
 	}
 
-	/** Re-does the last {@code Undoable} */
+	/**
+	 * Re-does the last {@code Undoable}. If there are no {@code Undoables} to be
+	 * re-done this method does nothing
+	 */
 	public void redo() {
-		if (!future.isEmpty()) {
+		if (canRedo()) {
 			T first = future.pop();
+
+			// this Undoable has executed successfully before; this statement can't throw
 			try {
-				// this Undoable has executed successfully before; this statement can't throw
 				first.execute();
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
+			} catch (Exception e) {}
 			past.push(first);
 		}
 	}
@@ -64,10 +69,28 @@ public final class UndoableHistory<T extends Undoable> {
 	}
 
 	/**
+	 * Returns whether or not there is an {@code Undoable} to be undone.
+	 *
+	 * @return {@code true} if there is, {@code false} otherwise
+	 */
+	public boolean canUndo() {
+		return !past.isEmpty();
+	}
+
+	/**
+	 * Returns whether or not there is an {@code Undoable} to be redone.
+	 *
+	 * @return {@code true} if there is, {@code false} otherwise
+	 */
+	public boolean canRedo() {
+		return !future.isEmpty();
+	}
+
+	/**
 	 * Returns the past part of the history.
 	 * <p>
-	 * Note that this does not return a copy of the history. Any changes to the
-	 * items will be reflected in this UndoableHistory object.
+	 * <b>Note:</b> this does <i>not</i> return a copy of the history. Any changes
+	 * to the items will be reflected in this UndoableHistory object.
 	 *
 	 * @return a List with the previously executed Undoables
 	 */
@@ -78,10 +101,10 @@ public final class UndoableHistory<T extends Undoable> {
 	/**
 	 * Returns the future part of the history.
 	 * <p>
-	 * Note that this does not return a copy of the history. Any changes to the
-	 * items will be reflected in this UndoableHistory object.
+	 * <b>Note:</b> this does <i>not</i> return a copy of the history. Any changes
+	 * to the items will be reflected in this UndoableHistory object.
 	 *
-	 * @return a List with the previously unexecuted Undoables
+	 * @return a List with the previously un-executed Undoables
 	 */
 	public List<Undoable> getFuture() {
 		return new Vector<>(future);
