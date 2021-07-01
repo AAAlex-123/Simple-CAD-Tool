@@ -62,7 +62,7 @@ public final class Editor extends JComponent {
 		this.app = app;
 		editorUI = new UI();
 		fileLabel = new FileLabel();
-		filename = initialFile;
+		setFile(initialFile);
 		dirty = true;
 		statusBar = new StatusBar();
 
