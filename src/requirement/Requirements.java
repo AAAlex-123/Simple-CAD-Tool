@@ -32,14 +32,17 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 
-import application.StatusBar;
+import application.editor.StatusBar;
 
 /**
  * A wrapper for a collection of {@code Requirements}. For method details refer
  * to the {@link Requirement} class.
  *
  * @param <V> the type of the Requirement objects
+ *
  * @see requirement.Requirement Requirement
+ *
+ * @author alexm
  */
 public final class Requirements<V> implements Iterable<Requirement<V>>, Serializable {
 
@@ -55,7 +58,7 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 
 	/**
 	 * Copy constructor.
-	 * 
+	 *
 	 * @param old the object to be copied
 	 */
 	public Requirements(Requirements<V> old) {
@@ -65,7 +68,7 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 
 	/**
 	 * Adds a Requirement with a specific {@code key}.
-	 * 
+	 *
 	 * @param key the key
 	 */
 	public void add(String key) {
@@ -74,7 +77,7 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 
 	/**
 	 * Adds a Requirement with a specific {@code key} and {@code stringType}.
-	 * 
+	 *
 	 * @param key        the key
 	 * @param stringType the type
 	 */
@@ -84,7 +87,7 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 
 	/**
 	 * Adds the given Requirement
-	 * 
+	 *
 	 * @param r the Requirement
 	 */
 	public void add(Requirement<V> r) {
@@ -92,13 +95,11 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 	}
 
 	/**
-	 * Returns the Requirement with the {@code key} given. This method isn't even
-	 * used but might be used in the future.
-	 * 
+	 * Returns the Requirement with the {@code key} given.
+	 *
 	 * @param key the key
+	 *
 	 * @return the Requirement with that key
-	 * 
-	 * @throws MissingRequirementException if no such Requirement exists
 	 */
 	public Requirement<V> get(String key) {
 		Requirement<V> r = requirements.get(key);
@@ -110,37 +111,54 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 
 	/**
 	 * Returns the value of the Requirement with the {@code key}.
-	 * 
+	 *
 	 * @param key the key
 	 * @return the value of the
-	 * 
-	 * @throws MissingRequirementException if no such Requirement exists
 	 */
 	public V getV(String key) {
 		return get(key).value();
 	}
 
 	/**
-	 * Fulfils the Requirement with key {@code k} using {@code v}.
-	 * 
+	 * Offers {@code v} for the Requirement with key {@code k}.
+	 *
 	 * @param k the key
 	 * @param v the value
-	 * 
-	 * @throws MissingRequirementException if no such Requirement exists
+	 *
+	 * @see Requirement#offer(Object)
+	 */
+	public void offer(String k, V v) {
+		get(k).offer(v);
+	}
+
+	/**
+	 * Fulfils the Requirement with key {@code k} using {@code v}.
+	 *
+	 * @param k the key
+	 * @param v the value
+	 *
+	 * @see Requirement#fulfil(Object)
 	 */
 	public void fulfil(String k, V v) {
-		Requirement<V> r = requirements.get(k);
-		if (r == null)
-			throw new MissingRequirementException(k);
+		get(k).fulfil(v);
+	}
 
-		r.fulfil(v);
+	/**
+	 * Finalises the Requirement with key {@code k} using {@code v}.
+	 *
+	 * @param k the key
+	 * @param v the value
+	 *
+	 * @see Requirement#finalise(Object)
+	 */
+	public void finalise(String k, V v) {
+		get(k).finalise(v);
 	}
 
 	/**
 	 * Attempts to fulfil the Requirements in this collection using a pop-up dialog.
-	 * If the type of the Requirements isn't String, an error will be printed. Note
-	 * that this shouldn't happen, like ever.
-	 * 
+	 * If the type of the Requirements isn't String, an error will be printed.
+	 *
 	 * @param frame       the parent of the dialog
 	 * @param description the text that will be displayed
 	 */
@@ -161,13 +179,14 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 		foreach(this, Requirement::clear);
 	}
 
-	/**
-	 * Returns {@code true} if all the Requirements are fulfilled.
-	 * 
-	 * @return {@code true} if all the Requirements are fulfilled
-	 */
+	/** @return {@code true} if all Requirements are fulfilled */
 	public boolean fulfilled() {
 		return all(this, Requirement::fulfilled);
+	}
+
+	/** @return {@code true} if all Requirements are finalised */
+	public boolean finalised() {
+		return all(this, Requirement::finalised);
 	}
 
 	@Override
@@ -248,7 +267,7 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 				labels[i] = new JLabel(r.key());
 				textAreas[i] = new JTextField(10);
 				textAreas[i].setText(r.value());
-				if (r.value() != null)
+				if (r.finalised())
 					textAreas[i].setEnabled(false);
 				labels[i].setHorizontalAlignment(SwingConstants.RIGHT);
 				textAreas[i].setMaximumSize(textAreas[i].getPreferredSize());
@@ -290,7 +309,8 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 			// backwards so that the last (first) wrong label has focus
 			for (int i = labels.length - 1; i >= 0; --i) {
 				Requirement<String> r = reqs.get(labels[i].getText());
-				r.fulfil(textAreas[i].getText());
+				if (!r.finalised())
+					r.fulfil(textAreas[i].getText());
 
 				if (!r.fulfilled()) {
 					textAreas[i].setText(r.stringType.desc);
@@ -334,10 +354,6 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 						textAreas[i].setSelectionEnd(textAreas[i].getText().length());
 					}
 				});
-				// textAreas[i].setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS,
-				// null);
-				// textAreas[i].setFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS,
-				// null);
 
 				textAreas[i].addKeyListener(new KeyAdapter() {
 					@Override
@@ -363,12 +379,15 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 			addWindowFocusListener(new WindowAdapter() {
 				@Override
 				public void windowGainedFocus(WindowEvent e) {
-					// give focus to the first empty text field...
-					for (int i = 0; i < textAreas.length; ++i)
-						if (textAreas[i].getText().equals("")) {
+					// give focus to the first non-fulfilled field...
+					int i = 0;
+					for (Requirement<V> r : Requirements.this) {
+						if (!r.fulfilled()) {
 							textAreas[i].requestFocus();
 							return;
 						}
+						++i;
+					}
 
 					// ... or the ok button if none exist
 					okButton.requestFocus();
