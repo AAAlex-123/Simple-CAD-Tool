@@ -20,35 +20,40 @@ import components.Component;
 import components.ComponentFactory;
 import exceptions.MalformedBranchException;
 import myUtil.Utility;
+import requirement.Requirement;
 import requirement.Requirements;
 import requirement.StringType;
 
-/** An enum-strategy for the different Actions the Editor may take */
+/**
+ * An enum-strategy for the different Actions the {@link Editor} may take
+ *
+ * @author alexm
+ */
 public enum Actions {
 
-	/** Action for creating a Component */
+	/** Action for creating a {@code Component} */
 	CREATE("command") {
 		@Override
 		public void execute() {
 
 			if (!reqs.fulfilled())
-				throw new RuntimeException("Execute CREATE without reqs");
+				throw new RuntimeException("Execute CREATE without requirements");
 
 			final Command cte = (Command) reqs.getV("command");
 
-			if (!cte.canExecute()) {
-				context.status("%s cancelled", cte);
-				return;
-			}
-
 			try {
-				context.do_(cte);
+				if (!cte.canExecute()) {
+					context.status("%s cancelled", cte);
+					return;
+				}
+
+				context.execute(cte);
 				context.status("%s successful", cte);
 				context.setDirty(true);
-			} catch (Editor.MissingComponentException | MalformedBranchException e) {
+			} catch (MissingComponentException | MalformedBranchException e) {
 				context.error(e);
 			} catch (final Exception e) {
-				// semi-spaghetti throws declaration on Undoable.execute();
+				// Undoable.execute() declares 'throw Exception'
 				throw new RuntimeException(e);
 			} finally {
 				reqs.clear();
@@ -56,29 +61,29 @@ public enum Actions {
 		}
 	},
 
-	/** Action for deleting a Component */
+	/** Action for deleting a {@code Component} */
 	DELETE("command") {
 		@Override
 		public void execute() {
 
 			if (!reqs.fulfilled())
-				throw new RuntimeException("Execute DELETE without reqs");
+				throw new RuntimeException("Execute DELETE without requirements");
 
 			final Command cte = (Command) reqs.getV("command");
 
-			if (!cte.canExecute()) {
-				context.status("Delete cancelled");
-				return;
-			}
-
 			try {
-				context.do_(cte);
+				if (!cte.canExecute()) {
+					context.status("Delete cancelled");
+					return;
+				}
+
+				context.execute(cte);
 				context.status("Component deleted");
 				context.setDirty(true);
-			} catch (final Editor.MissingComponentException e) {
+			} catch (final MissingComponentException e) {
 				context.error(e);
 			} catch (final Exception e) {
-				// semi-spaghetti throws declaration on Undoable.execute();
+				// Undoable.execute() declares 'throw Exception'
 				throw new RuntimeException(e);
 			} finally {
 				reqs.clear();
@@ -86,28 +91,27 @@ public enum Actions {
 		}
 	},
 
-	/** Action for saving the components of the Editor to a File */
+	/** Action for saving the components of the {@code Editor} to a File */
 	SAVE("filename", StringType.FILENAME) {
 		@Override
 		public void execute() {
 
-			if (!reqs.fulfilled()) {
-				context.status("File save cancelled");
-				return;
-			}
-
-			final String fname = (String) reqs.getV("filename");
-			context.setFile(fname);
-
 			try {
-				Actions.writeToFile(fname, context.getComponents_(),
-				        context.getPastCommands());
+				if (!reqs.fulfilled()) {
+					context.status("File save cancelled");
+					return;
+				}
+
+				final String fname = (String) reqs.getV("filename");
+				Actions.writeToFile(fname, context.getComponents_(), context.getPastCommands());
+
 				context.status("File %s saved successfully", fname);
 				context.setFile(fname);
 				context.setDirty(false);
+
 			} catch (final IOException e) {
 				context.error(
-				        "Error while writing to file. Try again or inform the developer about 'Action-Save-IO'");
+						"Error while writing to file. Inform the developer about 'Action-SAVE-IO'");
 				throw new RuntimeException(e);
 			} finally {
 				reqs.clear();
@@ -117,15 +121,9 @@ public enum Actions {
 
 	/** An Action that reads the contents of a File to the Editor */
 	OPEN(new String[] { "filename", "gatename", "filetype" },
-	        new StringType[] { StringType.FILENAME, StringType.ANY, StringType.FILETYPE }) {
+			new StringType[] { StringType.FILENAME, StringType.ANY, StringType.FILETYPE }) {
 		@Override
 		public void execute() {
-
-			if (!reqs.fulfilled()) {
-				context.status("File %s cancelled",
-				        reqs.getV("filetype").equals(Actions.circuit) ? "open" : "import");
-				return;
-			}
 
 			final String fname = (String) reqs.getV("filename");
 			final String ftype = (String) reqs.getV("filetype");
@@ -134,6 +132,12 @@ public enum Actions {
 			final List<Command> commands = new ArrayList<>();
 
 			try {
+				if (!reqs.fulfilled()) {
+					context.status("File %s cancelled",
+							ftype.equals(Actions.circuit) ? "open" : "import");
+					return;
+				}
+
 				Actions.readFromFile(fname, components, commands);
 
 				if (ftype.equals(Actions.circuit)) {
@@ -144,32 +148,30 @@ public enum Actions {
 					// foreach(commands, c -> context.undoableHistory.add(c));
 					for (final Command c : commands) {
 						c.context(context);
-						context.do_(c);
+						context.execute(c);
 					}
 
-					Component.setGlobalID(
-					        Utility.max(context.getComponents_(), Component::UID).UID() + 1);
-
 					context.setFile(fname);
+					context.status("File %s opened successfully", fname);
+					context.setDirty(false);
 
 				} else if (ftype.equals(Actions.component)) {
 
 					final Command cgc = Command.create(commands, (String) reqs.getV("gatename"));
 					context.context().addCreateCommand(cgc);
+					context.status("File %s imported successfully", fname);
 
-				} else
-					throw new RuntimeException("Invalid filetype specified");
-
-				context.status("File %s %s successfully", fname,
-				        ftype.equals(Actions.circuit) ? "opened" : "imported");
-
+				} else {
+					throw new RuntimeException(
+							"Inform the developer about 'Action-OPEN-Invalid-Filetype'");
+				}
 			} catch (Actions.IncompatibleFileException | Actions.FileCorruptedException e) {
 				context.error(e);
 			} catch (final FileNotFoundException e) {
 				context.error("File %s doesn't exist", fname);
 			} catch (final IOException e) {
 				context.error(
-				        "Error while reading from file. Try again or inform the developer about 'Action-Open-IO'");
+						"Error while reading from file. Inform the developer about 'Action-Open-IO'");
 				throw new RuntimeException(e);
 			} catch (final Exception e) {
 				throw new RuntimeException(e);
@@ -215,58 +217,57 @@ public enum Actions {
 		public void execute() {
 			context.status("Someone doesn't know how to use a UI...");
 			final String[] messages = {
-			        "Not-so-good help ahead, brance yourselves",
-			        "Create new Editor / Close current Editor",
-			        "Open a file in current Editor",
-			        "Save the current file to disk / Save with a different name",
-			        "Clear the Editor",
-			        "Import a file as a custom Component",
-			        "Undo/Redo last/previous action",
-			        "Turn on/off InputPin / Focus Component",
-			        "Creates a Component (by type and parameters)",
-			        "Deletes a Component (by identifier)",
-			        "Display these messages",
-			        "Drag to move, click to turn on/off",
-			        "Move with arrows (fast with ctrl), turn on/off with space",
+					"Not-so-good help ahead, brance yourselves",
+					"Create new Editor / Close current Editor",
+					"Open a file in current Editor",
+					"Save the current file to disk / Save with a different name",
+					"Clear the Editor",
+					"Import a file as a custom Component",
+					"Undo/Redo last/previous action",
+					"Turn on/off InputPin / Focus Component",
+					"Creates a Component (by type and parameters)",
+					"Deletes a Component (by identifier)",
+					"Display these messages",
+					"Drag to move, click to turn on/off",
+					"Move with arrows (fast with ctrl), turn on/off with space",
 			};
 
 			final String[] titles = {
-			        "Disclaimer",
-			        "File: New / Close",
-			        "File: Open",
-			        "File: Save / Save as",
-			        "File: Clear",
-			        "File: Import",
-			        "File: Undo / Redo",
-			        "Edit: Turn on/off / Focus",
-			        "Create",
-			        "Delete",
-			        "Help",
-			        "Mouse Actions",
-			        "Keyboard Actions",
+					"Disclaimer",
+					"File: New / Close",
+					"File: Open",
+					"File: Save / Save as",
+					"File: Clear",
+					"File: Import",
+					"File: Undo / Redo",
+					"Edit: Turn on/off / Focus",
+					"Create",
+					"Delete",
+					"Help",
+					"Mouse Actions",
+					"Keyboard Actions",
 			};
 
 			// yes=0 no=1 cancel=2 x=-1 (+1)
 			final int[] res = { 0, 0, 0, 0 };
 
-			for (int i = 0; i < messages.length; i++) {
-				++res[1 + JOptionPane.showConfirmDialog(null, messages[i], titles[i],
-				        JOptionPane.YES_NO_CANCEL_OPTION)];
-			}
+			for (int i = 0; i < messages.length; i++)
+				++res[1 + msg(messages[i], titles[i])];
 
 			final int y = res[1], n = res[2], c = res[3], x = res[0];
-			final int res1 = JOptionPane.showConfirmDialog(null, String
-			        .format("You clicked: %d yes, %d no, %d cancel, %d 'x'", y, n, c, x),
-			        "Fun Fact", JOptionPane.YES_NO_CANCEL_OPTION);
+			final int res1 = msg(String.format("You clicked: %d yes, %d no, %d cancel, %d 'x'", y, n, c, x), "Fun Fact");
 
 			if (res1 == -1)
-				JOptionPane.showConfirmDialog(null, String.format("(actually %d 'x')", x + 1));
+				msg(String.format("(actually %d 'x')", x + 1), "Bonus Fun Fact");
 			else if (res1 == 0)
-				JOptionPane.showConfirmDialog(null, String.format("(actually %d yes)", y + 1));
+				msg(String.format("(actually %d yes)", y + 1), "Bonus Fun Fact");
 			else if (res1 == 1)
-				JOptionPane.showConfirmDialog(null, String.format("(actually %d no)", n + 1));
+				msg(String.format("(actually %d no)", n + 1), "Bonus Fun Fact");
 			else if (res1 == 2)
-				JOptionPane.showConfirmDialog(null, String.format("(actually %d cancel)", c + 1));
+				msg(String.format("(actually %d cancel)", c + 1), "Bonus Fun Fact");
+		}
+		private int msg(String msg, String title) {
+			return JOptionPane.showConfirmDialog(null, msg, title, JOptionPane.YES_NO_CANCEL_OPTION);
 		}
 	};
 
@@ -314,9 +315,8 @@ public enum Actions {
 		if (reqKeys.length != types.length)
 			throw new RuntimeException("Invalid arguments in enum constructor");
 
-		for (int i = 0; i < reqKeys.length; i++) {
+		for (int i = 0; i < reqKeys.length; i++)
 			reqs.add(reqKeys[i], types[i]);
-		}
 	}
 
 	/** Executes the Action */
@@ -347,22 +347,22 @@ public enum Actions {
 	}
 
 	/**
-	 * Specifies an Object to fulfil a specific Requirement.
+	 * Specifies an Object to finalise a specific Requirement.
 	 *
 	 * @param req the Requirement
 	 * @param c   the Command
 	 *
 	 * @return this (used for chaining)
+	 *
+	 * @see Requirement#finalise
 	 */
 	public final Actions specify(String req, Object c) {
-		reqs.fulfil(req, c);
+		reqs.finalise(req, c);
 		return this;
 	}
 
 	/** Thrown when a file is corrupted and can't be read */
 	protected final static class FileCorruptedException extends Exception {
-
-		private static final long serialVersionUID = 1L;
 
 		/**
 		 * Constructs the Exception with information about the {@code filename}.
@@ -371,14 +371,12 @@ public enum Actions {
 		 */
 		public FileCorruptedException(String filename) {
 			super(String.format("Can't read file %s because its contents are corrupted",
-			        filename));
+					filename));
 		}
 	}
 
 	/** Thrown when a file's data are incompatible with current program version */
 	protected final static class IncompatibleFileException extends Exception {
-
-		private static final long serialVersionUID = 1L;
 
 		/**
 		 * Constructs the Exception with information about the {@code filename}.
@@ -393,7 +391,7 @@ public enum Actions {
 		private static String formatMessage(String filename, InvalidClassException e) {
 			// extract version information from exception message
 			final Pattern p = Pattern
-			        .compile(".*? serialVersionUID = (\\d+), .*? serialVersionUID = (\\d+)");
+					.compile(".*? serialVersionUID = (\\d+), .*? serialVersionUID = (\\d+)");
 			final Matcher m = p.matcher(e.getMessage());
 
 			if (!m.matches())
@@ -403,8 +401,7 @@ public enum Actions {
 			final int idInClass = Integer.parseInt(m.group(2));
 
 			return String.format("Data in file %s corresponds to %s version of the program",
-			        filename,
-			        idInFile > idInClass ? "a later" : "a previous");
+					filename, idInFile > idInClass ? "a later" : "a previous");
 		}
 	}
 
@@ -418,8 +415,8 @@ public enum Actions {
 	 * @throws IOException when an IOExcetpion occurs
 	 */
 	protected static void writeToFile(
-	        String filename, List<Component> components, List<Undoable> commands)
-	        throws IOException {
+			String filename, List<Component> components, List<Undoable> commands)
+					throws IOException {
 
 		final String outputFile = String.format("%s\\%s", StringConstants.user_data, filename);
 
@@ -452,9 +449,9 @@ public enum Actions {
 	 *                                   previous version of the program
 	 */
 	protected static void readFromFile(
-	        String filename, List<Component> components, List<Command> commands)
-	        throws FileNotFoundException, IOException, Actions.FileCorruptedException,
-	        Actions.IncompatibleFileException {
+			String filename, List<Component> components, List<Command> commands)
+					throws FileNotFoundException, IOException, Actions.FileCorruptedException,
+					Actions.IncompatibleFileException {
 
 		final String inputFile = String.format("%s\\%s", StringConstants.user_data, filename);
 
