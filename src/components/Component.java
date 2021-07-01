@@ -40,6 +40,8 @@ public abstract class Component extends JComponent implements Identifiable<Strin
 
 	@Override
 	public final void setID(String id) {
+		componentID = id;
+	}
 
 	// ===== CIRCUITING =====
 
