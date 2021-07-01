@@ -17,6 +17,7 @@ import java.util.function.Function;
 
 import javax.imageio.ImageIO;
 
+import application.StringConstants;
 import exceptions.ComponentNotFoundException;
 import exceptions.MalformedGateException;
 
@@ -25,7 +26,9 @@ class Gate extends Component {
 
 	private static final long serialVersionUID = 5L;
 
-	private static final String sprite = application.Application.component_icon_path + "gate.png";
+	private static final String sprite = StringConstants.component_icon_path
+	        + "gate.png";
+
 	private static final BufferedImage image;
 
 	static {

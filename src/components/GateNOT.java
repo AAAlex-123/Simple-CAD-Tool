@@ -6,6 +6,8 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import application.StringConstants;
+
 /**
  * A Primitive Gate that maps every input to its logical not. In this circuit
  * there may be multiple input pins. Each of them is mapped to its logical
@@ -16,7 +18,9 @@ final class GateNOT extends PrimitiveGate {
 
 	private static final long serialVersionUID = 3L;
 
-	private static final String sprite = application.Application.component_icon_path + "gate_not.png";
+	private static final String sprite = StringConstants.component_icon_path
+			+ "gate_not.png";
+
 	private static final BufferedImage image;
 
 	static {

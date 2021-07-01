@@ -8,6 +8,7 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import application.StringConstants;
 import exceptions.ComponentNotFoundException;
 import exceptions.MalformedGateException;
 
@@ -16,7 +17,9 @@ final class OutputPin extends Component {
 
 	private static final long serialVersionUID = 3L;
 
-	private static final String sprite = application.Application.component_icon_path + "output_pin_{state}.png";
+	private static final String sprite = StringConstants.component_icon_path
+			+ "output_pin_{state}.png";
+
 	private static final BufferedImage image_on, image_off;
 
 	static {
@@ -194,4 +197,3 @@ final class OutputPin extends Component {
 		return new Point(getX(), getY() + (getHeight() / 2));
 	}
 }
-
