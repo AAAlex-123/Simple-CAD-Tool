@@ -6,12 +6,16 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import application.StringConstants;
+
 /** A Primitive Gate that maps the inputs to their logical {@code and}. */
 final class GateAND extends PrimitiveGate {
 
 	private static final long serialVersionUID = 3L;
 
-	private static final String sprite = application.Application.component_icon_path + "gate_and.png";
+	private static final String sprite = StringConstants.component_icon_path
+	        + "gate_and.png";
+
 	private static final BufferedImage image;
 
 	static {
