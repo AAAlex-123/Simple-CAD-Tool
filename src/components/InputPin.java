@@ -12,6 +12,7 @@ import java.util.Vector;
 
 import javax.imageio.ImageIO;
 
+import application.StringConstants;
 import exceptions.ComponentNotFoundException;
 import exceptions.MalformedGateException;
 
@@ -20,7 +21,9 @@ final class InputPin extends Component {
 
 	private static final long serialVersionUID = 3L;
 
-	private static final String sprite = application.Application.component_icon_path + "input_pin_{state}.png";
+	private static final String sprite = StringConstants.component_icon_path
+			+ "input_pin_{state}.png";
+
 	private static final BufferedImage image_on, image_off;
 
 	static {
