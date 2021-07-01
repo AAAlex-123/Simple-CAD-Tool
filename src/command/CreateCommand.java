@@ -87,7 +87,7 @@ class CreateCommand extends Command {
 		context(newContext);
 
 		// alter the `CUSTOM` type for this specific use
-		CUSTOM.alter(constructRegex(), "Name not already used");
+		CUSTOM.alter(constructRegex(), "Available, no spaces");
 
 		// provide preset
 		requirements.get("name").offer(context.getNextID(componentType));
@@ -146,7 +146,7 @@ class CreateCommand extends Command {
 		// delete the branch that may have been deleted when creating this branch
 		// there can't be more than two branches deleted when creating a branch
 		if (createdComponent.type() == BRANCH) {
-			final List<Component> ls = context.getDeletedComponents_();
+			final List<Component> ls = context.getDeletedComponents();
 
 			if (ls.size() == 0)
 				return;
@@ -188,10 +188,11 @@ class CreateCommand extends Command {
 	private String constructRegex() {
 		// Construct the following regex: ^(?!foo$|bar$|)[^\s]*$
 		// to match IDs that don't contain blanks and are not in use
-		final StringBuilder regex = new StringBuilder("^(?!");
+		final StringBuilder regex = new StringBuilder("^(?!$");
 		Utility.foreach(context.getComponents_(), c -> {
+			regex.append("|");
 			regex.append(c.getID());
-			regex.append("$|");
+			regex.append("$");
 		});
 		regex.append(")[^\\s]*$");
 		return regex.toString();
