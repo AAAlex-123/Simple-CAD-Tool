@@ -6,28 +6,29 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 /**
- * The Component that will be displayed in the Editor's tab
+ * A JLabel that displays the {@code filename} with a leading '*' if the,
+ * hypothetical, file associated with that name is {@code dirty}.
  *
  * @author alexm
  */
-final class EditorTab extends JPanel {
+final class FileLabel extends JPanel {
 
 	private final JLabel label;
 
-	/** Constructs the EditorTab for the given Editor */
-	EditorTab() {
+	/** Constructs the FileLabel */
+	FileLabel() {
 		super(new FlowLayout());
 		setOpaque(false);
 		add(label = new JLabel());
 	}
 
 	/**
-	 * Updates the label's text
+	 * Updates the Label's text.
 	 *
 	 * @param fname the file name
-	 * @param dirty the dirty-ness of the file
+	 * @param dirty the dirtiness of the file
 	 */
-	void updateTitle(String fname, boolean dirty) {
+	void updateText(String fname, boolean dirty) {
 		label.setText((dirty ? "*" : "") + fname);
 	}
 }
