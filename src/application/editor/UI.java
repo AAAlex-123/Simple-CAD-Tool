@@ -8,20 +8,21 @@ import javax.swing.JPanel;
 import components.Component;
 
 /**
- * The UI the Editor uses to display Components.
+ * A JPanel to display {@link components.Component Components} that repaints
+ * itself when a {@code Component} is added or removed.
  *
  * @author alexm
  */
 final class UI extends JPanel {
 
-	/** Creates the UI that displays components */
+	/** Creates the UI */
 	UI() {
 		setLayout(null);
 		setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
 	}
 
 	/**
-	 * Adds a {@code Component} to the UI.
+	 * Adds a {@code Component} to the UI and repaints.
 	 *
 	 * @param c the Component
 	 */
@@ -31,7 +32,7 @@ final class UI extends JPanel {
 	}
 
 	/**
-	 * Removes a {@code Component} from the UI.
+	 * Removes a {@code Component} from the UI and repaints.
 	 *
 	 * @param c the Component
 	 */
