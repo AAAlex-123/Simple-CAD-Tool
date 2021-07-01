@@ -7,12 +7,15 @@ import java.util.function.Function;
 
 import javax.imageio.ImageIO;
 
+import application.StringConstants;
+
 /** A Primitive Gate that maps the inputs to their logical {@code xor}. */
 final class GateXOR extends PrimitiveGate {
 
 	private static final long serialVersionUID = 3L;
 
-	private static final String sprite = application.Application.component_icon_path + "gate_xor.png";
+	private static final String sprite = StringConstants.component_icon_path + "gate_xor.png";
+
 	private static final BufferedImage image;
 
 	static {
