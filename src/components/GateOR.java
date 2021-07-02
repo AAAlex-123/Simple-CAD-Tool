@@ -7,12 +7,16 @@ import java.util.function.Function;
 
 import javax.imageio.ImageIO;
 
+import application.StringConstants;
+
 /** A Primitive Gate that maps the inputs to their logical {@code or}. */
 final class GateOR extends PrimitiveGate {
 
 	private static final long serialVersionUID = 2L;
 
-	private static final String sprite = application.Application.component_icon_path + "gate_or.png";
+	private static final String sprite = StringConstants.component_icon_path
+			+ "gate_or.png";
+
 	private static final BufferedImage image;
 
 	static {

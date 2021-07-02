@@ -27,62 +27,20 @@ import exceptions.InvalidIndexException;
  * they are created and deleted. This Application will be referenced throughout
  * the documentation.
  */
-public abstract class Component extends JComponent {
+public abstract class Component extends JComponent implements Identifiable<String> {
 
-	private static final long serialVersionUID = 3L;
+	private static final long serialVersionUID = 5L;
 
-	/**
-	 * A static increasing ID. During construction, each Component is assigned one.
-	 * Note that because some Components consist internally of other Components, the
-	 * IDs assigned may not be consecutive.
-	 */
-	private static int staticID = 0;
+	private String componentID;
 
-	/**
-	 * Unique ID for this Component. It is automatically assigned during
-	 * construction and can be set only once afterwards.
-	 */
-	private int UID;
-
-	/** True if the UID has been assigned once after construction */
-	private boolean UIDset = false;
-
-	/** Sets the static ID to 0 */
-	public static void resetGlobalID() {
-		setGlobalID(0);
+	@Override
+	public final String getID() {
+		return componentID;
 	}
 
-	/**
-	 * Sets the static ID to the new value (use cautiously).
-	 *
-	 * @param newID the new ID
-	 */
-	public static void setGlobalID(int newID) {
-		staticID = newID;
-	}
-
-	/**
-	 * Allows for this Component's {@link Component#UID UID} to be set once after
-	 * construction.
-	 *
-	 * @param newID the new ID;
-	 */
-	public void setID(int newID) {
-		if (UIDset)
-			throw new RuntimeException(
-					"This Component's UID has already been set once after construction");
-
-		UID = newID;
-		UIDset = true;
-	}
-
-	/**
-	 * Returns this Component's {@link Component#UID UID}.
-	 *
-	 * @return the UID
-	 */
-	public int UID() {
-		return UID;
+	@Override
+	public final void setID(String id) {
+		componentID = id;
 	}
 
 	// ===== CIRCUITING =====
@@ -180,15 +138,6 @@ public abstract class Component extends JComponent {
 	final boolean toRemove() {
 		return toBeRemoved;
 	}
-
-	/*
-	 * Restoration:
-	 *
-	 * after serialize: attachListeners() requestFocus() Gate: addFunctions()
-	 *
-	 * after delete: toBeRemoved = false requestFocus() Gate: for loop {} Branch:
-	 * connect()
-	 */
 
 	/** Restores the state of the Component after it was destroyed */
 	final void restoreDeleted() {
@@ -331,9 +280,8 @@ public abstract class Component extends JComponent {
 
 	@Override
 	public final String toString() {
-		return String.format("%s: %d-%d, UID: %d, hidden: %s", type().description(), inCount(),
-				outCount(), UID(),
-				hidden());
+		return String.format("%s: %d-%d, UID: %s, hidden: %s", type().description(), inCount(),
+				outCount(), getID(), hidden());
 	}
 
 	// ===== DRAWING =====
@@ -353,21 +301,19 @@ public abstract class Component extends JComponent {
 
 	/** Default constructor */
 	Component() {
-		this(0, 0, SIZE, SIZE, staticID++);
+		this(0, 0, Component.SIZE, Component.SIZE);
 	}
 
 	/**
 	 * Constructor specifying location, dimensions and ID.
 	 *
-	 * @param x  the Component's X position
-	 * @param y  the Component's Y position
-	 * @param w  the Component's width
-	 * @param h  the Component's height
-	 * @param id the Component's ID
+	 * @param x the Component's X position
+	 * @param y the Component's Y position
+	 * @param w the Component's width
+	 * @param h the Component's height
 	 */
-	private Component(int x, int y, int w, int h, int id) {
+	private Component(int x, int y, int w, int h) {
 		setBounds(x, y, w, h);
-		this.UID = id;
 		attachListeners();
 	}
 
@@ -397,7 +343,8 @@ public abstract class Component extends JComponent {
 
 	private void moveWithKeyboard(KeyEvent e) {
 		if (hasFocus()) {
-			int d = 10, dm = 4, dx = 0, dy = 0;
+			final int d = 10, dm = 4;
+			int dx = 0, dy = 0;
 
 			// find direction
 			switch (e.getKeyCode()) {
@@ -418,7 +365,7 @@ public abstract class Component extends JComponent {
 			}
 
 			// check for 'fast' movement
-			if (e.isControlDown()) {
+			if (e.isShiftDown()) {
 				dx *= dm;
 				dy *= dm;
 			}
@@ -426,10 +373,10 @@ public abstract class Component extends JComponent {
 			// check for drawing area bounds
 			int newx = getX(), newy = getY();
 			if ((dx != 0) && ((getX() + dx) >= 0)
-			        && ((getX() + dx) <= (getParent().getWidth() - getWidth())))
+					&& ((getX() + dx) <= (getParent().getWidth() - getWidth())))
 				newx = (int) Math.floor((getX() + dx) / (double) d) * d;
 			if ((dy != 0) && ((getY() + dy) >= 0)
-			        && ((getY() + dy) <= (getParent().getHeight() - getHeight())))
+					&& ((getY() + dy) <= (getParent().getHeight() - getHeight())))
 				newy = (int) Math.floor((getY() + dy) / (double) d) * d;
 
 			// update location
@@ -456,13 +403,13 @@ public abstract class Component extends JComponent {
 	 * @see Component#attachListeners()
 	 */
 	final void attachListeners_(byte flags) {
-		if ((flags & DRAG_KB_FOCUS) != 0) {
+		if ((flags & Component.DRAG_KB_FOCUS) != 0) {
 			addDragListener();
 			addKeyboardListener();
 			addFocusListener();
 		}
 
-		if ((flags & ACTIVATE) != 0)
+		if ((flags & Component.ACTIVATE) != 0)
 			addActivateListener();
 	}
 
@@ -550,7 +497,7 @@ public abstract class Component extends JComponent {
 	 */
 	protected void drawID(Graphics g) {
 		g.setColor(hidden() ? Color.ORANGE : focused ? Color.CYAN : Color.BLACK);
-		g.drawString(String.valueOf(UID()), 0, getHeight() - 1);
+		g.drawString(getID(), 0, getHeight() - 1);
 	}
 
 	/** Specifies how this Component should react when it's moved or resized. */

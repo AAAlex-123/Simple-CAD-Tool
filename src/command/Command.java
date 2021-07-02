@@ -4,63 +4,77 @@ import java.awt.Frame;
 import java.io.Serializable;
 import java.util.List;
 
-import application.Application;
-import application.Undoable;
+import application.editor.Editor;
+import application.editor.Undoable;
 import components.ComponentType;
 import requirement.Requirements;
 
-/** An implementation of the Undoable interface, specific to this Application */
-public abstract class Command implements Undoable, Serializable {
+/**
+ * An implementation of the {@code Undoable} interface, specific to this
+ * Application. {@link command.Command Commands} have certain
+ * {@link requirement.Requirement requirements}, act on a
+ * {@link application.editor.Editor context} and manipulate
+ * {@link components.Component Components} by creating or deleting them.
+ * <p>
+ * <b>Note:</b> the Command does not check if the {@code requirements} are set.
+ * If they are not, the Command neither prints an error message nor attempts to
+ * recover and continue execution. It's up to the caller to ensure that the
+ * {@code requirements} are set properly.
+ *
+ * @author alexm
+ */
+public abstract class Command implements Undoable, Serializable, Cloneable {
 
-	private static final long serialVersionUID = 3L;
+	private static final long serialVersionUID = 4L;
 
 	/**
-	 * Creates a Command that creates a Component of the given
-	 * {@code ComponentType}.
-	 * 
-	 * @param app           the Command's context
+	 * Creates a Command that creates a {@code Component} of the given
+	 * {@link components.ComponentType Type}.
+	 *
 	 * @param componentType the type of the Component
+	 *
 	 * @return the Command
 	 */
-	public static Command create(Application app, ComponentType componentType) {
-		return new CreateCommand(app, componentType);
+	public static Command create(ComponentType componentType) {
+		return new CreateCommand(null, componentType);
 	}
 
 	/**
-	 * Creates a Command that creates a composite Gate.
-	 * 
-	 * @param app         the Command's context
-	 * @param commands    the Command's instructions to create the composite
-	 * @param description the Command's description
+	 * Creates a Command that creates a composite {@code Gate}.
+	 *
+	 * @param commands    the instructions to create the Gate
+	 * @param description the description
+	 *
 	 * @return the Command
+	 *
+	 * @see components.ComponentType#GATE
 	 */
-	public static Command create(Application app, List<Command> commands, String description) {
-		return new CreateGateCommand(app, commands, description);
+	public static Command create(List<Command> commands, String description) {
+		return new CreateGateCommand(null, commands, description);
 	}
 
 	/**
-	 * Creates a Command that deletes a Component.
-	 * 
-	 * @param app the Command's context
+	 * Creates a Command that deletes a {@code Component}.
+	 *
 	 * @return the Command
 	 */
-	public static Command delete(Application app) {
-		return new DeleteCommand(app);
+	public static Command delete() {
+		return new DeleteCommand(null);
 	}
 
-	/** The Command's requirements; what it needs to execute. */
+	/** What this Command needs to execute */
 	protected Requirements<String> requirements;
 
-	/** The Command's context; where it will act. */
-	protected transient Application context;
+	/** Where this Command will act */
+	protected transient Editor context;
 
 	/**
-	 * Constructs the Command with the given {@code Application}.
+	 * Constructs the Command with the given {@code context}.
 	 *
-	 * @param app the Command's context
+	 * @param editor the context
 	 */
-	public Command(Application app) {
-		context = app;
+	public Command(Editor editor) {
+		context = editor;
 		requirements = new Requirements<>();
 	}
 
@@ -74,29 +88,32 @@ public abstract class Command implements Undoable, Serializable {
 	public abstract Command clone();
 
 	/**
-	 * Fulfils the Command's requirements with a dialog.
-	 * 
-	 * @param parent the parent of the dialog
+	 * Fulfils the Command's {@code requirements} with a dialog while also
+	 * specifying its {@code context}.
+	 *
+	 * @param parentFrame the parent of the dialog
+	 * @param newContext  the Command's context
 	 */
-	public final void fillRequirements(Frame parent) {
-		requirements.fulfillWithDialog(parent, toString());
+	public void fillRequirements(Frame parentFrame, Editor newContext) {
+		requirements.fulfillWithDialog(parentFrame, toString());
+		context(newContext);
 	}
 
 	/**
-	 * Returns whether or not this Command is ready to execute.
-	 * 
-	 * @return true if ready to execute, false otherwise
+	 * Returns whether or not this Command is ready to be executed.
+	 *
+	 * @return {@code true} if ready to be executed, {@code false} otherwise
 	 */
 	public final boolean canExecute() {
 		return requirements.fulfilled();
 	}
 
 	/**
-	 * Sets the Command's context.
-	 * 
+	 * Sets the Command's {@code context}.
+	 *
 	 * @param c the context
 	 */
-	public final void context(Application c) {
+	public final void context(Editor c) {
 		context = c;
 	}
 

@@ -11,8 +11,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu.Separator;
 import javax.swing.KeyStroke;
 
-import application.Application.Actions;
-import application.Application.MissingComponentException;
+import application.editor.Actions;
+import application.editor.Editor;
 import command.Command;
 import components.Component;
 import components.ComponentFactory;
@@ -20,83 +20,93 @@ import exceptions.InvalidComponentException;
 import requirement.Requirements;
 import requirement.StringType;
 
-/** Custom Menu bar for the Application. */
+/**
+ * Menu bar for the Application.
+ *
+ * @author alexm
+ */
 final class MyMenu extends JMenuBar {
 
 	private final Application context;
 
-	private final JMenu m_file, m_edit, m_create, m_delete, m_help;
-	private final JMenuItem f_save, f_save_as, f_open, f_clear, f_import, f_undo, f_redo, e_activate, e_focus,
-	d_component, h_help;
+	private final JMenu     m_file, m_edit, m_create, m_delete, m_help;
+	private final JMenuItem f_new, f_close, f_save, f_save_as, f_open, f_clear, f_import, f_undo,
+	        f_redo, e_activate, e_focus, d_component, h_help;
 
-	private final Action a_undo, a_redo, a_save, a_save_as, a_open, a_clear, a_import, a_delete, a_help;
+	private final Action a_new, a_close, a_undo, a_redo, a_save, a_save_as, a_open, a_clear,
+	        a_import, a_delete, a_help;
 
 	private int commandCounter = 1, customCommandCounter = 1;
 
 	/**
-	 * Constructs the Menu with a related {@code Application}.
+	 * Constructs the Menu with the given {@code Application}.
 	 *
-	 * @param app the context of this Menu
+	 * @param application the context of this Menu
 	 */
-	@SuppressWarnings("unused")
-	MyMenu(Application app) {
+	MyMenu(Application application) {
 
-		// very big block of actions :)
+		context = application;
+
+		// block of actions
 		{
-			// --- actions ---
 			a_undo = new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					Actions.UNDO.context(context).execute();
+					Actions.UNDO.context(context.getActiveEditor()).execute();
 				}
 			};
 
 			a_redo = new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					Actions.REDO.context(context).execute();
+					Actions.REDO.context(context.getActiveEditor()).execute();
+				}
+			};
+
+			a_new = new AbstractAction() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					Application.Actions.NEW.context(context).execute();
+				}
+			};
+
+			a_close = new AbstractAction() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					Application.Actions.CLOSE.context(context).execute();
 				}
 			};
 
 			a_save = new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-
-					// when first time saving get filename with dialog
-					if (context.current_file == null) {
-						Actions.SAVE.specifyWithDialog(context);
-					} else {
-						Actions.SAVE.specify("filename", context.current_file);
-					}
-
-					Actions.SAVE.context(context).execute();
+					final Editor activeEditor = context.getActiveEditor();
+					Actions.SAVE.specify("filename", activeEditor.getFile()).context(activeEditor)
+					        .execute();
 				}
 			};
 
 			a_save_as = new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					Actions.SAVE.specifyWithDialog(context)
-					.context(context)
-					.execute();
+					Actions.SAVE.specifyWithDialog(context.getActiveEditor())
+					        .context(context.getActiveEditor()).execute();
 				}
 			};
 
 			a_open = new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					Actions.OPEN.specify("gatename", "N/A")
-					.specify("filetype", "circuit")
-					.specifyWithDialog(context)
-					.context(context)
-					.execute();
+					Actions.OPEN.specify("gatename", "N/A").specify("filetype", "circuit")
+					        .specifyWithDialog(context.getActiveEditor())
+					        .context(context.getActiveEditor()).execute();
 				}
 			};
 
 			a_clear = new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					Actions.CLEAR.context(context).execute();
+					Actions.CLEAR.context(context.getActiveEditor()).execute();
 				}
 			};
 
@@ -104,35 +114,33 @@ final class MyMenu extends JMenuBar {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					Actions.OPEN.specify("filetype", "component")
-					.specifyWithDialog(context)
-					.context(context)
-					.execute();
+					        .specifyWithDialog(context.getActiveEditor())
+					        .context(context.getActiveEditor()).execute();
 				}
 			};
 
 			a_delete = new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					Command c = Command.delete(context);
-					c.fillRequirements(app.getFrame());
-					Actions.DELETE.specify("command", c)
-					.context(context)
-					.execute();
+					final Editor activeEditor = context.getActiveEditor();
+					final Command c = Command.delete();
+					c.fillRequirements(application.getFrame(), activeEditor);
+					Actions.DELETE.specify("command", c).context(activeEditor).execute();
 				}
 			};
 
 			a_help = new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					Actions.HELP.context(context).execute();
+					Actions.HELP.context(context.getActiveEditor()).execute();
 				}
 			};
 		}
 
-		context = app;
-
 		// --- file ---
 		m_file = new JMenu("File");
+		f_new = new JMenuItem("New");
+		f_close = new JMenuItem("Close");
 		f_open = new JMenuItem("Open");
 		f_save = new JMenuItem("Save");
 		f_save_as = new JMenuItem("Save as");
@@ -141,6 +149,9 @@ final class MyMenu extends JMenuBar {
 		f_undo = new JMenuItem("Undo");
 		f_redo = new JMenuItem("Redo");
 
+		m_file.add(f_new);
+		m_file.add(f_close);
+		m_file.add(new Separator());
 		m_file.add(f_open);
 		m_file.add(f_save);
 		m_file.add(f_save_as);
@@ -177,7 +188,7 @@ final class MyMenu extends JMenuBar {
 		m_help.add(h_help);
 		add(m_help);
 
-		// make menu usable
+		// make menus usable
 		mnemonics();
 		listeners();
 		editMenuListeners();
@@ -186,27 +197,26 @@ final class MyMenu extends JMenuBar {
 	}
 
 	/**
-	 * Adds a {@code Command} that creates a Component to the Menu.
+	 * Adds a {@code Command} that creates a {@code Component} to the Menu.
 	 *
 	 * @param c the Command
 	 */
 	void addCreateCommand(Command c) {
-		JMenuItem jmic = new JMenuItem();
+		final JMenuItem jmic = new JMenuItem();
 
+		// different text and accelerator depending on command type (build-in vs user-created)
 		if (c.toString().matches("^(?:Create|Delete).*")) {
 			jmic.setText(c.toString().substring(7));
-			setAccel(jmic, "control " + commandCounter++);
+			MyMenu.setAccel(jmic, "control " + commandCounter++);
 		} else {
 			jmic.setText(c.toString());
-			setAccel(jmic, "control shift " + customCommandCounter++);
+			MyMenu.setAccel(jmic, "control shift " + customCommandCounter++);
 		}
 
 		jmic.addActionListener(e -> {
-			Command cloned = c.clone();
-			cloned.fillRequirements(context.getFrame());
-			Actions.CREATE.specify("command", cloned)
-			.context(context)
-			.execute();
+			final Command cloned = c.clone();
+			cloned.fillRequirements(context.getFrame(), context.getActiveEditor());
+			Actions.CREATE.specify("command", cloned).context(context.getActiveEditor()).execute();
 		});
 
 		m_create.add(jmic);
@@ -221,9 +231,11 @@ final class MyMenu extends JMenuBar {
 	}
 
 	private void listeners() {
+		f_new.addActionListener(a_new);
+		f_open.addActionListener(a_open);
+		f_close.addActionListener(a_close);
 		f_save.addActionListener(a_save);
 		f_save_as.addActionListener(a_save_as);
-		f_open.addActionListener(a_open);
 		f_clear.addActionListener(a_clear);
 		f_import.addActionListener(a_import);
 		f_undo.addActionListener(a_undo);
@@ -234,84 +246,94 @@ final class MyMenu extends JMenuBar {
 
 	private void editMenuListeners() {
 		e_activate.addActionListener(e -> {
-			Requirements<String> reqs = new Requirements<>();
+			final Editor activeEditor = context.getActiveEditor();
+
+			final Requirements<String> reqs = new Requirements<>();
 			reqs.add("id", StringType.NON_NEG_INTEGER);
 			reqs.add("active", StringType.ON_OFF);
 			reqs.fulfillWithDialog(context.getFrame(), "Turn Input Pin on/off");
 
 			if (reqs.fulfilled()) {
-				int id = Integer.valueOf(reqs.getV("id"));
+				final int id = Integer.parseInt(reqs.getV("id"));
 				Component comp;
 				try {
-					comp = context.getComponent(id);
-				} catch (MissingComponentException e1) {
-					context.error(e1);
+					comp = context.getActiveEditor().getComponent_(id);
+				} catch (final Editor.MissingComponentException e1) {
+					activeEditor.error(e1);
 					return;
 				}
 
-				boolean active = reqs.getV("active").equals("on");
+				final boolean active = reqs.getV("active").equals("on");
 				try {
 					ComponentFactory.setActive(comp, active);
-				} catch (InvalidComponentException e1) {
-					context.error(e1);
+				} catch (final InvalidComponentException e1) {
+					activeEditor.error(e1);
 					return;
 				}
-				context.status("Activated Input Pin");
+				activeEditor.status("Activated Input Pin");
 			} else {
-				context.status("Activate Input Pin cancelled");
+				activeEditor.status("Activate Input Pin cancelled");
 			}
 		});
 
 		e_focus.addActionListener(e -> {
-			Requirements<String> reqs = new Requirements<>();
+			final Editor activeEditor = context.getActiveEditor();
+
+			final Requirements<String> reqs = new Requirements<>();
 			reqs.add("id", StringType.NON_NEG_INTEGER);
 			reqs.fulfillWithDialog(context.getFrame(), "Focus Component");
+
 			if (reqs.fulfilled()) {
-				int id = Integer.valueOf(reqs.getV("id"));
+				final int id = Integer.parseInt(reqs.getV("id"));
 				Component comp;
 				try {
-					comp = context.getComponent(id);
-				} catch (MissingComponentException e1) {
-					context.error(e1);
+					comp = activeEditor.getComponent_(id);
+				} catch (final Editor.MissingComponentException e1) {
+					activeEditor.error(e1);
 					return;
 				}
 				comp.requestFocus();
-				context.status("Focusing Component");
+				activeEditor.status("Focusing Component");
+
 			} else {
-				context.status("Focus Component cancelled");
+				activeEditor.status("Focus Component cancelled");
 			}
 		});
 	}
 
 	private void accelerators() {
-		setAccel(f_save, "control S");
-		setAccel(f_save_as, "control shift S");
-		setAccel(f_open, "control O");
-		setAccel(f_clear, "control shift C");
-		setAccel(f_import, "control I");
-		setAccel(f_undo, "control Z");
-		setAccel(f_redo, "control Y");
-		setAccel(e_activate, "shift A");
-		setAccel(e_focus, "shift M");
-		setAccel(d_component, "control D");
-		setAccel(h_help, "F1");
+		MyMenu.setAccel(f_new, "control N");
+		MyMenu.setAccel(f_close, "control W");
+		MyMenu.setAccel(f_save, "control S");
+		MyMenu.setAccel(f_save_as, "control shift S");
+		MyMenu.setAccel(f_open, "control O");
+		MyMenu.setAccel(f_clear, "control shift C");
+		MyMenu.setAccel(f_import, "control I");
+		MyMenu.setAccel(f_undo, "control Z");
+		MyMenu.setAccel(f_redo, "control Y");
+		MyMenu.setAccel(e_activate, "shift A");
+		MyMenu.setAccel(e_focus, "shift M");
+		MyMenu.setAccel(d_component, "control D");
+		MyMenu.setAccel(h_help, "F1");
 	}
 
 	private void icons() {
-		setIcon(m_file, "file");
-		setIcon(f_save, "save");
-		setIcon(f_save_as, "save_as");
-		setIcon(f_open, "open");
-		setIcon(f_clear, "clear");
-		setIcon(f_undo, "undo");
-		setIcon(f_redo, "redo");
-		setIcon(f_import, "import");
-		setIcon(m_edit, "edit");
-		setIcon(e_activate, "activate");
-		setIcon(e_focus, "focus");
-		setIcon(m_create, "create");
-		setIcon(m_delete, "delete");
-		setIcon(m_help, "help");
+		MyMenu.setIcon(m_file, "file");
+		MyMenu.setIcon(f_new, "new");
+		MyMenu.setIcon(f_close, "close");
+		MyMenu.setIcon(f_save, "save");
+		MyMenu.setIcon(f_save_as, "save_as");
+		MyMenu.setIcon(f_open, "open");
+		MyMenu.setIcon(f_clear, "clear");
+		MyMenu.setIcon(f_undo, "undo");
+		MyMenu.setIcon(f_redo, "redo");
+		MyMenu.setIcon(f_import, "import");
+		MyMenu.setIcon(m_edit, "edit");
+		MyMenu.setIcon(e_activate, "activate");
+		MyMenu.setIcon(e_focus, "focus");
+		MyMenu.setIcon(m_create, "create");
+		MyMenu.setIcon(m_delete, "delete");
+		MyMenu.setIcon(m_help, "help");
 	}
 
 	private static void setAccel(JMenuItem jmi, String s) {
@@ -319,6 +341,9 @@ final class MyMenu extends JMenuBar {
 	}
 
 	private static void setIcon(JMenuItem jmi, String desc) {
-		jmi.setIcon(new ImageIcon(Application.menu_icon_path + desc + "_icon.png", desc + " icon"));
+		final String filename = String.format("%s%s_icon.png", StringConstants.menu_icon_path,
+		        desc);
+		final String description = String.format("%s icon", desc);
+		jmi.setIcon(new ImageIcon(filename, description));
 	}
 }
