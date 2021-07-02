@@ -62,8 +62,8 @@ public final class Editor extends JComponent {
 		this.app = app;
 		editorUI = new UI();
 		fileLabel = new FileLabel();
+		setDirty(false);
 		setFile(initialFile);
-		dirty = true;
 		statusBar = new StatusBar();
 
 		components = new ItemManager<>();

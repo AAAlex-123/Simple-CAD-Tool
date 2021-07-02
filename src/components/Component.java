@@ -139,15 +139,6 @@ public abstract class Component extends JComponent implements Identifiable<Strin
 		return toBeRemoved;
 	}
 
-	/*
-	 * Restoration:
-	 *
-	 * after serialize: attachListeners() requestFocus() Gate: addFunctions()
-	 *
-	 * after delete: toBeRemoved = false requestFocus() Gate: for loop {} Branch:
-	 * connect()
-	 */
-
 	/** Restores the state of the Component after it was destroyed */
 	final void restoreDeleted() {
 		restoreDeletedSelf();
@@ -289,9 +280,8 @@ public abstract class Component extends JComponent implements Identifiable<Strin
 
 	@Override
 	public final String toString() {
-		return String.format("%s: %d-%d, UID: %d, hidden: %s", type().description(), inCount(),
-				outCount(), getID(),
-				hidden());
+		return String.format("%s: %d-%d, UID: %s, hidden: %s", type().description(), inCount(),
+				outCount(), getID(), hidden());
 	}
 
 	// ===== DRAWING =====
@@ -311,21 +301,19 @@ public abstract class Component extends JComponent implements Identifiable<Strin
 
 	/** Default constructor */
 	Component() {
-		this(0, 0, SIZE, SIZE, staticID++);
+		this(0, 0, Component.SIZE, Component.SIZE);
 	}
 
 	/**
 	 * Constructor specifying location, dimensions and ID.
 	 *
-	 * @param x  the Component's X position
-	 * @param y  the Component's Y position
-	 * @param w  the Component's width
-	 * @param h  the Component's height
-	 * @param id the Component's ID
+	 * @param x the Component's X position
+	 * @param y the Component's Y position
+	 * @param w the Component's width
+	 * @param h the Component's height
 	 */
-	private Component(int x, int y, int w, int h, int id) {
+	private Component(int x, int y, int w, int h) {
 		setBounds(x, y, w, h);
-		this.UID = id;
 		attachListeners();
 	}
 
@@ -355,7 +343,8 @@ public abstract class Component extends JComponent implements Identifiable<Strin
 
 	private void moveWithKeyboard(KeyEvent e) {
 		if (hasFocus()) {
-			int d = 10, dm = 4, dx = 0, dy = 0;
+			final int d = 10, dm = 4;
+			int dx = 0, dy = 0;
 
 			// find direction
 			switch (e.getKeyCode()) {
@@ -376,7 +365,7 @@ public abstract class Component extends JComponent implements Identifiable<Strin
 			}
 
 			// check for 'fast' movement
-			if (e.isControlDown()) {
+			if (e.isShiftDown()) {
 				dx *= dm;
 				dy *= dm;
 			}
@@ -384,10 +373,10 @@ public abstract class Component extends JComponent implements Identifiable<Strin
 			// check for drawing area bounds
 			int newx = getX(), newy = getY();
 			if ((dx != 0) && ((getX() + dx) >= 0)
-			        && ((getX() + dx) <= (getParent().getWidth() - getWidth())))
+					&& ((getX() + dx) <= (getParent().getWidth() - getWidth())))
 				newx = (int) Math.floor((getX() + dx) / (double) d) * d;
 			if ((dy != 0) && ((getY() + dy) >= 0)
-			        && ((getY() + dy) <= (getParent().getHeight() - getHeight())))
+					&& ((getY() + dy) <= (getParent().getHeight() - getHeight())))
 				newy = (int) Math.floor((getY() + dy) / (double) d) * d;
 
 			// update location
@@ -414,13 +403,13 @@ public abstract class Component extends JComponent implements Identifiable<Strin
 	 * @see Component#attachListeners()
 	 */
 	final void attachListeners_(byte flags) {
-		if ((flags & DRAG_KB_FOCUS) != 0) {
+		if ((flags & Component.DRAG_KB_FOCUS) != 0) {
 			addDragListener();
 			addKeyboardListener();
 			addFocusListener();
 		}
 
-		if ((flags & ACTIVATE) != 0)
+		if ((flags & Component.ACTIVATE) != 0)
 			addActivateListener();
 	}
 
