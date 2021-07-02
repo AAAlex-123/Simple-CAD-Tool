@@ -36,16 +36,16 @@ public final class MalformedBranchException extends Exception {
 	}
 
 	private static String formatMessage(Component c, int index) {
-		Pattern p = Pattern.compile("(.*?): (\\d+)-(\\d+), UID: (\\d+), hidden: (true|false)");
+		Pattern p = Pattern.compile("(.*?): (\\d+)-(\\d+), UID: (\\w+), hidden: (true|false)");
 		Matcher m = p.matcher(c.toString());
 		m.find();
 		String comp = m.group(1);
 		int i1 = Integer.valueOf(m.group(2));
 		int i2 = Integer.valueOf(m.group(3));
-		int id = Integer.valueOf(m.group(4));
+		String id = m.group(4);
 		String s1 = i1 != 1 ? "s" : "";
 		String s2 = i2 != 1 ? "s" : "";
-		return String.format("Invalid index %d for %s (ID=%d) with %d input%s and %d output%s", index, comp, id, i1, s1,
-				i2, s2);
+		return String.format("Invalid index %d for %s (ID=%s) with %d input%s and %d output%s",
+		        index, comp, id, i1, s1, i2, s2);
 	}
 }
