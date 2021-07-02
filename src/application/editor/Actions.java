@@ -229,7 +229,7 @@ public enum Actions {
 					"Deletes a Component (by identifier)",
 					"Display these messages",
 					"Drag to move, click to turn on/off",
-					"Move with arrows (fast with ctrl), turn on/off with space",
+					"Move with arrows (fast with shift), turn on/off with space",
 			};
 
 			final String[] titles = {
