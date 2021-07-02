@@ -280,9 +280,8 @@ public abstract class Component extends JComponent implements Identifiable<Strin
 
 	@Override
 	public final String toString() {
-		return String.format("%s: %d-%d, UID: %d, hidden: %s", type().description(), inCount(),
-				outCount(), getID(),
-				hidden());
+		return String.format("%s: %d-%d, UID: %s, hidden: %s", type().description(), inCount(),
+				outCount(), getID(), hidden());
 	}
 
 	// ===== DRAWING =====
