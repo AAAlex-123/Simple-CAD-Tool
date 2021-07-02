@@ -15,6 +15,8 @@ import javax.swing.WindowConstants;
 import application.editor.Editor;
 import command.Command;
 import components.ComponentType;
+import myUtil.StringGenerator;
+import myUtil.Utility;
 
 /**
  * A class representing an Application. It aggregates all of the individual
@@ -30,8 +32,7 @@ public class Application {
 
 	private final JTabbedPane  editorPane;
 	private final List<Editor> editors;
-	private Editor             activeEditor;
-	private int                unsavedEditors = 0;
+	private final StringGenerator nameGenerator;
 
 	/** Constructs the Application */
 	public Application() {
@@ -39,6 +40,7 @@ public class Application {
 		menu = new MyMenu(this);
 		editors = new Vector<>();
 		editorPane = new JTabbedPane(SwingConstants.TOP, JTabbedPane.SCROLL_TAB_LAYOUT);
+		nameGenerator = new StringGenerator("new-%d");
 	}
 
 	/** Runs the application and configures the UI */
@@ -79,10 +81,10 @@ public class Application {
 
 	/** Terminates the application */
 	public void terminate() {
-		for (Editor e : new ArrayList<>(editors))
-			removeEditor(e);
+		Utility.foreach(new ArrayList<>(editors), this::removeEditor);
 
-		window.dispose();
+		if (getActiveEditor() == null)
+			window.dispose();
 	}
 
 	/**
@@ -100,7 +102,7 @@ public class Application {
 	 * @return the active Editor
 	 */
 	public Editor getActiveEditor() {
-		return activeEditor;
+		return (Editor) editorPane.getSelectedComponent();
 	}
 
 	/**
@@ -109,17 +111,17 @@ public class Application {
 	 * @param e the active Editor
 	 */
 	public void setActiveEditor(Editor e) {
-		activeEditor = e;
-		window.add(e.getStatusBar(), BorderLayout.SOUTH);
 		editorPane.setSelectedComponent(e);
+		window.add(e.getStatusBar(), BorderLayout.SOUTH);
+		window.repaint();
 	}
 
 	private void addEditor() {
-		Editor newEditor = new Editor(this, "new-" + unsavedEditors++);
+		Editor newEditor = new Editor(this, nameGenerator.get());
 		editors.add(newEditor);
 		editorPane.addTab("", newEditor);
 		editorPane.setTabComponentAt(editorPane.getTabCount() - 1,
-				newEditor.getEditorTab());
+				newEditor.getFileLabel());
 		setActiveEditor(newEditor);
 	}
 
