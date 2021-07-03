@@ -2,15 +2,11 @@ package components;
 
 import static myUtil.Utility.foreach;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Vector;
-
-import javax.imageio.ImageIO;
 
 import exceptions.ComponentNotFoundException;
 import exceptions.MalformedGateException;
@@ -18,32 +14,7 @@ import exceptions.MalformedGateException;
 /** Corresponds to the {@link ComponentType#INPUT_PIN INPUT_PIN} type. */
 final class InputPin extends Component {
 
-	private static final long serialVersionUID = 3L;
-
-	private static final String sprite = application.Application.component_icon_path + "input_pin_{state}.png";
-	private static final BufferedImage image_on, image_off;
-
-	static {
-		BufferedImage temp_on = null, temp_off = null;
-		File file = null;
-
-		try {
-			file = new File(sprite.replace("{state}", "on"));
-			temp_on = ImageIO.read(file);
-		} catch (@SuppressWarnings("unused") IOException e) {
-			System.err.printf("Could not load image %s", file);
-		}
-
-		try {
-			file = new File(sprite.replace("{state}", "off"));
-			temp_off = ImageIO.read(file);
-		} catch (@SuppressWarnings("unused") IOException e) {
-			System.err.printf("Could not load image %s", file);
-		}
-
-		image_on = temp_on;
-		image_off = temp_off;
-	}
+	private static final long serialVersionUID = 1L;
 
 	private final Vector<Branch> outputBranches;
 	private boolean active;
@@ -60,59 +31,50 @@ final class InputPin extends Component {
 	}
 
 	@Override
-	protected int inCount() {
-		return 0;
-	}
-
-	@Override
-	protected void wake_up(boolean newActive, int index, boolean prevHidden) {
+	void wake_up(boolean newActive, int index, boolean prevChangeable) {
 		checkIndex(index, 1);
 
 		// once hidden cannot be un-hidden
-		if (hidden() && !prevHidden)
+		if ((changeable == false) && (prevChangeable == true))
 			throw new MalformedGateException(this);
 
-		if (prevHidden)
-			hideComponent();
+		changeable = prevChangeable;
 
 		// propagate signal only if it's different
 		if (active != newActive) {
 			active = newActive;
 			repaint();
-			foreach(outputBranches, b -> b.wake_up(active, hidden()));
+			foreach(outputBranches, b -> b.wake_up(active, changeable));
 		}
 	}
 
 	@Override
-	protected void destroySelf() {
+	void destroySelf() {
 		foreach(new ArrayList<>(outputBranches), Branch::destroy);
 		outputBranches.clear();
 	}
 
 	@Override
-	protected void restoreDeletedSelf() {
+	void restore() {
+		toBeRemoved = false;
 	}
 
 	@Override
-	protected void restoreSerialisedSelf() {
-	}
-
-	@Override
-	protected boolean getActive(int index) {
-		checkIndex(index, outCount());
+	boolean getActive(int index) {
+		checkIndex(index, 1);
 		return active;
 	}
 
 	@Override
-	protected void addOut(Branch b, int index) {
-		checkIndex(index, outCount());
+	void addOut(Branch b, int index) {
+		checkIndex(index, 1);
 		checkChangeable();
 		outputBranches.add(b);
 	}
 
 	@Override
-	protected void removeOut(Branch b, int index) {
-		checkIndex(index, outCount());
+	void removeOut(Branch b, int index) {
+		checkIndex(index, 1);
 		checkChangeable();
 		if (!outputBranches.remove(b))
 			throw new ComponentNotFoundException(b, this);
@@ -135,32 +97,36 @@ final class InputPin extends Component {
 	 */
 	void setOuterGate() {
 		checkChangeable();
-		hideComponent();
+		changeable = false;
 	}
 
 	@Override
-	protected void attachListeners() {
-		attachListeners_((byte) (DRAG_KB_FOCUS | ACTIVATE));
+	void attachListeners() {
+		attachListeners_((byte) (DRAG | KEYBOARD | ACTIVATE | FOCUS));
 	}
 
 	@Override
-	protected void draw(Graphics g) {
-		g.drawImage(getActive(0) ? image_on : image_off, 0, 0, null);
+	public void draw(Graphics g) {
+		// crappy drawing
+		g.setColor(active ? Color.yellow : Color.black);
+		g.fillRect(0, 0, getWidth() - 1, getHeight() - 1);
+		g.setColor(Color.RED);
+		g.fillRect(getWidth() - 5, (getHeight() / 2) - 5, 4, 4);
 	}
 
 	@Override
-	protected void updateOnMovement() {
+	public void updateOnMovement() {
 		// this component is moved by the user; tell branches to update
 		foreach(outputBranches, Branch::updateOnMovement);
 	}
 
 	@Override
-	protected Point getBranchInputCoords(Branch b, int index) {
-		checkIndex(index, outCount());
+	public Point getBranchCoords(Branch b, int index) {
+		checkIndex(index, 1);
 
 		if (!outputBranches.contains(b))
 			throw new ComponentNotFoundException(b, this);
 
-		return new Point((getX() + getWidth()) - 1, getY() + (getHeight() / 2));
+		return new Point(getX() + getWidth(), getY() + (getHeight() / 2));
 	}
 }

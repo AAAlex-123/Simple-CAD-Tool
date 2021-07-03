@@ -5,7 +5,6 @@ import static components.ComponentType.OUTPUT_PIN;
 import static myUtil.Utility.foreach;
 
 import exceptions.InvalidComponentException;
-import exceptions.MalformedBranchException;
 
 /**
  * A set of static methods that acts as the interface of the {@link components}
@@ -62,11 +61,9 @@ public final class ComponentFactory {
 	 * @param out      the Branch's input
 	 * @param indexOut the index of the pin on the output gate
 	 * @return the created Branch
-	 * @throws MalformedBranchException in the case of connecting invalid components
 	 * @see ComponentType#BRANCH
 	 */
-	public static Component connectComponents(Component in, int indexIn, Component out, int indexOut)
-			throws MalformedBranchException {
+	public static Component connectComponents(Component in, int indexIn, Component out, int indexOut) {
 		return new Branch(in, indexIn, out, indexOut);
 	}
 
@@ -103,14 +100,12 @@ public final class ComponentFactory {
 	 * new {@code Gate}. This renders the components hidden and cannot be directly
 	 * accessed or modified in any way.
 	 *
-	 * @param inputPins   the new Gate's input pins
-	 * @param outputPins  the new Gate's output pins
-	 * @param description the new Gate's description
+	 * @param inputPins  the new gate's input pins
+	 * @param outputPins the new gate's output pins
 	 * @return the created Gate
-	 * 
 	 * @see ComponentType#GATE
 	 */
-	public static Component createGate(Component[] inputPins, Component[] outputPins, String description) {
+	public static Component createGate(Component[] inputPins, Component[] outputPins) {
 
 		// check component type
 		foreach(inputPins, t -> checkType(t, INPUT_PIN));
@@ -126,7 +121,7 @@ public final class ComponentFactory {
 		for (int i = 0; i < outp.length; ++i)
 			outp[i] = (OutputPin) outputPins[i];
 
-		return new Gate(inp, outp, description);
+		return new Gate(inp, outp);
 	}
 
 	/**
@@ -176,21 +171,22 @@ public final class ComponentFactory {
 	}
 
 	/**
-	 * Restores the state of a destroyed {@code Component} so that it can function.
+	 * Restores the state of a destroyed {@code Component} so that it's not
+	 * destroyed.
 	 *
 	 * @param component the Component
 	 */
-	public static void restoreDeletedComponent(Component component) {
-		component.restoreDeleted();
+	public static void restoreComponent(Component component) {
+		component.restore();
 	}
 
 	/**
-	 * Restores the state of a serialised {@code Component} so that it can function.
+	 * Attaches the Listeners of a {@code Component}.
 	 *
 	 * @param component the Component
 	 */
-	public static void restoreSerialisedComponent(Component component) {
-		component.restoreSerialised();
+	public static void attachListeners(Component component) {
+		component.attachListeners();
 	}
 
 	/**
