@@ -50,7 +50,7 @@ class DeleteCommand extends Command {
 		ComponentFactory.destroyComponent(componentToDelete);
 		context.removeComponent(componentToDelete);
 
-		Utility.foreach(context.getDeletedComponents_(), c -> {
+		Utility.foreach(context.getDeletedComponents(), c -> {
 			final DeleteCommand deleteCommand = new DeleteCommand(context);
 			deleteCommands.add(deleteCommand);
 
