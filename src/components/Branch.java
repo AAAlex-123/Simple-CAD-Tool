@@ -1,4 +1,6 @@
 package components;
+
+import static components.ComponentType.BRANCH;
 import static components.ComponentType.INPUT_PIN;
 import static components.ComponentType.OUTPUT_PIN;
 import static java.lang.Math.abs;
@@ -8,16 +10,19 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
 
+import exceptions.InvalidIndexException;
 import exceptions.MalformedBranchException;
 import exceptions.MalformedGateException;
 
 /** Corresponds to the {@link ComponentType#BRANCH BRANCH} type */
 final class Branch extends Component {
 
-	private final Component in, out;
-	private final int indexIn, indexOut;
+	private static final long serialVersionUID = 3L;
 
-	private boolean active;
+	private final Component	in, out;
+	private final int		indexIn, indexOut;
+
+	private boolean active = false;
 
 	// graphics, 1 or -1, slope of the line
 	//  1 = draw top-left to bottom-right
@@ -27,29 +32,32 @@ final class Branch extends Component {
 	/**
 	 * Constructs a {@code Branch} between two Components at the specified indexes.
 	 *
-	 * @param in       the Branch's input
-	 * @param indexIn  the index of the pin on the {@code in} component
-	 * @param out      the Branch's output
-	 * @param indexOut the index of the pin on the {@code out} component
+	 * @param inComponent  the Branch's input
+	 * @param inIndex      the index of the pin on the {@code in} component
+	 * @param outComponent the Branch's output
+	 * @param outIndex     the index of the pin on the {@code out} component
+	 *
+	 * @throws MalformedBranchException in the case of an invalid connection
 	 */
-	Branch(Component in, int indexIn, Component out, int indexOut) {
-		if ((in == null) || (out == null) || (in.type() == OUTPUT_PIN) || (out.type() == INPUT_PIN))
-			throw new MalformedBranchException(in, out);
+	Branch(Component inComponent, int inIndex, Component outComponent, int outIndex)
+			throws MalformedBranchException {
+		if (
+				(inComponent == null) || (outComponent == null) || (inComponent.type() == OUTPUT_PIN)
+				|| (outComponent.type() == INPUT_PIN)
+				|| (inComponent.type() == BRANCH) || (outComponent.type() == BRANCH)
+				)
+			throw new MalformedBranchException(inComponent, outComponent);
+		if (inIndex >= inComponent.outCount())
+			throw new MalformedBranchException(inComponent, inIndex);
+		if (outIndex >= outComponent.inCount())
+			throw new MalformedBranchException(outComponent, outIndex);
 
-		this.in = in;
-		this.out = out;
-		this.indexIn = indexIn;
-		this.indexOut = indexOut;
-
-		active = false;
-		toBeRemoved = false;
+		this.in = inComponent;
+		this.out = outComponent;
+		this.indexIn = inIndex;
+		this.indexOut = outIndex;
 
 		connect();
-	}
-
-	@Override
-	void attachListeners() {
-		attachListeners_((byte) 0);
 	}
 
 	@Override
@@ -58,25 +66,26 @@ final class Branch extends Component {
 	}
 
 	@Override
-	void wake_up(boolean newActive, int index, boolean prevChangeable) {
-		checkIndex(index, 1);
+	protected void wake_up(boolean newActive, int index, boolean prevHidden) {
+		checkIndex(index, inCount());
 
 		// once hidden cannot be un-hidden
-		if ((changeable == false) && (prevChangeable == true))
+		if (hidden() && !prevHidden)
 			throw new MalformedGateException(this);
 
-		changeable = prevChangeable;
+		if (prevHidden)
+			hideComponent();
 
 		// repaint and propagate signal only if it's different
 		if (active != newActive) {
 			active = newActive;
 			repaint();
-			out.wake_up(active, indexOut, changeable);
+			out.wake_up(active, indexOut, hidden());
 		}
 	}
 
 	@Override
-	void destroySelf() {
+	protected void destroySelf() {
 		checkChangeable();
 		in.removeOut(this, indexIn);
 		out.removeIn(this, indexOut);
@@ -86,14 +95,16 @@ final class Branch extends Component {
 	}
 
 	@Override
-	void restore() {
-		toBeRemoved = false;
+	protected void restoreDeletedSelf() {
 		connect();
 	}
 
 	@Override
-	boolean getActive(int index) {
-		checkIndex(index, 1);
+	protected void restoreSerialisedSelf() {}
+
+	@Override
+	protected boolean getActive(int index) {
+		checkIndex(index, inCount());
 		return active;
 	}
 
@@ -106,7 +117,7 @@ final class Branch extends Component {
 		try {
 			in.addOut(this, indexIn);
 			out.setIn(this, indexOut);
-		} catch (UnsupportedOperationException e) {
+		} catch (UnsupportedOperationException | InvalidIndexException e) {
 			// don't leave hanging connections
 			destroy();
 			throw e;
@@ -121,27 +132,40 @@ final class Branch extends Component {
 	}
 
 	@Override
-	void draw(Graphics g) {
+	protected void attachListeners() {
+		attachListeners_((byte) 0);
+	}
+
+	@Override
+	protected void draw(Graphics g) {
 		g.setColor(active ? Color.green : Color.red);
 
 		// draw with correct direction (as specified in the `direction` declaration)
 		if (direction == 1)
-			g.drawLine(0, 0, getWidth(), getHeight());
+			g.drawLine(5, 5, getWidth() - 5, getHeight() - 6);
 		else if (direction == -1)
-			g.drawLine(0, getHeight(), getWidth(), 0);
+			g.drawLine(5, getHeight() - 6, getWidth() - 5, 5);
 		else
-			throw new RuntimeException("branch-draw-direction-ffs");
+			throw new RuntimeException("Invalid Branch direction");
+	}
+
+	/** @param g the Graphics object with which to draw the ID */
+	@Override
+	protected void drawID(Graphics g) {
+		g.setColor(Color.BLACK);
+		g.drawString(getID(), (getWidth() / 2) - 4, (getHeight() / 2) + 5);
 	}
 
 	@Override
-	void updateOnMovement() {
+	protected void updateOnMovement() {
 		// from the new coordinates calculate the Branch's start point, width and height
 		// and also calculate its direction (as specified in the declaration).
-		Point p1 = in.getBranchCoords(this, indexIn);
-		Point p2 = out.getBranchCoords(this, indexOut);
-		int w = abs(p2.x - p1.x);
-		int h = abs(p2.y - p1.y);
+		Point p1 = in.getBranchInputCoords(this, indexIn);
+		Point p2 = out.getBranchOutputCoords(this, indexOut);
 		direction = ((p2.x - p1.x) * (p2.y - p1.y)) > 0 ? 1 : -1;
-		setBounds(min(p1.x, p2.x), min(p1.y, p2.y), w, (h == 0 ? 3 : h));
+		// components with a dimension = 0 aren't drawn and text can't be drawn on a
+		// small space so add extra width/height here and remove it when drawing
+		setBounds(min(p1.x, p2.x) - 5, min(p1.y, p2.y) - 5, abs(p2.x - p1.x) + 11,
+				abs(p2.y - p1.y) + 11);
 	}
 }
