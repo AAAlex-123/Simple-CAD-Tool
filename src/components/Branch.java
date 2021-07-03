@@ -1,6 +1,4 @@
 package components;
-
-import static components.ComponentType.BRANCH;
 import static components.ComponentType.INPUT_PIN;
 import static components.ComponentType.OUTPUT_PIN;
 import static java.lang.Math.abs;
@@ -10,19 +8,16 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
 
-import exceptions.InvalidIndexException;
 import exceptions.MalformedBranchException;
 import exceptions.MalformedGateException;
 
 /** Corresponds to the {@link ComponentType#BRANCH BRANCH} type */
 final class Branch extends Component {
 
-	private static final long serialVersionUID = 3L;
-
 	private final Component in, out;
 	private final int indexIn, indexOut;
 
-	private boolean active = false;
+	private boolean active;
 
 	// graphics, 1 or -1, slope of the line
 	//  1 = draw top-left to bottom-right
@@ -36,24 +31,25 @@ final class Branch extends Component {
 	 * @param indexIn  the index of the pin on the {@code in} component
 	 * @param out      the Branch's output
 	 * @param indexOut the index of the pin on the {@code out} component
-	 * 
-	 * @throws MalformedBranchException in the case of an invalid connection
 	 */
-	Branch(Component in, int indexIn, Component out, int indexOut) throws MalformedBranchException {
-		if ((in == null) || (out == null) || (in.type() == OUTPUT_PIN) || (out.type() == INPUT_PIN)
-				|| (in.type() == BRANCH) || (out.type() == BRANCH))
+	Branch(Component in, int indexIn, Component out, int indexOut) {
+		if ((in == null) || (out == null) || (in.type() == OUTPUT_PIN) || (out.type() == INPUT_PIN))
 			throw new MalformedBranchException(in, out);
-		if (indexIn >= in.outCount())
-			throw new MalformedBranchException(in, indexIn);
-		if (indexOut >= out.inCount())
-			throw new MalformedBranchException(out, indexOut);
 
 		this.in = in;
 		this.out = out;
 		this.indexIn = indexIn;
 		this.indexOut = indexOut;
 
+		active = false;
+		toBeRemoved = false;
+
 		connect();
+	}
+
+	@Override
+	void attachListeners() {
+		attachListeners_((byte) 0);
 	}
 
 	@Override
@@ -62,26 +58,25 @@ final class Branch extends Component {
 	}
 
 	@Override
-	protected void wake_up(boolean newActive, int index, boolean prevHidden) {
-		checkIndex(index, inCount());
+	void wake_up(boolean newActive, int index, boolean prevChangeable) {
+		checkIndex(index, 1);
 
 		// once hidden cannot be un-hidden
-		if (hidden() && !prevHidden)
+		if ((changeable == false) && (prevChangeable == true))
 			throw new MalformedGateException(this);
 
-		if (prevHidden)
-			hideComponent();
+		changeable = prevChangeable;
 
 		// repaint and propagate signal only if it's different
 		if (active != newActive) {
 			active = newActive;
 			repaint();
-			out.wake_up(active, indexOut, hidden());
+			out.wake_up(active, indexOut, changeable);
 		}
 	}
 
 	@Override
-	protected void destroySelf() {
+	void destroySelf() {
 		checkChangeable();
 		in.removeOut(this, indexIn);
 		out.removeIn(this, indexOut);
@@ -91,17 +86,14 @@ final class Branch extends Component {
 	}
 
 	@Override
-	protected void restoreDeletedSelf() {
+	void restore() {
+		toBeRemoved = false;
 		connect();
 	}
 
 	@Override
-	protected void restoreSerialisedSelf() {
-	}
-
-	@Override
-	protected boolean getActive(int index) {
-		checkIndex(index, inCount());
+	boolean getActive(int index) {
+		checkIndex(index, 1);
 		return active;
 	}
 
@@ -114,7 +106,7 @@ final class Branch extends Component {
 		try {
 			in.addOut(this, indexIn);
 			out.setIn(this, indexOut);
-		} catch (UnsupportedOperationException | InvalidIndexException e) {
+		} catch (UnsupportedOperationException e) {
 			// don't leave hanging connections
 			destroy();
 			throw e;
@@ -129,39 +121,27 @@ final class Branch extends Component {
 	}
 
 	@Override
-	protected void attachListeners() {
-		attachListeners_((byte) 0);
-	}
-
-	@Override
-	protected void draw(Graphics g) {
+	void draw(Graphics g) {
 		g.setColor(active ? Color.green : Color.red);
 
 		// draw with correct direction (as specified in the `direction` declaration)
 		if (direction == 1)
-			g.drawLine(5, 5, getWidth() - 5, getHeight() - 6);
+			g.drawLine(0, 0, getWidth(), getHeight());
 		else if (direction == -1)
-			g.drawLine(5, getHeight() - 6, getWidth() - 5, 5);
+			g.drawLine(0, getHeight(), getWidth(), 0);
 		else
-			throw new RuntimeException("Invalid Branch direction");
-	}
-
-	/** @param g the Graphics object with which to draw the ID */
-	@Override
-	protected void drawID(Graphics g) {
-		g.setColor(Color.BLACK);
-		g.drawString(String.valueOf(UID()), (getWidth() / 2) - 4, (getHeight() / 2) + 5);
+			throw new RuntimeException("branch-draw-direction-ffs");
 	}
 
 	@Override
-	protected void updateOnMovement() {
+	void updateOnMovement() {
 		// from the new coordinates calculate the Branch's start point, width and height
 		// and also calculate its direction (as specified in the declaration).
-		Point p1 = in.getBranchInputCoords(this, indexIn);
-		Point p2 = out.getBranchOutputCoords(this, indexOut);
+		Point p1 = in.getBranchCoords(this, indexIn);
+		Point p2 = out.getBranchCoords(this, indexOut);
+		int w = abs(p2.x - p1.x);
+		int h = abs(p2.y - p1.y);
 		direction = ((p2.x - p1.x) * (p2.y - p1.y)) > 0 ? 1 : -1;
-		// components with a dimension = 0 aren't drawn and text can't be drawn on a
-		// small space so add extra width/height here and remove it when drawing
-		setBounds(min(p1.x, p2.x) - 5, min(p1.y, p2.y) - 5, abs(p2.x - p1.x) + 11, abs(p2.y - p1.y) + 11);
+		setBounds(min(p1.x, p2.x), min(p1.y, p2.y), w, (h == 0 ? 3 : h));
 	}
 }

@@ -1,14 +1,12 @@
 package components;
 
-import exceptions.MalformedGateException;
-
 /**
- * The most basic of gates; they can only be implemented with transistors (or by
- * NAND Gates), so their output is artificially calculated (for now).
+ * The most basic of gates; they can only be implemented with transistors, so
+ * their output is artificially calculated (for now).
  */
 abstract class PrimitiveGate extends Gate {
 
-	private static final long serialVersionUID = 3L;
+	private static final long serialVersionUID = 1L;
 
 	/**
 	 * Constructs the Primitive Gate with the given number of input and output pins.
@@ -21,14 +19,8 @@ abstract class PrimitiveGate extends Gate {
 	}
 
 	@Override
-	protected void wake_up(boolean newActive, int indexIn, boolean prevHidden) {
-
-		// once hidden cannot be un-hidden
-		if (hidden() && !prevHidden)
-			throw new MalformedGateException(this);
-
-		if (prevHidden)
-			hideComponent();
+	void wake_up(boolean newActive, int indexIn, boolean prevChangeable) {
+		changeable = prevChangeable;
 
 		inputPins[indexIn].wake_up(newActive); // this isn't propagated anywhere
 
@@ -38,5 +30,5 @@ abstract class PrimitiveGate extends Gate {
 	}
 
 	/** calculates the output and sets the output pins to their correct values */
-	abstract protected void calculateOutput();
+	abstract void calculateOutput();
 }

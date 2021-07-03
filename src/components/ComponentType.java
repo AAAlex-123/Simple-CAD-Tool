@@ -49,37 +49,19 @@ public enum ComponentType {
 	 */
 	BRANCH("Branch"),
 
-	/**
-	 * Gates are Components that map a set of Input Pins to a set of Output Pins.
-	 * Specifically, they essentially compute a boolean function from any number of
-	 * inputs to any number of outputs. Components of this type (and not the other
-	 * Gate types) may be defined by the user and compute the outputs by feeding the
-	 * inputs into another circuit and taking its outputs.
-	 */
+	/** A value representing a Gate */
 	GATE("Gate"),
 
-	/**
-	 * AND Gates are a Gates that compute a single function. Specifically, they map
-	 * the set of inputs to its logical `and`.
-	 */
+	/** A value representing an AND Gate */
 	GATEAND("AND Gate"),
 
-	/**
-	 * OR Gates are a Gates that compute a single function. Specifically, they map
-	 * the set of inputs to its logical `or`.
-	 */
+	/** A value representing an OR Gate */
 	GATEOR("OR Gate"),
 
-	/**
-	 * NOT Gates are a Gates that compute a single function. Specifically, each
-	 * input is matched to its logical `not`.
-	 */
+	/** A value representing a NOT Gate */
 	GATENOT("NOT Gate"),
 
-	/**
-	 * XOR Gates are a Gates that compute a single function. Specifically, they map
-	 * the set of inputs to its logical `xor`.
-	 */
+	/** A value representing a XOR Gate */
 	GATEXOR("XOR Gate");
 
 	private String desc;
@@ -89,7 +71,7 @@ public enum ComponentType {
 	}
 
 	/**
-	 * Returns the description of this ComponentType.
+	 * Returns the description of the ComponentType.
 	 * 
 	 * @return the description
 	 */

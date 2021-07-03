@@ -1,15 +1,19 @@
 package application;
 
-/** An Interface for objects that can be executed and un-executed */
-public interface Undoable {
+/** An Interface for classes that can be executed and un-done */
+interface Undoable {
 
 	/**
-	 * Executes the Undoable
+	 * Executes the Undoable.
 	 * 
-	 * @throws Exception when an exception occurred
+	 * @return a return code
 	 */
-	void execute() throws Exception;
+	int execute();
 
-	/** Un-does the Undoable */
-	void unexecute();
+	/**
+	 * Un-does the Undoable.
+	 * 
+	 * @return a return code
+	 */
+	int unexecute();
 }

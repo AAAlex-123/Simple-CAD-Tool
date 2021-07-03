@@ -1,12 +1,8 @@
 package components;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-
-import javax.imageio.ImageIO;
 
 import exceptions.ComponentNotFoundException;
 import exceptions.MalformedGateException;
@@ -14,33 +10,7 @@ import exceptions.MalformedGateException;
 /** Corresponds to the {@link ComponentType#OUTPUT_PIN OUTPUT_PIN} type. */
 final class OutputPin extends Component {
 
-	private static final long serialVersionUID = 3L;
-
-	private static final String sprite = application.Application.component_icon_path + "output_pin_{state}.png";
-	private static final BufferedImage image_on, image_off;
-
-	static {
-		// yes it has to be done this way
-		BufferedImage temp_on = null, temp_off = null;
-		File file = null;
-
-		try {
-			file = new File(sprite.replace("{state}", "on"));
-			temp_on = ImageIO.read(file);
-		} catch (@SuppressWarnings("unused") IOException e) {
-			System.err.printf("Could not load image %s", file);
-		}
-
-		try {
-			file = new File(sprite.replace("{state}", "off"));
-			temp_off = ImageIO.read(file);
-		} catch (@SuppressWarnings("unused") IOException e) {
-			System.err.printf("Could not load image %s", file);
-		}
-
-		image_on = temp_on;
-		image_off = temp_off;
-	}
+	private static final long serialVersionUID = 1L;
 
 	private Branch inputBranch;
 	private boolean active;
@@ -55,25 +25,20 @@ final class OutputPin extends Component {
 	}
 
 	@Override
-	public ComponentType type() {
+	public
+	ComponentType type() {
 		return ComponentType.OUTPUT_PIN;
 	}
 
 	@Override
-	protected int outCount() {
-		return 0;
-	}
-
-	@Override
-	protected void wake_up(boolean newActive, int index, boolean prevHidden) {
-		checkIndex(index, inCount());
+	void wake_up(boolean newActive, int index, boolean prevChangeable) {
+		checkIndex(index, 1);
 
 		// once hidden cannot be un-hidden
-		if (hidden() && !prevHidden)
+		if ((changeable == false) && (prevChangeable == true))
 			throw new MalformedGateException(this);
 
-		if (prevHidden)
-			hideComponent();
+		changeable = prevChangeable;
 
 		// propagate signal only if it's different
 		if (active != newActive) {
@@ -87,7 +52,7 @@ final class OutputPin extends Component {
 	}
 
 	@Override
-	protected void destroySelf() {
+	void destroySelf() {
 		if (inputBranch != null) {
 			inputBranch.destroy();
 			inputBranch = null;
@@ -95,22 +60,19 @@ final class OutputPin extends Component {
 	}
 
 	@Override
-	protected void restoreDeletedSelf() {
+	void restore() {
+		toBeRemoved = false;
 	}
 
 	@Override
-	protected void restoreSerialisedSelf() {
-	}
-
-	@Override
-	protected boolean getActive(int index) {
-		checkIndex(index, inCount());
+	boolean getActive(int index) {
+		checkIndex(index, 1);
 		return active;
 	}
 
 	@Override
-	protected void setIn(Branch b, int index) {
-		checkIndex(index, inCount());
+	void setIn(Branch b, int index) {
+		checkIndex(index, 1);
 		checkChangeable();
 
 		if (inputBranch != null) {
@@ -123,8 +85,8 @@ final class OutputPin extends Component {
 	}
 
 	@Override
-	protected void removeIn(Branch b, int index) {
-		checkIndex(index, inCount());
+	void removeIn(Branch b, int index) {
+		checkIndex(index, 1);
 		checkChangeable();
 
 		if ((inputBranch == b)) {
@@ -163,32 +125,36 @@ final class OutputPin extends Component {
 		if (outerGate != null)
 			checkChangeable();
 
-		hideComponent();
+		changeable = false;
 
 		outerGate = gate;
 		outerGateIndex = index;
 	}
 
 	@Override
-	protected void attachListeners() {
-		attachListeners_(DRAG_KB_FOCUS);
+	void attachListeners() {
+		attachListeners_((byte) (DRAG | KEYBOARD | FOCUS));
 	}
 
 	@Override
-	protected void draw(Graphics g) {
-		g.drawImage(getActive(0) ? image_on : image_off, 0, 0, null);
+	void draw(Graphics g) {
+		// crappy drawing
+		g.setColor(active ? Color.yellow : Color.black);
+		g.fillRect(0, 0, getWidth() - 1, getHeight() - 1);
+		g.setColor(Color.red);
+		g.fillRect(0, (getHeight() / 2) - 5, 4, 4);
 	}
 
 	@Override
-	protected void updateOnMovement() {
+	void updateOnMovement() {
 		// this component is moved by the user; tell branch to update
 		if (inputBranch != null)
 			inputBranch.updateOnMovement();
 	}
 
 	@Override
-	protected Point getBranchOutputCoords(Branch b, int index) {
-		checkIndex(index, inCount());
+	Point getBranchCoords(Branch b, int index) {
+		checkIndex(index, 1);
 
 		if (b != inputBranch)
 			throw new ComponentNotFoundException(b, this);

@@ -1,4 +1,4 @@
-package command;
+package application;
 
 import static components.ComponentType.INPUT_PIN;
 import static components.ComponentType.OUTPUT_PIN;
@@ -7,7 +7,6 @@ import static myUtil.Utility.foreach;
 import java.util.ArrayList;
 import java.util.List;
 
-import application.Application;
 import components.Component;
 import components.ComponentFactory;
 
@@ -17,7 +16,7 @@ import components.ComponentFactory;
  */
 class CreateGateCommand extends Command {
 
-	private static final long serialVersionUID = 5L;
+	private static final long serialVersionUID = 2L;
 
 	// the sequence of Commands required to create the Gate
 	private final List<Command> commands;
@@ -34,40 +33,39 @@ class CreateGateCommand extends Command {
 	 * @param cmds the sub-commands that will be executed
 	 * @param desc the description of this Command
 	 */
-	CreateGateCommand(Application app, List<Command> cmds, String desc) {
+	public CreateGateCommand(Application app, List<Command> cmds, String desc) {
 		super(app);
 		commands = cmds;
 		description = desc;
-		componentID = -1;
 	}
 
 	@Override
-	public Command clone() {
+	Command myclone() {
+		return myclone(false);
+	}
+
+	@Override
+	Command myclone(boolean keepId) {
 		CreateGateCommand cgc = new CreateGateCommand(context, commands, description);
-		if (createdComponent != null)
-			cgc.componentID = createdComponent.UID();
+		if (keepId)
+			cgc.componentID = componentID;
 		return cgc;
 	}
 
 	@Override
-	public void execute() {
+	public int execute() {
 		if (createdComponent != null) {
 			context.addComponent(createdComponent);
-			ComponentFactory.restoreDeletedComponent(createdComponent);
+			ComponentFactory.restoreComponent(createdComponent);
 		} else {
 
 			// execute the sequence of commands to create the circuit in a temporary context
 			Application tempContext = new Application();
 
 			foreach(commands, c -> {
-				Command cloned = c.clone();
-				cloned.context(tempContext);
-				try {
-					cloned.execute();
-				} catch (Exception e) {
-					// this Command has executed successfully before; this statement can't throw
-					throw new RuntimeException(e);
-				}
+				Command cloned = ((CreateCommand) c).myclone(true);
+				cloned.context = tempContext;
+				cloned.execute();
 			});
 
 			// get arrays of the InputPins and the OutputPins from the temporary context
@@ -86,21 +84,22 @@ class CreateGateCommand extends Command {
 				out[i] = outs.get(i);
 
 			// create the composite Gate and add it to the real context
-			createdComponent = ComponentFactory.createGate(in, out, description);
-			if (componentID != -1)
-				createdComponent.setID(componentID);
+			createdComponent = ComponentFactory.createGate(in, out);
+			componentID = createdComponent.UID();
 			context.addComponent(createdComponent);
 		}
+		return 0;
 	}
 
 	@Override
-	public void unexecute() {
+	public int unexecute() {
 		ComponentFactory.destroyComponent(createdComponent);
 		context.removeComponent(createdComponent);
+		return 0;
 	}
 
 	@Override
-	public String toString() {
+	String desc() {
 		return description;
 	}
 }
