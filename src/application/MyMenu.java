@@ -13,6 +13,7 @@ import javax.swing.KeyStroke;
 
 import application.editor.Actions;
 import application.editor.Editor;
+import application.editor.MissingComponentException;
 import command.Command;
 import components.Component;
 import components.ComponentFactory;
@@ -31,10 +32,10 @@ final class MyMenu extends JMenuBar {
 
 	private final JMenu     m_file, m_edit, m_create, m_delete, m_help;
 	private final JMenuItem f_new, f_close, f_save, f_save_as, f_open, f_clear, f_import, f_undo,
-	        f_redo, e_activate, e_focus, d_component, h_help;
+	f_redo, e_activate, e_focus, d_component, h_help;
 
 	private final Action a_new, a_close, a_undo, a_redo, a_save, a_save_as, a_open, a_clear,
-	        a_import, a_delete, a_help;
+	a_import, a_delete, a_help;
 
 	private int commandCounter = 1, customCommandCounter = 1;
 
@@ -82,7 +83,7 @@ final class MyMenu extends JMenuBar {
 				public void actionPerformed(ActionEvent e) {
 					final Editor activeEditor = context.getActiveEditor();
 					Actions.SAVE.specify("filename", activeEditor.getFile()).context(activeEditor)
-					        .execute();
+					.execute();
 				}
 			};
 
@@ -90,7 +91,7 @@ final class MyMenu extends JMenuBar {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					Actions.SAVE.specifyWithDialog(context.getActiveEditor())
-					        .context(context.getActiveEditor()).execute();
+					.context(context.getActiveEditor()).execute();
 				}
 			};
 
@@ -98,8 +99,8 @@ final class MyMenu extends JMenuBar {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					Actions.OPEN.specify("gatename", "N/A").specify("filetype", "circuit")
-					        .specifyWithDialog(context.getActiveEditor())
-					        .context(context.getActiveEditor()).execute();
+					.specifyWithDialog(context.getActiveEditor())
+					.context(context.getActiveEditor()).execute();
 				}
 			};
 
@@ -114,8 +115,8 @@ final class MyMenu extends JMenuBar {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					Actions.OPEN.specify("filetype", "component")
-					        .specifyWithDialog(context.getActiveEditor())
-					        .context(context.getActiveEditor()).execute();
+					.specifyWithDialog(context.getActiveEditor())
+					.context(context.getActiveEditor()).execute();
 				}
 			};
 
@@ -249,16 +250,16 @@ final class MyMenu extends JMenuBar {
 			final Editor activeEditor = context.getActiveEditor();
 
 			final Requirements<String> reqs = new Requirements<>();
-			reqs.add("id", StringType.NON_NEG_INTEGER);
+			reqs.add("id", StringType.ANY);
 			reqs.add("active", StringType.ON_OFF);
 			reqs.fulfillWithDialog(context.getFrame(), "Turn Input Pin on/off");
 
 			if (reqs.fulfilled()) {
-				final int id = Integer.parseInt(reqs.getV("id"));
+				final String id = reqs.getV("id");
 				Component comp;
 				try {
 					comp = context.getActiveEditor().getComponent_(id);
-				} catch (final Editor.MissingComponentException e1) {
+				} catch (final MissingComponentException e1) {
 					activeEditor.error(e1);
 					return;
 				}
@@ -280,15 +281,15 @@ final class MyMenu extends JMenuBar {
 			final Editor activeEditor = context.getActiveEditor();
 
 			final Requirements<String> reqs = new Requirements<>();
-			reqs.add("id", StringType.NON_NEG_INTEGER);
+			reqs.add("id", StringType.ANY);
 			reqs.fulfillWithDialog(context.getFrame(), "Focus Component");
 
 			if (reqs.fulfilled()) {
-				final int id = Integer.parseInt(reqs.getV("id"));
+				final String id = reqs.getV("id");
 				Component comp;
 				try {
 					comp = activeEditor.getComponent_(id);
-				} catch (final Editor.MissingComponentException e1) {
+				} catch (final MissingComponentException e1) {
 					activeEditor.error(e1);
 					return;
 				}
@@ -342,7 +343,7 @@ final class MyMenu extends JMenuBar {
 
 	private static void setIcon(JMenuItem jmi, String desc) {
 		final String filename = String.format("%s%s_icon.png", StringConstants.menu_icon_path,
-		        desc);
+				desc);
 		final String description = String.format("%s icon", desc);
 		jmi.setIcon(new ImageIcon(filename, description));
 	}
