@@ -8,7 +8,7 @@ import java.io.Serializable;
  * by other objects.
  * <p>
  * When the required object is of type {@code String}, restrictions may
- * optionally be enforced using the appropriate {@link StringType Type}.
+ * optionally be enforced using the appropriate {@link StringType}.
  *
  * @param <V> the type of the Requirement's value
  *
@@ -16,41 +16,42 @@ import java.io.Serializable;
  */
 public final class Requirement<V> implements Serializable {
 
-	private static final long serialVersionUID = 5L;
+	private static final long serialVersionUID = 6L;
 
 	private final String key;
 	private V            value;
+	private V            defaultValue;
 
 	private boolean fulfilled, finalised;
 
 	/** The (optional) type of String expected as value. Used when V == String. */
-	public final StringType stringType;
+	final StringType stringType;
 
 	/**
-	 * Constructs a Requirement with a given {@code key}.
+	 * Constructs this Requirement with a {@code key}.
 	 *
-	 * @param reqKey the key
+	 * @param key the key
 	 */
-	public Requirement(String reqKey) {
+	public Requirement(String key) {
+		this.key = key;
+		value = defaultValue = null;
 		fulfilled = finalised = false;
-		key = reqKey;
-		value = null;
 		stringType = null;
 	}
 
 	/**
-	 * Constructs this Requirement with a given {@code key} and {@code stringType}.
+	 * Constructs this Requirement with a {@code key} and a {@code type}.
 	 *
-	 * @param reqKey  the key
-	 * @param reqType the type
+	 * @param key  the key
+	 * @param type the type
 	 *
 	 * @see Requirement#stringType
 	 */
-	public Requirement(String reqKey, StringType reqType) {
+	public Requirement(String key, StringType type) {
+		this.key = key;
+		value = defaultValue = null;
 		fulfilled = finalised = false;
-		key = reqKey;
-		value = null;
-		stringType = reqType;
+		stringType = type;
 	}
 
 	/**
@@ -63,6 +64,7 @@ public final class Requirement<V> implements Serializable {
 		fulfilled = other.fulfilled;
 		finalised = other.finalised;
 		value = other.value;
+		defaultValue = other.defaultValue;
 	}
 
 	/** @return the key */
@@ -75,15 +77,20 @@ public final class Requirement<V> implements Serializable {
 		return value;
 	}
 
+	/** @return the default value */
+	V defaultValue() {
+		return defaultValue;
+	}
+
 	/**
-	 * Attempts set the value of this Requirement without marking it as fulfilled.
-	 * If {@code v} is a {@code String} additional restrictions may be enforced
-	 * according to the {@code stringType}.
+	 * Attempts to set the {@code default value} of this Requirement without marking
+	 * it as {@code fulfilled}. If {@code v} is a {@code String} additional
+	 * restrictions may be enforced according to the {@code stringType}.
 	 * <p>
 	 * This method is intended for offering a default value which must then be
 	 * explicitly set in order for the Requirement to be marked as fulfilled.
 	 *
-	 * @param v the value of the required object
+	 * @param v the default value of the required object
 	 */
 	public void offer(V v) {
 		if (finalised)
@@ -92,12 +99,12 @@ public final class Requirement<V> implements Serializable {
 		if ((v instanceof String) && (stringType != null) && !stringType.isValid((String) v))
 			return;
 
-		value = v;
+		defaultValue = v;
 	}
 
 	/**
-	 * Calls {@link Requirement#offer(Object) offer(V)} and additionally marks this
-	 * Requirement as fulfilled, meaning that this value was not a default value.
+	 * Calls {@link Requirement#offer(Object) offer(V)} and additionally sets the
+	 * {@code value} of this Requirement, marking is as {@code fulfilled}.
 	 * <p>
 	 * This method is intended for normal use, to specify that a value for this
 	 * Requirement exists.
@@ -106,16 +113,17 @@ public final class Requirement<V> implements Serializable {
 	 */
 	public void fulfil(V v) {
 		offer(v);
+		value = v;
 		fulfilled = !((v instanceof String) && (stringType != null)
-				&& !stringType.isValid((String) v));
+		        && !stringType.isValid((String) v));
 	}
 
 	/**
 	 * Calls {@link Requirement#fulfil(Object) fulfil(V)} and additionally marks
 	 * this Requirement as finalised, meaning that its value cannot be altered.
 	 * <p>
-	 * This method is intended for providing a strict default or for making sure the
-	 * value is final.
+	 * This method is intended for providing a strict default or for ensuring the
+	 * value cannot be altered in the future.
 	 *
 	 * @param v the value of the required object
 	 */
@@ -124,11 +132,21 @@ public final class Requirement<V> implements Serializable {
 		finalised = true;
 	}
 
-	/** Clears this Requirement resetting its value */
+	/** Clears this Requirement and its {@code value} resetting its state */
 	public void clear() {
 		value = null;
 		fulfilled = false;
 		finalised = false;
+	}
+
+	/** Clears this Requirement and resets the {@code value} to its default */
+	@SuppressWarnings("unchecked")
+	public void reset() {
+		clear();
+		if ((value instanceof String) && (defaultValue == null))
+			value = (V) "";
+		else
+			value = defaultValue;
 	}
 
 	/** @return {@code true} if fulfilled, {@code false} otherwise */
@@ -144,8 +162,8 @@ public final class Requirement<V> implements Serializable {
 	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder(String.format(
-				"Requirement: %s%n\tValue:     %s%n\tFulfilled: %s%n\tFinalise:  %s%n", key, value,
-				fulfilled() ? "yes" : "no", finalised() ? "yes" : "no"));
+		        "Requirement: %s%n\tDefault:   %s%n\tValue:     %s%n\tFulfilled: %s%n\tFinalised: %s%n",
+		        key, defaultValue, value, fulfilled() ? "yes" : "no", finalised() ? "yes" : "no"));
 
 		if (stringType != null)
 			sb.append(String.format("\tType:      %s%n", stringType));
