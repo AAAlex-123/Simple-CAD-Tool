@@ -14,7 +14,7 @@ final class GateXOR extends PrimitiveGate {
 
 	private static final long serialVersionUID = 3L;
 
-	private static final String sprite = StringConstants.component_icon_path + "gate_xor.png";
+	private static final String sprite = StringConstants.COMPONENT_ICON_PATH + "gate_xor.png";
 
 	private static final BufferedImage image;
 
