@@ -13,7 +13,7 @@ final class GateAND extends PrimitiveGate {
 
 	private static final long serialVersionUID = 3L;
 
-	private static final String sprite = StringConstants.component_icon_path
+	private static final String sprite = StringConstants.COMPONENT_ICON_PATH
 	        + "gate_and.png";
 
 	private static final BufferedImage image;

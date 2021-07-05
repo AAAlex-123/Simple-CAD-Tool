@@ -26,7 +26,7 @@ class Gate extends Component {
 
 	private static final long serialVersionUID = 5L;
 
-	private static final String sprite = StringConstants.component_icon_path
+	private static final String sprite = StringConstants.COMPONENT_ICON_PATH
 	        + "gate.png";
 
 	private static final BufferedImage image;

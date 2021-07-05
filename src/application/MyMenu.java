@@ -1,5 +1,29 @@
 package application;
 
+import static application.StringConstants.BUILTIN_COMMAND_ACCEL_PREFIX;
+import static application.StringConstants.D_COMPONENT_ACCEL;
+import static application.StringConstants.E_ACTIVATE_ACCEL;
+import static application.StringConstants.E_FOCUS_ACCEL;
+import static application.StringConstants.F_CLEAR_ACCEL;
+import static application.StringConstants.F_CLOSE_ACCEL;
+import static application.StringConstants.F_IMPORT_ACCEL;
+import static application.StringConstants.F_NEW_ACCEL;
+import static application.StringConstants.F_OPEN_ACCEL;
+import static application.StringConstants.F_REDO_ACCEL;
+import static application.StringConstants.F_SAVE_ACCEL;
+import static application.StringConstants.F_SAVE_AS_ACCEL;
+import static application.StringConstants.F_UNDO_ACCEL;
+import static application.StringConstants.H_HELP_ACCEL;
+import static application.StringConstants.MENU_ICON_PATH;
+import static application.StringConstants.M_CREATE_MNEMONIC;
+import static application.StringConstants.M_DELETE_MNEMONIC;
+import static application.StringConstants.M_EDIT_MNEMONIC;
+import static application.StringConstants.M_FILE_MNEMONIC;
+import static application.StringConstants.M_HELP_MNEMONIC;
+import static application.StringConstants.M_PREFERENCES_MNEMONIC;
+import static application.StringConstants.P_SETTINGS_ACCEL;
+import static application.StringConstants.USER_COMMAND_ACCEL_PREFIX;
+
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
@@ -30,12 +54,12 @@ final class MyMenu extends JMenuBar {
 
 	private final Application context;
 
-	private final JMenu     m_file, m_edit, m_create, m_delete, m_help;
+	private final JMenu     m_file, m_edit, m_create, m_delete, m_preferences, m_help;
 	private final JMenuItem f_new, f_close, f_save, f_save_as, f_open, f_clear, f_import, f_undo,
-	f_redo, e_activate, e_focus, d_component, h_help;
+	f_redo, e_activate, e_focus, d_component, p_settings, h_help;
 
 	private final Action a_new, a_close, a_undo, a_redo, a_save, a_save_as, a_open, a_clear,
-	a_import, a_delete, a_help;
+	a_import, a_delete, a_edit, a_help;
 
 	private int commandCounter = 1, customCommandCounter = 1;
 
@@ -130,6 +154,13 @@ final class MyMenu extends JMenuBar {
 				}
 			};
 
+			a_edit = new AbstractAction() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					Application.Actions.EDIT_SETTINGS.context(context).execute();
+				}
+			};
+
 			a_help = new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
@@ -183,6 +214,12 @@ final class MyMenu extends JMenuBar {
 		m_delete.add(d_component);
 		add(m_delete);
 
+		// --- preferences ---
+		m_preferences = new JMenu("Preferences");
+		p_settings = new JMenuItem("Settings");
+		m_preferences.add(p_settings);
+		add(m_preferences);
+
 		// --- help ---
 		m_help = new JMenu("Help");
 		h_help = new JMenuItem("Help I can't use this application :(");
@@ -208,10 +245,12 @@ final class MyMenu extends JMenuBar {
 		// different text and accelerator depending on command type (build-in vs user-created)
 		if (c.toString().matches("^(?:Create|Delete).*")) {
 			jmic.setText(c.toString().substring(7));
-			MyMenu.setAccel(jmic, "control " + commandCounter++);
+			MyMenu.setAccel(jmic,
+					String.format("%s %d", BUILTIN_COMMAND_ACCEL_PREFIX, commandCounter++));
 		} else {
 			jmic.setText(c.toString());
-			MyMenu.setAccel(jmic, "control shift " + customCommandCounter++);
+			MyMenu.setAccel(jmic, String.format("%s %d", USER_COMMAND_ACCEL_PREFIX,
+					customCommandCounter++));
 		}
 
 		jmic.addActionListener(e -> {
@@ -224,11 +263,12 @@ final class MyMenu extends JMenuBar {
 	}
 
 	private void mnemonics() {
-		m_file.setMnemonic('f');
-		m_edit.setMnemonic('e');
-		m_create.setMnemonic('c');
-		m_delete.setMnemonic('d');
-		m_help.setMnemonic('h');
+		m_file.setMnemonic(M_FILE_MNEMONIC);
+		m_edit.setMnemonic(M_EDIT_MNEMONIC);
+		m_create.setMnemonic(M_CREATE_MNEMONIC);
+		m_delete.setMnemonic(M_DELETE_MNEMONIC);
+		m_preferences.setMnemonic(M_PREFERENCES_MNEMONIC);
+		m_help.setMnemonic(M_HELP_MNEMONIC);
 	}
 
 	private void listeners() {
@@ -242,6 +282,7 @@ final class MyMenu extends JMenuBar {
 		f_undo.addActionListener(a_undo);
 		f_redo.addActionListener(a_redo);
 		d_component.addActionListener(a_delete);
+		p_settings.addActionListener(a_edit);
 		h_help.addActionListener(a_help);
 	}
 
@@ -303,19 +344,20 @@ final class MyMenu extends JMenuBar {
 	}
 
 	private void accelerators() {
-		MyMenu.setAccel(f_new, "control N");
-		MyMenu.setAccel(f_close, "control W");
-		MyMenu.setAccel(f_save, "control S");
-		MyMenu.setAccel(f_save_as, "control shift S");
-		MyMenu.setAccel(f_open, "control O");
-		MyMenu.setAccel(f_clear, "control shift C");
-		MyMenu.setAccel(f_import, "control I");
-		MyMenu.setAccel(f_undo, "control Z");
-		MyMenu.setAccel(f_redo, "control Y");
-		MyMenu.setAccel(e_activate, "shift A");
-		MyMenu.setAccel(e_focus, "shift M");
-		MyMenu.setAccel(d_component, "control D");
-		MyMenu.setAccel(h_help, "F1");
+		MyMenu.setAccel(f_new, F_NEW_ACCEL);
+		MyMenu.setAccel(f_close, F_CLOSE_ACCEL);
+		MyMenu.setAccel(f_save, F_SAVE_ACCEL);
+		MyMenu.setAccel(f_save_as, F_SAVE_AS_ACCEL);
+		MyMenu.setAccel(f_open, F_OPEN_ACCEL);
+		MyMenu.setAccel(f_clear, F_CLEAR_ACCEL);
+		MyMenu.setAccel(f_import, F_IMPORT_ACCEL);
+		MyMenu.setAccel(f_undo, F_UNDO_ACCEL);
+		MyMenu.setAccel(f_redo, F_REDO_ACCEL);
+		MyMenu.setAccel(e_activate, E_ACTIVATE_ACCEL);
+		MyMenu.setAccel(e_focus, E_FOCUS_ACCEL);
+		MyMenu.setAccel(d_component, D_COMPONENT_ACCEL);
+		MyMenu.setAccel(p_settings, P_SETTINGS_ACCEL);
+		MyMenu.setAccel(h_help, H_HELP_ACCEL);
 	}
 
 	private void icons() {
@@ -334,6 +376,8 @@ final class MyMenu extends JMenuBar {
 		MyMenu.setIcon(e_focus, "focus");
 		MyMenu.setIcon(m_create, "create");
 		MyMenu.setIcon(m_delete, "delete");
+		MyMenu.setIcon(m_preferences, "preferences");
+		MyMenu.setIcon(p_settings, "settings");
 		MyMenu.setIcon(m_help, "help");
 	}
 
@@ -342,7 +386,7 @@ final class MyMenu extends JMenuBar {
 	}
 
 	private static void setIcon(JMenuItem jmi, String desc) {
-		final String filename = String.format("%s%s_icon.png", StringConstants.menu_icon_path,
+		final String filename = String.format("%s%s_icon.png", MENU_ICON_PATH,
 				desc);
 		final String description = String.format("%s icon", desc);
 		jmi.setIcon(new ImageIcon(filename, description));

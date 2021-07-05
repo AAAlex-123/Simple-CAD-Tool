@@ -21,7 +21,7 @@ final class InputPin extends Component {
 
 	private static final long serialVersionUID = 3L;
 
-	private static final String sprite = StringConstants.component_icon_path
+	private static final String sprite = StringConstants.COMPONENT_ICON_PATH
 			+ "input_pin_{state}.png";
 
 	private static final BufferedImage image_on, image_off;

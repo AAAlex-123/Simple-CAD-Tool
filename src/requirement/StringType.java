@@ -21,13 +21,13 @@ public enum StringType {
 	/** Type for valid file types */
 	FILETYPE("component|circuit", "'component' or 'circuit'"),
 
-	/** Type for positive integers */
+	/** Type for 'on' or 'off' */
 	ON_OFF("on|off", "'on' or 'off'"),
 
 	/** Type for any string */
 	ANY(".+", "Non-empty string"),
 
-	/** Type for custom regex. Defaults to ANY */
+	/** Type for custom regex. Defaults to ANY. */
 	CUSTOM(".*", "Custom") {
 		@Override
 		public StringType alter(String regex, String description) {
@@ -39,41 +39,37 @@ public enum StringType {
 
 	/** The regex of this Type */
 	Pattern p;
+
 	/** A human-readable description for the regex of this Type */
 	String  desc;
 
-	StringType(String regex, String description) {
+	private StringType(String regex, String description) {
 		p = Pattern.compile(regex);
 		desc = description;
 	}
 
 	/**
-	 * Allows some StringTypes to define custom regex at runtime.
+	 * Allows some Types to define a custom regex and description at runtime.
 	 *
-	 * @param regex       the new regex for this StringType
-	 * @param description the new description for this StringType
+	 * @param regex       the new regex for this Type
+	 * @param description the new description for this Type
 	 *
 	 * @return this (used for chaining)
 	 */
+	@SuppressWarnings("unused")
 	public StringType alter(String regex, String description) {
 		throw new UnsupportedOperationException(
-				"Type " + this + " does not support custom regex and description");
+				String.format("Type %s does not support custom regex and description", this));
 	}
 
 	/**
-	 * Checks whether or not the String provided matches the regular expression of
-	 * this type.
+	 * Checks whether or not the String {@code s} matches the regex of this Type.
 	 *
 	 * @param s the String to check
 	 *
-	 * @return true if it matches, false otherwise
+	 * @return {@code true} if it matches, {@code false} otherwise
 	 */
 	public final boolean isValid(String s) {
 		return p.matcher(s).matches();
-	}
-
-	@Override
-	public final String toString() {
-		return String.format("%s: %s", super.toString(), desc);
 	}
 }
