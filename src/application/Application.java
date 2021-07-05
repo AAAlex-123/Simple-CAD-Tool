@@ -1,13 +1,14 @@
 package application;
-
 import java.awt.BorderLayout;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
@@ -157,6 +158,28 @@ public class Application {
 			@Override
 			void execute() {
 				context.removeEditor(context.getActiveEditor());
+			}
+		},
+
+		/** Action for saving settings */
+		EDIT_SETTINGS {
+			@Override
+			void execute() {
+				try {
+					final boolean settingsChanged = StringConstants.edit(context.getFrame());
+					if (settingsChanged) {
+						StringConstants.writeToFile();
+						JOptionPane.showMessageDialog(context.getFrame(), String.format(
+								"Changes saved to file %s.%nThey will take effect the next time the Application is started.",
+								StringConstants.SETTINGS_FILE), "Settings saved successfully",
+								JOptionPane.INFORMATION_MESSAGE);
+					}
+				} catch (IOException e) {
+					JOptionPane.showMessageDialog(context.getFrame(), String.format(
+							"Couldn't save settings to file %s.%nInform the developer about 'Application-SETTINGS'.",
+							StringConstants.SETTINGS_FILE), "Error while saving settings",
+							JOptionPane.ERROR_MESSAGE);
+				}
 			}
 		};
 
