@@ -13,6 +13,8 @@ import java.awt.event.MouseMotionAdapter;
 
 import javax.swing.JComponent;
 
+import myUtil.Utility;
+
 /**
  * A class encapsulating the drawing behaviour of a {@link Component}.
  *
@@ -93,14 +95,20 @@ public abstract class ComponentGraphic extends JComponent {
 	 * @param g the Graphics object necessary to draw
 	 */
 	protected void drawID(Graphics g) {
-		g.setColor(focused ? Color.ORANGE : Color.BLACK);
+		g.setColor(focused ? Color.YELLOW : Color.BLACK);
 		g.drawString(component.getID(), 0, getHeight() - 1);
 	}
 
 	// 5 methods for moving and resizing
 
-	/** Specifies how this ComponentGraphic should react when moved or resized */
-	protected abstract void updateOnMovement();
+	/** Specifies how this ComponentGraphic should react when moved (or resized) */
+	protected void updateOnMovement() {
+		// for Components that are moved by the user (all except for Branches),
+		// tell their inputs and outputs (the Branches connected to them) to update.
+		Utility.foreach(component.getInputs(), comp -> comp.getGraphics().updateOnMovement());
+		Utility.foreach(component.getOutputs(),
+		        vc -> Utility.foreach(vc, comp -> comp.getGraphics().updateOnMovement()));
+	}
 
 	@Override
 	public final void setLocation(int x, int y) {

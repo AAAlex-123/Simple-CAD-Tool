@@ -13,7 +13,6 @@ import javax.imageio.ImageIO;
 
 import application.StringConstants;
 import exceptions.ComponentNotFoundException;
-import myUtil.Utility;
 
 /**
  * Handles the Graphics of a {@link Gate}.
@@ -70,7 +69,6 @@ class GateGraphic extends ComponentGraphic {
 		addFunctions();
 	}
 
-
 	@Override
 	protected final void draw(Graphics g) {
 		drawSprite(g);
@@ -118,13 +116,6 @@ class GateGraphic extends ComponentGraphic {
 	}
 
 	@Override
-	protected void updateOnMovement() {
-		Utility.foreach(component.getInputs(), c -> c.getGraphics().updateOnMovement());
-		Utility.foreach(component.getOutputs(),
-		        vb -> Utility.foreach(vb, c -> c.getGraphics().updateOnMovement()));
-	}
-
-	@Override
 	protected Point getBranchInputCoords(Component b) {
 		for (List<Component> ls : component.getOutputs()) {
 			int index = ls.indexOf(b);
@@ -148,7 +139,6 @@ class GateGraphic extends ComponentGraphic {
 	protected void attachListeners() {
 		attachListeners_(DRAG_KB_FOCUS);
 	}
-
 
 	@Override
 	protected void restoreSerialised() {

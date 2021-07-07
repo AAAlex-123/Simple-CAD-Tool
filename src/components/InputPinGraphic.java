@@ -10,7 +10,6 @@ import javax.imageio.ImageIO;
 
 import application.StringConstants;
 import exceptions.ComponentNotFoundException;
-import myUtil.Utility;
 
 /**
  * Handles the Graphics of an {@link InputPin}.
@@ -62,11 +61,6 @@ final class InputPinGraphic extends ComponentGraphic {
 		g.drawImage(component.getActive(0) ? image_on : image_off, 0, 0, null);
 	}
 
-	@Override
-	protected void updateOnMovement() {
-		// this component is moved by the user; tell branches to update
-		Utility.foreach(component.getOutputs().get(0), c -> c.getGraphics().updateOnMovement());
-	}
 
 	@Override
 	protected Point getBranchInputCoords(Component b) {
