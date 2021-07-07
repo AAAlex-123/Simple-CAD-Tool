@@ -1,36 +1,15 @@
 package components;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-
-import javax.imageio.ImageIO;
-
-import application.StringConstants;
-
-/** A Primitive Gate that maps the inputs to their logical {@code and}. */
+/**
+ * A Primitive Gate that maps the inputs to their logical {@code and}.
+ *
+ * @author alexm
+ */
 final class GateAND extends PrimitiveGate {
 
-	private static final long serialVersionUID = 3L;
+	private static final long serialVersionUID = 4L;
 
-	private static final String sprite = StringConstants.COMPONENT_ICON_PATH
-	        + "gate_and.png";
-
-	private static final BufferedImage image;
-
-	static {
-		BufferedImage temp = null;
-		File file = null;
-
-		try {
-			file = new File(sprite);
-			temp = ImageIO.read(file);
-		} catch (IOException e) {
-			System.err.printf("Could not load image %s", file);
-		}
-
-		image = temp;
-	}
+	private final ComponentGraphic g;
 
 	/**
 	 * Constructs the AND Gate with the given number of inputs and one output.
@@ -39,6 +18,7 @@ final class GateAND extends PrimitiveGate {
 	 */
 	GateAND(int in) {
 		super(in, 1);
+		g = new GateANDGraphics(this);
 	}
 
 	@Override
@@ -61,7 +41,7 @@ final class GateAND extends PrimitiveGate {
 	}
 
 	@Override
-	protected BufferedImage getImage() {
-		return image;
+	public ComponentGraphic getGraphics() {
+		return g;
 	}
 }
