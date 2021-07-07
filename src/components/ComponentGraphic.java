@@ -20,6 +20,8 @@ import javax.swing.JComponent;
  */
 public abstract class ComponentGraphic extends JComponent {
 
+	private static final long serialVersionUID = 1L;
+
 	/**
 	 * The {@link Component} that is drawn by this {@code ComponentGraphics}. It is
 	 * used to access information necessary to properly draw the {@code Component}
