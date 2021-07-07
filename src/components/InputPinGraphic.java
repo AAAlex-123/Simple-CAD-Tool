@@ -19,6 +19,8 @@ import myUtil.Utility;
  */
 final class InputPinGraphic extends ComponentGraphic {
 
+	private static final long serialVersionUID = 1L;
+
 	private static final String sprite = StringConstants.COMPONENT_ICON_PATH
 	        + "input_pin_{state}.png";
 
