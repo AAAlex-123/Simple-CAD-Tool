@@ -1,5 +1,9 @@
 package components;
 
+import static components.ComponentType.BRANCH;
+import static components.ComponentType.INPUT_PIN;
+import static components.ComponentType.OUTPUT_PIN;
+
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
@@ -10,9 +14,12 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.util.List;
+import java.util.function.Function;
 
 import javax.swing.JComponent;
 
+import exceptions.ComponentNotFoundException;
 import myUtil.Utility;
 
 /**
@@ -33,6 +40,12 @@ public abstract class ComponentGraphic extends JComponent {
 
 	/** Size of the drawn image in pixels */
 	private static final int SIZE = 40;
+
+	/** Size of the drawn pins in pixels */
+	private static final int PIN_SIZE = 3;
+
+	/** Functions to draw the pins. let subclasses specify any number of them */
+	private transient Function<Integer, Integer> dxi, dyi, dxo, dyo;
 
 	/** bit to make component dragable, keyboard-usable and focusable */
 	protected static final byte DRAG_KB_FOCUS = 0x1;
@@ -68,9 +81,10 @@ public abstract class ComponentGraphic extends JComponent {
 		component = c;
 		setBounds(x, y, w, h);
 		attachListeners();
+		addFunctions();
 	}
 
-	// 3 draw methods
+	// 5 draw methods
 
 	@Override
 	public final void paintComponent(Graphics g) {
@@ -79,6 +93,7 @@ public abstract class ComponentGraphic extends JComponent {
 
 		super.paintComponent(g);
 		draw(g);
+		drawPins(g);
 		drawID(g);
 	}
 
@@ -88,6 +103,41 @@ public abstract class ComponentGraphic extends JComponent {
 	 * @param g the Graphics object necessary to draw
 	 */
 	protected abstract void draw(Graphics g);
+
+	private final void drawPins(Graphics g) {
+		final List<Component> inputs = component.getInputs();
+		final List<List<Component>> outputs = component.getOutputs();
+
+		for (int i = 0; i < inputs.size(); ++i) {
+			g.setColor(inputs.get(i) != null ? inputs.get(i).getActive(0) ? Color.GREEN : Color.RED : Color.RED);
+			drawPin(g, new Point(dxi.apply(i), dyi.apply(i)));
+		}
+
+		// TODO: contemplate whether or not this is worth improving
+
+		switch (component.type()) {
+		case INPUT_PIN:
+		case OUTPUT_PIN:
+			for (int i = 0; i < outputs.size(); ++i) {
+				List<Component> pins = outputs.get(i);
+				if (pins.size() == 0)
+					g.setColor(Color.RED);
+				else
+					g.setColor(pins.get(0).getActive(0) ? Color.GREEN : Color.RED);
+
+				g.setColor(component.getActive(0) ? Color.GREEN : Color.RED);
+				drawPin(g, new Point(dxo.apply(i), dyo.apply(i)));
+			}
+			break;
+		case BRANCH:
+			break;
+		default:
+			for (int i = 0; i < outputs.size(); ++i) {
+				g.setColor(((Gate) component).outputPins[i].getActive(0) ? Color.GREEN : Color.RED);
+				drawPin(g, new Point(dxo.apply(i), dyo.apply(i)));
+			}
+		}
+	}
 
 	/**
 	 * Draws the ID of the {@code ComponentGraphic}.
@@ -99,6 +149,10 @@ public abstract class ComponentGraphic extends JComponent {
 		g.drawString(component.getID(), 0, getHeight() - 1);
 	}
 
+	private static void drawPin(Graphics g, Point p) {
+		g.fillRect(p.x - (PIN_SIZE / 2), p.y - (PIN_SIZE / 2), PIN_SIZE, PIN_SIZE);
+	}
+
 	// 5 methods for moving and resizing
 
 	/** Specifies how this ComponentGraphic should react when moved (or resized) */
@@ -107,7 +161,7 @@ public abstract class ComponentGraphic extends JComponent {
 		// tell their inputs and outputs (the Branches connected to them) to update.
 		Utility.foreach(component.getInputs(), comp -> comp.getGraphics().updateOnMovement());
 		Utility.foreach(component.getOutputs(),
-		        vc -> Utility.foreach(vc, comp -> comp.getGraphics().updateOnMovement()));
+				vc -> Utility.foreach(vc, comp -> comp.getGraphics().updateOnMovement()));
 	}
 
 	@Override
@@ -132,10 +186,19 @@ public abstract class ComponentGraphic extends JComponent {
 	 *
 	 * @return a Point with the coordinates of the Branch
 	 */
-	protected Point getBranchInputCoords(Component branch) {
-		throw new UnsupportedOperationException(String
-		        .format("Component of type %s don't support getBranchInputCoords(Branch, int)",
-		                component.type().description()));
+	protected final Point getBranchInputCoords(Component branch) {
+		ComponentType type = component.type();
+		if ((type == BRANCH) || (type == OUTPUT_PIN))
+			throw new UnsupportedOperationException(String.format(
+					"Component of type %s don't support getBranchInputCoords(Branch, int)", type.description()));
+
+		for (List<Component> ls : component.getOutputs()) {
+			int index = ls.indexOf(branch);
+			if (index != -1)
+				return new Point(getX() + dxo().apply(index), getY() + dyo().apply(index));
+		}
+
+		throw new ComponentNotFoundException(branch, component);
 	}
 
 	/**
@@ -146,10 +209,18 @@ public abstract class ComponentGraphic extends JComponent {
 	 *
 	 * @return a Point with the coordinates of the Branch
 	 */
-	protected Point getBranchOutputCoords(Component branch) {
-		throw new UnsupportedOperationException(String
-		        .format("Component of type %s don't support getBranchOutputCoords(Branch, int)",
-		                component.type().description()));
+	protected final Point getBranchOutputCoords(Component branch) {
+		ComponentType type = component.type();
+		if ((type == BRANCH) || (type == INPUT_PIN))
+			throw new UnsupportedOperationException(String
+					.format("Component of type %s don't support getBranchOutputCoords(Branch, int)",
+							type.description()));
+
+		int index = component.getInputs().indexOf(branch);
+		if (index != -1)
+			return new Point(getX() + dxi().apply(index), getY() + dyi().apply(index));
+
+		throw new ComponentNotFoundException(branch, component);
 	}
 
 	// 2 main listener methods
@@ -196,6 +267,56 @@ public abstract class ComponentGraphic extends JComponent {
 		attachListeners();
 		focused = false;
 		requestFocus();
+		addFunctions();
+	}
+
+	// 5 function methods for pin locations
+
+	private void addFunctions() {
+		dxi = dxi();
+		dyi = dyi();
+		dxo = dxo();
+		dyo = dyo();
+	}
+
+	/**
+	 * Returns a Function for the x coordinate of the Input Pin at index i.
+	 * 
+	 * @return the Function
+	 */
+	protected Function<Integer, Integer> dxi() {
+		return i -> PIN_SIZE / 2;
+	}
+
+	/**
+	 * Returns a Function for the y coordinate of the Input Pin at index i.
+	 * 
+	 * @return the Function
+	 */
+	protected Function<Integer, Integer> dyi() {
+		final int count = component.inCount();
+		final int gap = (getHeight() - (count * PIN_SIZE)) / (count + 1);
+		return i -> (((i + 1) * (gap + PIN_SIZE)) - (PIN_SIZE / 2));
+	}
+
+	/**
+	 * Returns a Function for the x coordinate of the Output Pin at index i.
+	 * 
+	 * @return the Function
+	 */
+	protected Function<Integer, Integer> dxo() {
+		return i -> (getWidth() - (PIN_SIZE / 2)) - 1;
+	}
+
+	/**
+	 * Returns a Function for the y coordinate of the Output Pin at index i.
+	 * 
+	 * @return the Function
+	 */
+	protected Function<Integer, Integer> dyo() {
+		final int count = component.outCount();
+		final int gap = (getHeight() - (count * PIN_SIZE)) / (count + 1);
+		return i -> (((i + 1) * (gap + PIN_SIZE)) - (PIN_SIZE / 2));
 	}
 
 	// 5 secondary listener methods
@@ -206,7 +327,7 @@ public abstract class ComponentGraphic extends JComponent {
 			public void mouseDragged(MouseEvent e) {
 				// center on mouse
 				setLocation(getX() + (e.getX() - (getWidth() / 2)),
-				        getY() + (e.getY() - (getHeight() / 2)));
+						getY() + (e.getY() - (getHeight() / 2)));
 				e.consume();
 			}
 		});
@@ -225,8 +346,8 @@ public abstract class ComponentGraphic extends JComponent {
 					break;
 				case KeyEvent.VK_SPACE:
 					if (component.type() == ComponentType.INPUT_PIN)
-						((InputPin) ComponentGraphic.this.component)
-						        .setActive(!component.getActive(0));
+						((InputPin) component)
+						.setActive(!component.getActive(0));
 					break;
 				default:
 					break;
@@ -303,10 +424,10 @@ public abstract class ComponentGraphic extends JComponent {
 			// check for drawing area bounds
 			int newx = getX(), newy = getY();
 			if ((dx != 0) && ((getX() + dx) >= 0)
-			        && ((getX() + dx) <= (getParent().getWidth() - getWidth())))
+					&& ((getX() + dx) <= (getParent().getWidth() - getWidth())))
 				newx = (int) Math.floor((getX() + dx) / (double) d) * d;
 			if ((dy != 0) && ((getY() + dy) >= 0)
-			        && ((getY() + dy) <= (getParent().getHeight() - getHeight())))
+					&& ((getY() + dy) <= (getParent().getHeight() - getHeight())))
 				newy = (int) Math.floor((getY() + dy) / (double) d) * d;
 
 			// update location
