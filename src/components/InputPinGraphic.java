@@ -1,7 +1,6 @@
 package components;
 
 import java.awt.Graphics;
-import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -9,7 +8,6 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 import application.StringConstants;
-import exceptions.ComponentNotFoundException;
 
 /**
  * Handles the Graphics of an {@link InputPin}.
@@ -59,15 +57,6 @@ final class InputPinGraphic extends ComponentGraphic {
 	@Override
 	protected void draw(Graphics g) {
 		g.drawImage(component.getActive(0) ? image_on : image_off, 0, 0, null);
-	}
-
-
-	@Override
-	protected Point getBranchInputCoords(Component b) {
-		if (!component.getOutputs().get(0).contains(b))
-			throw new ComponentNotFoundException(b, component);
-
-		return new Point((getX() + getWidth()) - 1, getY() + (getHeight() / 2));
 	}
 
 	@Override
