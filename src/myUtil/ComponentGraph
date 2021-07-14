@@ -60,6 +60,7 @@ public class ComponentGraph {
 	/**
 	 * Check whether or not a branch connecting 2 components can be safely added.
 	 * Make sure to perform the check <i>before</i> the actual branch is added.
+	 * The connection will be added to the graph if it's deemed safe to do so.
 	 * 
 	 * @param connector the <b>branch's</br> input component
 	 * @param target the <b>branch's</br> output component
@@ -88,18 +89,19 @@ public class ComponentGraph {
 		}
 		
 		/*
-		 * For any edge (u,v): if post(u) < post(v) then the graph is not acyclical
+		 * For any edge (u,v): if post(u) < post(v) then the graph is not a DAG
 		 * so there is a feedback look somewhere in the circuit. 
 		 */
-		for(String outer_key : nodes.keySet())
+		for(String outer_key : nodes.keySet()) {
+			Node u = nodes.get(outer_key);
 			for(Node v : nodes.get(outer_key).neighbours) {
-				Node u = nodes.get(outer_key);
+				
 				if(u.post < v.post) {
 					u.neighbours.remove(v); //remove faulty connection
 					return false;
 				}
 			}
-				
+		}	
 		return true;
 	}
 	
