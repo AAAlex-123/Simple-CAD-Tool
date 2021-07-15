@@ -28,16 +28,16 @@ public final class StringConstants {
 	private static final Map<String, String>  map;
 	private static final Requirements<String> reqs;
 
-	public static String COMPONENT_ICON_PATH, MENU_ICON_PATH, USER_DATA, F_NEW_ACCEL,
-	        F_CLOSE_ACCEL, F_SAVE_ACCEL, F_SAVE_AS_ACCEL, F_OPEN_ACCEL, F_CLEAR_ACCEL,
-	        F_IMPORT_ACCEL, F_UNDO_ACCEL, F_REDO_ACCEL, E_ACTIVATE_ACCEL, E_FOCUS_ACCEL,
-	        D_COMPONENT_ACCEL, P_SETTINGS_ACCEL, H_HELP_ACCEL, BUILTIN_COMMAND_ACCEL_PREFIX,
-	        USER_COMMAND_ACCEL_PREFIX;
-	public static char   M_FILE_MNEMONIC, M_EDIT_MNEMONIC, M_CREATE_MNEMONIC,
-	        M_DELETE_MNEMONIC, M_PREFERENCES_MNEMONIC, M_HELP_MNEMONIC;
+	public static String COMPONENT_ICON_PATH, MENU_ICON_PATH, USER_DATA, F_NEW_ACCEL, F_CLOSE_ACCEL, F_SAVE_ACCEL,
+	F_SAVE_AS_ACCEL, F_OPEN_ACCEL, F_CLEAR_ACCEL, F_IMPORT_ACCEL, F_UNDO_ACCEL, F_REDO_ACCEL, E_ACTIVATE_ACCEL,
+	E_FOCUS_ACCEL, D_COMPONENT_ACCEL, P_SETTINGS_ACCEL, H_HELP_ACCEL, BUILTIN_COMMAND_ACCEL_PREFIX,
+	USER_COMMAND_ACCEL_PREFIX, G_INPUT_PIN, G_OUTPUT_PIN, G_BRANCH, G_GATE, G_GATEAND, G_GATEOR, G_GATENOT,
+	G_GATEXOR;
+	public static char M_FILE_MNEMONIC, M_EDIT_MNEMONIC, M_CREATE_MNEMONIC, M_DELETE_MNEMONIC, M_PREFERENCES_MNEMONIC,
+	M_HELP_MNEMONIC;
 
 	static {
-		map = new LinkedHashMap<>() {
+		map = new LinkedHashMap<String, String>() {
 			@Override
 			public String get(Object key) {
 				final String rv = super.get(key);
@@ -59,8 +59,8 @@ public final class StringConstants {
 			System.exit(0);
 		} catch (final IOException e) {
 			System.err.printf(
-			        "Error while reading from file %s. Inform the developer about 'StringConstants.static-IO'%n",
-			        StringConstants.SETTINGS_FILE);
+					"Error while reading from file %s. Inform the developer about 'StringConstants.static-IO'%n",
+					StringConstants.SETTINGS_FILE);
 			System.exit(0);
 		}
 	}
@@ -85,7 +85,7 @@ public final class StringConstants {
 
 	public static void writeToFile() throws IOException {
 		try (BufferedWriter writer = new BufferedWriter(
-		        new FileWriter(StringConstants.SETTINGS_FILE))) {
+				new FileWriter(StringConstants.SETTINGS_FILE))) {
 			for (final Entry<String, String> e : StringConstants.map.entrySet())
 				writer.write(String.format("%s=%s%n", e.getKey(), e.getValue()));
 		}
@@ -94,9 +94,10 @@ public final class StringConstants {
 	private static void loadFromFile() throws FileNotFoundException, IOException {
 
 		try (BufferedReader reader = new BufferedReader(
-		        new FileReader(StringConstants.SETTINGS_FILE))) {
+				new FileReader(StringConstants.SETTINGS_FILE))) {
 			String line;
 			while ((line = reader.readLine()) != null) {
+				// lines starting with '#' are comments
 				if (!line.equals("") && !line.startsWith("#")) {
 					final String[] parts = line.split("=");
 					StringConstants.map.put(parts[0], parts[1]);
@@ -112,7 +113,7 @@ public final class StringConstants {
 		StringConstants.M_CREATE_MNEMONIC = StringConstants.map.get("Create_Mnemonic").charAt(0);
 		StringConstants.M_DELETE_MNEMONIC = StringConstants.map.get("Delete_Mnemonic").charAt(0);
 		StringConstants.M_PREFERENCES_MNEMONIC = StringConstants.map.get("Preferences_Mnemonic")
-		        .charAt(0);
+				.charAt(0);
 		StringConstants.M_HELP_MNEMONIC = StringConstants.map.get("Help_Mnemonic").charAt(0);
 		StringConstants.F_NEW_ACCEL = StringConstants.map.get("New_Editor");
 		StringConstants.F_CLOSE_ACCEL = StringConstants.map.get("Close_Editor");
@@ -129,8 +130,16 @@ public final class StringConstants {
 		StringConstants.P_SETTINGS_ACCEL = StringConstants.map.get("Edit_Settings");
 		StringConstants.H_HELP_ACCEL = StringConstants.map.get("Help");
 		StringConstants.BUILTIN_COMMAND_ACCEL_PREFIX = StringConstants.map
-		        .get("Built_in_create_component_prefix");
+				.get("Built_in_create_component_prefix");
 		StringConstants.USER_COMMAND_ACCEL_PREFIX = StringConstants.map
-		        .get("User_create_component_prefix");
+				.get("User_create_component_prefix");
+		StringConstants.G_INPUT_PIN = StringConstants.map.get("Input_Pin_Sequence");
+		StringConstants.G_OUTPUT_PIN = StringConstants.map.get("Output_Pin_Sequence");
+		StringConstants.G_BRANCH = StringConstants.map.get("Branch_Sequence");
+		StringConstants.G_GATE = StringConstants.map.get("Gate_Sequence");
+		StringConstants.G_GATEAND = StringConstants.map.get("Gate_AND_Sequence");
+		StringConstants.G_GATEOR = StringConstants.map.get("Gate_OR_Sequence");
+		StringConstants.G_GATENOT = StringConstants.map.get("Gate_NOT_Sequence");
+		StringConstants.G_GATEXOR = StringConstants.map.get("Gate_XOR_Sequence");
 	}
 }
