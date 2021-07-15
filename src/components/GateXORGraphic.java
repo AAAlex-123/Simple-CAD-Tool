@@ -14,7 +14,7 @@ import application.StringConstants;
  *
  * @author alexm
  */
-final class GateXORGraphic extends GateGraphics {
+final class GateXORGraphic extends GateGraphic {
 
 	private static final long serialVersionUID = 1L;
 
