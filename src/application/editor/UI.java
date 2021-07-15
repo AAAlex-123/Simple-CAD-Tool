@@ -27,7 +27,7 @@ final class UI extends JPanel {
 	 * @param c the Component
 	 */
 	void addComponent(Component c) {
-		add(c);
+		add(c.getGraphics());
 		repaint();
 	}
 
@@ -37,7 +37,7 @@ final class UI extends JPanel {
 	 * @param c the Component
 	 */
 	void removeComponent(Component c) {
-		remove(c);
+		remove(c.getGraphics());
 		repaint();
 	}
 }

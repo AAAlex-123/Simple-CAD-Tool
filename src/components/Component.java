@@ -1,17 +1,8 @@
 package components;
 
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Point;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionAdapter;
-
-import javax.swing.JComponent;
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.List;
 
 import exceptions.ComponentNotAccessibleException;
 import exceptions.InvalidIndexException;
@@ -26,24 +17,17 @@ import exceptions.InvalidIndexException;
  * Components may be used in the context of an Application which manages when
  * they are created and deleted. This Application will be referenced throughout
  * the documentation.
+ *
+ * @author alexm
  */
-public abstract class Component extends JComponent implements Identifiable<String> {
+public abstract class Component implements Identifiable<String>, Serializable {
 
-	private static final long serialVersionUID = 5L;
+	private static final long serialVersionUID = 6L;
 
+	// 3 private fields
+
+	/** ID for this Component, to implement the {@link Identifiable} interface */
 	private String componentID;
-
-	@Override
-	public final String getID() {
-		return componentID;
-	}
-
-	@Override
-	public final void setID(String id) {
-		componentID = id;
-	}
-
-	// ===== CIRCUITING =====
 
 	/**
 	 * Indicates whether or not this Component is hidden inside another Component. A
@@ -52,7 +36,7 @@ public abstract class Component extends JComponent implements Identifiable<Strin
 	 * of its inner circuit. This property of Components will be referred to as its
 	 * "hiddenness".
 	 */
-	private boolean hidden = false;
+	private boolean hidden;
 
 	/**
 	 * Indicates whether or not this Component should be removed. When the method
@@ -60,16 +44,15 @@ public abstract class Component extends JComponent implements Identifiable<Strin
 	 * The application is responsible to check, using {@link Component#toRemove()
 	 * toRemove()}, if a Component is destroyed and must therefore be removed.
 	 */
-	protected boolean toBeRemoved = false;
+	protected boolean toBeRemoved;
 
-	/** @return the number of incoming connections */
-	protected int inCount() {
-		return 1;
-	}
+	// 4 core methods
 
-	/** @return the number of outgoing connections */
-	protected int outCount() {
-		return 1;
+	/** Constructs the Component */
+	protected Component() {
+		componentID = "";
+		hidden = false;
+		toBeRemoved = false;
 	}
 
 	/**
@@ -78,21 +61,6 @@ public abstract class Component extends JComponent implements Identifiable<Strin
 	 * @return the type
 	 */
 	public abstract ComponentType type();
-
-	/**
-	 * Returns whether or not this Component is {@link Component#hidden hidden}
-	 * inside another Component.
-	 *
-	 * @return true if it is hidden, false otherwise
-	 */
-	protected final boolean hidden() {
-		return hidden;
-	}
-
-	/** Marks this Component as hidden */
-	protected final void hideComponent() {
-		hidden = true;
-	}
 
 	/**
 	 * The core of the library: all Components are able to propagate a received
@@ -111,57 +79,6 @@ public abstract class Component extends JComponent implements Identifiable<Strin
 	protected abstract void wake_up(boolean newActive, int index, boolean prevHidden);
 
 	/**
-	 * Specifies what this Component should do when it is destroyed. Subclasses
-	 * specify how Components that are connected to this Component should react
-	 * using the template method {@link Component#destroySelf destroySelf}.
-	 * <p>
-	 * In principle, a destroyed Component isn't referenced by any other Component
-	 * and when the application removes it, it should be garbage collected.
-	 *
-	 * @see Component#toBeRemoved
-	 */
-	protected final void destroy() {
-		toBeRemoved = true;
-		destroySelf();
-	}
-
-	/** Each Component specifies how it should destroy itself. */
-	protected abstract void destroySelf();
-
-	/**
-	 * Returns whether or not the application should remove this Component.
-	 *
-	 * @return true if the Component should be removed, false otherwise.
-	 *
-	 * @see Component#toBeRemoved
-	 */
-	final boolean toRemove() {
-		return toBeRemoved;
-	}
-
-	/** Restores the state of the Component after it was destroyed */
-	final void restoreDeleted() {
-		restoreDeletedSelf();
-		toBeRemoved = false;
-		focused = false;
-		requestFocus();
-	}
-
-	/** Each Component specifies how it is restored after destruction */
-	protected abstract void restoreDeletedSelf();
-
-	/** Restores the state of the Component after it was serialised */
-	final void restoreSerialised() {
-		restoreSerialisedSelf();
-		attachListeners();
-		focused = false;
-		requestFocus();
-	}
-
-	/** Each Component specifies how it is restored after serialisation */
-	protected abstract void restoreSerialisedSelf();
-
-	/**
 	 * Returns the active state of the Component's pin at the specified index.
 	 *
 	 * @param index the Component's Pin index
@@ -170,35 +87,8 @@ public abstract class Component extends JComponent implements Identifiable<Strin
 	 */
 	protected abstract boolean getActive(int index);
 
-	/**
-	 * Checks if this Component is not hidden inside another gate. If it is, it
-	 * cannot be modified or accessed in any way, and this method throws.
-	 * <p>
-	 * This method should be called in every method that changes a Component (e.g. a
-	 * method that creates a connection). If everything is designed correctly, this
-	 * method should never throw.
-	 */
-	protected final void checkChangeable() {
-		if (hidden())
-			throw new ComponentNotAccessibleException(this);
-	}
-
-	/**
-	 * Checks if the {@code index} given by another component wishing to access this
-	 * component does not exceed {@code indexMax} (specified by this component).
-	 * <p>
-	 * This method should be called in every method that is index-sensitive. If
-	 * everything is designed correctly, this method should never throw.
-	 *
-	 * @param index    the index to check
-	 * @param indexMax its maximum value
-	 */
-	protected final void checkIndex(int index, int indexMax) {
-		if ((index < 0) || (index >= indexMax))
-			throw new InvalidIndexException(this, index);
-	}
-
-	// NOTE: the following 4 methods are only called internally by the Branches:
+	// 4 methods to change the inputs and outputs of a Component.
+	// Only Branches should call them.
 	// - set/add are called by Branch.connect()
 	// - remove in/out are called by Branch.destroy()
 
@@ -247,6 +137,150 @@ public abstract class Component extends JComponent implements Identifiable<Strin
 				type().description()));
 	}
 
+	// 2 + 4 methods for destroying and restoring Components
+
+	/**
+	 * Specifies what this Component should do when it is destroyed. Subclasses
+	 * specify how Components that are connected to this Component should react
+	 * using the template method {@link Component#destroySelf destroySelf}.
+	 * <p>
+	 * In principle, a destroyed Component isn't referenced by any other Component
+	 * and when the application removes it, it should be garbage collected.
+	 *
+	 * @see Component#toBeRemoved
+	 */
+	protected final void destroy() {
+		toBeRemoved = true;
+		destroySelf();
+	}
+
+	/** Each Component specifies how it should destroy itself */
+	protected abstract void destroySelf();
+
+	/** Restores the state of the Component after it was destroyed */
+	final void restoreDeleted() {
+		restoreDeletedSelf();
+		toBeRemoved = false;
+		getGraphics().restoreDeleted();
+	}
+
+	/** Each Component specifies how it is restored after destruction */
+	protected abstract void restoreDeletedSelf();
+
+	/** Restores the state of the Component after it was serialised */
+	final void restoreSerialised() {
+		restoreSerialisedSelf();
+		getGraphics().restoreSerialised();
+	}
+
+	/** Each Component specifies how it is restored after serialisation */
+	protected abstract void restoreSerialisedSelf();
+
+	// 3 methods to access specific parts and information of the Component
+
+	/**
+	 * Returns an unmodifiable list with the inputs of this Component as specified
+	 * by {@link Collections#unmodifiableList(List)}
+	 *
+	 * @return the List
+	 */
+	protected abstract List<Component> getInputs();
+
+	/**
+	 * Returns an unmodifiable list with a list of outputs of this Component as
+	 * specified by {@link Collections#unmodifiableList(List)}
+	 *
+	 * @return the List
+	 */
+	protected abstract List<List<Component>> getOutputs();
+
+	/**
+	 * Returns the {@code ComponentGraphics} object associated with this Component.
+	 *
+	 * @return the ComponentGraphics object
+	 */
+	public abstract ComponentGraphic getGraphics();
+
+	/** @return the number of incoming connections */
+	protected int inCount() {
+		return 1;
+	}
+
+	/** @return the number of outgoing connections */
+	protected int outCount() {
+		return 1;
+	}
+
+	// 2 general purpose methods
+
+	/**
+	 * Checks if this Component is not hidden inside another gate. If it is, it
+	 * cannot be modified or accessed in any way, and this method throws.
+	 * <p>
+	 * This method should be called in every method that changes a Component (e.g. a
+	 * method that creates a connection). If everything is designed correctly, this
+	 * method should never throw.
+	 */
+	protected final void checkChangeable() {
+		if (hidden())
+			throw new ComponentNotAccessibleException(this);
+	}
+
+	/**
+	 * Checks if the {@code index} given by another component wishing to access this
+	 * component does not exceed {@code indexMax} (specified by this component).
+	 * <p>
+	 * This method should be called in every method that is index-sensitive. If
+	 * everything is designed correctly, this method should never throw.
+	 *
+	 * @param index    the index to check
+	 * @param indexMax its maximum value
+	 */
+	protected final void checkIndex(int index, int indexMax) {
+		if ((index < 0) || (index >= indexMax))
+			throw new InvalidIndexException(this, index);
+	}
+
+	// 5 getters and setters for private fields
+
+	@Override
+	public final String getID() {
+		return componentID;
+	}
+
+	@Override
+	public final void setID(String id) {
+		componentID = id;
+	}
+
+	/**
+	 * Returns whether or not this Component is {@link Component#hidden hidden}
+	 * inside another Component.
+	 *
+	 * @return true if it is hidden, false otherwise
+	 */
+	protected final boolean hidden() {
+		return hidden;
+	}
+
+	/** Marks this Component as hidden */
+	protected final void hideComponent() {
+		hidden = true;
+	}
+
+	/**
+	 * Returns whether or not the application should remove this Component.
+	 *
+	 * @return true if the Component should be removed, false otherwise.
+	 *
+	 * @see Component#toBeRemoved
+	 */
+	final boolean toRemove() {
+		return toBeRemoved;
+	}
+
+	// 3 convenience methods for `wake_up`
+
 	/**
 	 * Same as wake_up, but "hiddenness" is assumed to be the same (e.g. when
 	 * connecting a Branch, "hiddenness" can't have changed)
@@ -278,258 +312,11 @@ public abstract class Component extends JComponent implements Identifiable<Strin
 		wake_up(newActive, 0, hidden());
 	}
 
+	// toString
+
 	@Override
 	public final String toString() {
 		return String.format("%s: %d-%d, UID: %s, hidden: %s", type().description(), inCount(),
 				outCount(), getID(), hidden());
-	}
-
-	// ===== DRAWING =====
-
-	private static final int SIZE = 40;
-
-	/*
-	 * used instead of hasFocus() because it does not return true immediately after
-	 * requestFocus() is called and therefore the user has no indication of focus.
-	 */
-	private boolean focused = false;
-
-	/** bit to make component dragable, keyboard-usable and focusable */
-	protected static final byte DRAG_KB_FOCUS = 0x01;
-	/** bit to make component (de)activate on click */
-	protected static final byte ACTIVATE      = 0x02;
-
-	/** Default constructor */
-	Component() {
-		this(0, 0, Component.SIZE, Component.SIZE);
-	}
-
-	/**
-	 * Constructor specifying location, dimensions and ID.
-	 *
-	 * @param x the Component's X position
-	 * @param y the Component's Y position
-	 * @param w the Component's width
-	 * @param h the Component's height
-	 */
-	private Component(int x, int y, int w, int h) {
-		setBounds(x, y, w, h);
-		attachListeners();
-	}
-
-	@Override
-	public final void paintComponent(Graphics g) {
-		if (hidden())
-			throw new RuntimeException("Hidden Components can't be drawn");
-
-		super.paintComponent(g);
-		draw(g);
-		drawID(g);
-	}
-
-	@Override
-	public final void setLocation(int x, int y) {
-		// use swing's setLocation and also update related components
-		super.setLocation(x, y);
-		updateOnMovement();
-	}
-
-	@Override
-	public final void setSize(int w, int h) {
-		// use swing's setSize and also update related components
-		super.setSize(w, h);
-		updateOnMovement();
-	}
-
-	private void moveWithKeyboard(KeyEvent e) {
-		if (hasFocus()) {
-			final int d = 10, dm = 4;
-			int dx = 0, dy = 0;
-
-			// find direction
-			switch (e.getKeyCode()) {
-			case KeyEvent.VK_LEFT:
-				dx = -d;
-				break;
-			case KeyEvent.VK_RIGHT:
-				dx = d;
-				break;
-			case KeyEvent.VK_UP:
-				dy = -d;
-				break;
-			case KeyEvent.VK_DOWN:
-				dy = d;
-				break;
-			default:
-				break;
-			}
-
-			// check for 'fast' movement
-			if (e.isShiftDown()) {
-				dx *= dm;
-				dy *= dm;
-			}
-
-			// check for drawing area bounds
-			int newx = getX(), newy = getY();
-			if ((dx != 0) && ((getX() + dx) >= 0)
-					&& ((getX() + dx) <= (getParent().getWidth() - getWidth())))
-				newx = (int) Math.floor((getX() + dx) / (double) d) * d;
-			if ((dy != 0) && ((getY() + dy) >= 0)
-					&& ((getY() + dy) <= (getParent().getHeight() - getHeight())))
-				newy = (int) Math.floor((getY() + dy) / (double) d) * d;
-
-			// update location
-			if ((newx != getX()) || (newy != getY()))
-				setLocation(newx, newy);
-		}
-	}
-
-	/**
-	 * Each Component specifies which listeners should be attached. This method may
-	 * (and should) be defined to call the {@link Component#attachListeners_(byte)
-	 * attachListeners_(byte)} method with the appropriate byte(s).
-	 *
-	 * @see Component#DRAG_KB_FOCUS
-	 * @see Component#ACTIVATE
-	 */
-	protected abstract void attachListeners();
-
-	/**
-	 * Attaches listeners to this Component based on the {@code flags}.
-	 *
-	 * @param flags a byte whose bits correspond to different listeners
-	 *
-	 * @see Component#attachListeners()
-	 */
-	final void attachListeners_(byte flags) {
-		if ((flags & Component.DRAG_KB_FOCUS) != 0) {
-			addDragListener();
-			addKeyboardListener();
-			addFocusListener();
-		}
-
-		if ((flags & Component.ACTIVATE) != 0)
-			addActivateListener();
-	}
-
-	private void addDragListener() {
-		addMouseMotionListener(new MouseMotionAdapter() {
-			@Override
-			public void mouseDragged(MouseEvent e) {
-				// center on mouse
-				setLocation(getX() + (e.getX() - (getWidth() / 2)),
-						getY() + (e.getY() - (getHeight() / 2)));
-				e.consume();
-			}
-		});
-	}
-
-	private void addKeyboardListener() {
-		addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent e) {
-				switch (e.getKeyCode()) {
-				case KeyEvent.VK_LEFT:
-				case KeyEvent.VK_RIGHT:
-				case KeyEvent.VK_UP:
-				case KeyEvent.VK_DOWN:
-					moveWithKeyboard(e);
-					break;
-				case KeyEvent.VK_SPACE:
-					if (type() == ComponentType.INPUT_PIN)
-						((InputPin) Component.this).setActive(!getActive(0));
-					break;
-				default:
-					break;
-				}
-			}
-		});
-	}
-
-	private void addActivateListener() {
-		addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				wake_up(!getActive(0));
-			}
-		});
-	}
-
-	private void addFocusListener() {
-
-		addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if (!focused) {
-					requestFocus();
-					repaint();
-				}
-			}
-		});
-
-		addFocusListener(new FocusListener() {
-			@Override
-			public void focusLost(FocusEvent e) {
-				focused = false;
-				repaint();
-			}
-
-			@Override
-			public void focusGained(FocusEvent e) {
-				focused = true;
-				repaint();
-			}
-		});
-	}
-
-	/**
-	 * Each component specifies how it's drawn.
-	 *
-	 * @param g the Graphics object necessary to draw
-	 */
-	protected abstract void draw(Graphics g);
-
-	/**
-	 * Draws the ID of the Component with a given {@code Graphics} object.
-	 *
-	 * @param g the Graphics object
-	 */
-	protected void drawID(Graphics g) {
-		g.setColor(hidden() ? Color.ORANGE : focused ? Color.CYAN : Color.BLACK);
-		g.drawString(getID(), 0, getHeight() - 1);
-	}
-
-	/** Specifies how this Component should react when it's moved or resized. */
-	protected abstract void updateOnMovement();
-
-	/**
-	 * Returns information about the location of the, imaginary, pins on the
-	 * Component's output so the {@code branch} knows precisely where to connect.
-	 *
-	 * @param branch the Branch (used for safety, only index is necessary)
-	 * @param index  the Branch's index (used for safety, only Branch is necessary)
-	 *
-	 * @return a Point with the coordinates of the Branch
-	 */
-	protected Point getBranchInputCoords(Branch branch, int index) {
-		throw new UnsupportedOperationException(String
-				.format("Component of type %s don't support getBranchInputCoords(Branch, int)",
-						type().description()));
-	}
-
-	/**
-	 * Returns information about the location of the, imaginary, pins on the
-	 * Component's input so the {@code branch} knows precisely where to connect.
-	 *
-	 * @param branch the Branch (used for safety, only index is necessary)
-	 * @param index  the Branch's index (used for safety, only Branch is necessary)
-	 *
-	 * @return a Point with the coordinates of the Branch
-	 */
-	protected Point getBranchOutputCoords(Branch branch, int index) {
-		throw new UnsupportedOperationException(String
-				.format("Component of type %s don't support getBranchOutputCoords(Branch, int)",
-						type().description()));
 	}
 }
