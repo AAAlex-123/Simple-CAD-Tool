@@ -16,6 +16,8 @@ import javax.swing.JOptionPane;
 
 import application.StringConstants;
 import command.Command;
+import components.Component;
+import components.ComponentFactory;
 import exceptions.MalformedBranchException;
 import myUtil.Utility;
 import requirement.Requirement;
@@ -94,15 +96,14 @@ public enum Actions {
 		@Override
 		public void execute() {
 
-			final String fname = (String) reqs.getV("filename");
-
 			try {
 				if (!reqs.fulfilled()) {
 					context.status("File save cancelled");
 					return;
 				}
 
-				Actions.writeToFile(fname, context.getPastCommands());
+				final String fname = (String) reqs.getV("filename");
+				Actions.writeToFile(fname, context.getComponents_(), context.getPastCommands());
 
 				context.status("File %s saved successfully", fname);
 				context.setFile(fname);
@@ -110,8 +111,7 @@ public enum Actions {
 
 			} catch (final IOException e) {
 				context.error(
-						"Error while writing to file %s. Inform the developer about 'Action-SAVE-IO'",
-						fname);
+						"Error while writing to file. Inform the developer about 'Action-SAVE-IO'");
 				throw new RuntimeException(e);
 			} finally {
 				reqs.clear();
@@ -128,6 +128,7 @@ public enum Actions {
 			final String fname = (String) reqs.getV("filename");
 			final String ftype = (String) reqs.getV("filetype");
 
+			final List<Component> components = new ArrayList<>();
 			final List<Command> commands = new ArrayList<>();
 
 			try {
@@ -137,12 +138,14 @@ public enum Actions {
 					return;
 				}
 
-				Actions.readFromFile(fname, commands);
+				Actions.readFromFile(fname, components, commands);
 
 				if (ftype.equals(Actions.circuit)) {
 
 					context.clear();
 
+					// foreach(components, c -> context.addComponent(c));
+					// foreach(commands, c -> context.undoableHistory.add(c));
 					for (final Command c : commands) {
 						c.context(context);
 						context.execute(c);
@@ -168,8 +171,7 @@ public enum Actions {
 				context.error("File %s doesn't exist", fname);
 			} catch (final IOException e) {
 				context.error(
-						"Error while reading from file %s. Inform the developer about 'Action-Open-IO'",
-						fname);
+						"Error while reading from file. Inform the developer about 'Action-Open-IO'");
 				throw new RuntimeException(e);
 			} catch (final Exception e) {
 				throw new RuntimeException(e);
@@ -407,15 +409,23 @@ public enum Actions {
 	 * Writes the contents of Lists of Components and Commands to a file.
 	 *
 	 * @param filename   the filename
+	 * @param components the list of components to write
 	 * @param commands   the list of commands to write
+	 *
 	 * @throws IOException when an IOExcetpion occurs
 	 */
-	protected static void writeToFile(String filename, List<Undoable> commands) throws IOException {
+	protected static void writeToFile(
+			String filename, List<Component> components, List<Undoable> commands)
+					throws IOException {
 
-		final String outputFile = String.format("%s\\%s", StringConstants.USER_DATA, filename);
+		final String outputFile = String.format("%s\\%s", StringConstants.user_data, filename);
 
 		try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(outputFile))) {
 			oos.writeByte(Actions.start);
+
+			oos.writeInt(components.size());
+			for (final Component c : components)
+				oos.writeObject(c);
 
 			oos.writeInt(commands.size());
 			for (final Undoable u : commands)
@@ -429,18 +439,21 @@ public enum Actions {
 	 * Fills the Lists with the Components and Commands from the file.
 	 *
 	 * @param filename   the filename
+	 * @param components the list that will be filled with Components
 	 * @param commands   the list that will be filled with Commands
+	 *
 	 * @throws IOException               when an IOException occurred
 	 * @throws FileNotFoundException     when the file couldn't be found
 	 * @throws FileCorruptedException    when the contents of the file are corrupted
 	 * @throws IncompatibleFileException when the file data corresponds to a
 	 *                                   previous version of the program
 	 */
-	protected static void readFromFile(String filename, List<Command> commands)
-	        throws FileNotFoundException, IOException, Actions.FileCorruptedException,
-	        Actions.IncompatibleFileException {
+	protected static void readFromFile(
+			String filename, List<Component> components, List<Command> commands)
+					throws FileNotFoundException, IOException, Actions.FileCorruptedException,
+					Actions.IncompatibleFileException {
 
-		final String inputFile = String.format("%s\\%s", StringConstants.USER_DATA, filename);
+		final String inputFile = String.format("%s\\%s", StringConstants.user_data, filename);
 
 		try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(inputFile))) {
 
@@ -448,8 +461,16 @@ public enum Actions {
 			if (ois.readByte() != Actions.start)
 				throw new FileCorruptedException(filename);
 
-			// read commands
+			// read components
 			int count = ois.readInt();
+			for (int i = 0; i < count; ++i) {
+				final Component c = (Component) ois.readObject();
+				ComponentFactory.restoreSerialisedComponent(c);
+				components.add(c);
+			}
+
+			// read commands
+			count = ois.readInt();
 			for (int i = 0; i < count; ++i) {
 				final Command c = (Command) ois.readObject();
 				commands.add(c);
