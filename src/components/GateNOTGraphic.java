@@ -13,12 +13,12 @@ import application.StringConstants;
  *
  * @author alexm
  */
-final class GateNOTGraphic extends GateGraphics {
+final class GateNOTGraphic extends GateGraphic {
 
 	private static final long serialVersionUID = 1L;
 
 	private static final String sprite = StringConstants.COMPONENT_ICON_PATH
-	        + "gate_not.png";
+			+ "gate_not.png";
 
 	private static final BufferedImage image;
 
