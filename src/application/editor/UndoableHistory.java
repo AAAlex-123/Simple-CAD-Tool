@@ -57,7 +57,9 @@ public final class UndoableHistory<T extends Undoable> {
 			// this Undoable has executed successfully before; this statement can't throw
 			try {
 				first.execute();
-			} catch (Exception e) {}
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
 			past.push(first);
 		}
 	}

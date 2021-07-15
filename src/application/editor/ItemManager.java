@@ -42,7 +42,7 @@ class ItemManager<T extends components.Identifiable<String>> {
 	}
 
 	/**
-	 * Removes a {@code Item} from the Manager.
+	 * Removes an {@code Item} from the Manager.
 	 *
 	 * @param item the Item
 	 */
@@ -85,7 +85,7 @@ class ItemManager<T extends components.Identifiable<String>> {
 	 * @return a List with the Items
 	 */
 	List<T> getall() {
-		return getall((c) -> true);
+		return getall(c -> true);
 	}
 
 	/**
