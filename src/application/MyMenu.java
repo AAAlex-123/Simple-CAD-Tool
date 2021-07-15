@@ -334,7 +334,7 @@ final class MyMenu extends JMenuBar {
 					activeEditor.error(e1);
 					return;
 				}
-				comp.getGraphics().requestFocus();
+				comp.requestFocus();
 				activeEditor.status("Focusing Component");
 
 			} else {

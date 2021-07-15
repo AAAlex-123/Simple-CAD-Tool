@@ -1,18 +1,41 @@
 package components;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+
+import application.StringConstants;
+
 /**
  * A Primitive Gate that maps every input to its logical not. In this circuit
  * there may be multiple input pins. Each of them is mapped to its logical
  * {@code not} and output at the output pin at the same index, provided that a
  * Branch is connected to that input pin.
- *
- * @author alexm
  */
 final class GateNOT extends PrimitiveGate {
 
-	private static final long serialVersionUID = 4L;
+	private static final long serialVersionUID = 3L;
 
-	private final ComponentGraphic g;
+	private static final String sprite = StringConstants.COMPONENT_ICON_PATH
+			+ "gate_not.png";
+
+	private static final BufferedImage image;
+
+	static {
+		BufferedImage temp = null;
+		File file = null;
+
+		try {
+			file = new File(sprite);
+			temp = ImageIO.read(file);
+		} catch (IOException e) {
+			System.err.printf("Could not load image %s", file);
+		}
+
+		image = temp;
+	}
 
 	/**
 	 * Constructs the NOT Gate with the given number of inputs and outputs.
@@ -21,7 +44,6 @@ final class GateNOT extends PrimitiveGate {
 	 */
 	GateNOT(int n) {
 		super(n, n);
-		g = new GateNOTGraphic(this);
 	}
 
 	@Override
@@ -42,7 +64,10 @@ final class GateNOT extends PrimitiveGate {
 	}
 
 	@Override
-	public ComponentGraphic getGraphics() {
-		return g;
+	protected BufferedImage getImage() {
+		// the triangle and circle image can't be used with multiple inputs
+		if (inCount() > 1)
+			return null;
+		return image;
 	}
 }
