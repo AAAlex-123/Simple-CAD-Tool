@@ -21,7 +21,6 @@ final class BranchGraphic extends ComponentGraphic {
 	// -1 = draw bottom-left to top-right
 	private int direction;
 
-
 	/**
 	 * Constructs the graphics object
 	 *
@@ -49,7 +48,10 @@ final class BranchGraphic extends ComponentGraphic {
 			throw new RuntimeException("Invalid Branch direction");
 	}
 
-	/** @param g the Graphics object with which to draw the ID */
+	@Override
+	protected void drawPins(Graphics g) {
+	}
+
 	@Override
 	protected void drawID(Graphics g) {
 		g.setColor(Color.BLACK);
@@ -68,6 +70,6 @@ final class BranchGraphic extends ComponentGraphic {
 		// components with a dimension = 0 aren't drawn and text can't be drawn on a
 		// small space so add extra width/height here and remove it when drawing
 		setBounds(min(p1.x, p2.x) - 5, min(p1.y, p2.y) - 5, abs(p2.x - p1.x) + 11,
-		        abs(p2.y - p1.y) + 11);
+				abs(p2.y - p1.y) + 11);
 	}
 }
