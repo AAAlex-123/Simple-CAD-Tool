@@ -1,6 +1,5 @@
 package application;
 
-import static application.StringConstants.BUILTIN_COMMAND_ACCEL_PREFIX;
 import static application.StringConstants.D_COMPONENT_ACCEL;
 import static application.StringConstants.E_ACTIVATE_ACCEL;
 import static application.StringConstants.E_FOCUS_ACCEL;
@@ -22,9 +21,9 @@ import static application.StringConstants.M_FILE_MNEMONIC;
 import static application.StringConstants.M_HELP_MNEMONIC;
 import static application.StringConstants.M_PREFERENCES_MNEMONIC;
 import static application.StringConstants.P_SETTINGS_ACCEL;
-import static application.StringConstants.USER_COMMAND_ACCEL_PREFIX;
 
 import java.awt.event.ActionEvent;
+import java.util.function.Supplier;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -42,6 +41,7 @@ import command.Command;
 import components.Component;
 import components.ComponentFactory;
 import exceptions.InvalidComponentException;
+import myUtil.StringGenerator;
 import requirement.Requirements;
 import requirement.StringType;
 
@@ -61,7 +61,7 @@ final class MyMenu extends JMenuBar {
 	private final Action a_new, a_close, a_undo, a_redo, a_save, a_save_as, a_open, a_clear,
 	a_import, a_delete, a_edit, a_help;
 
-	private int commandCounter = 1, customCommandCounter = 1;
+	private final Supplier<String> builtin_command_gen, custom_command_gen;
 
 	/**
 	 * Constructs the Menu with the given {@code Application}.
@@ -71,6 +71,8 @@ final class MyMenu extends JMenuBar {
 	MyMenu(Application application) {
 
 		context = application;
+		builtin_command_gen = new StringGenerator(StringConstants.USER_COMMAND_ACCEL_PREFIX + " %d", 1, 10);
+		custom_command_gen = new StringGenerator(StringConstants.BUILTIN_COMMAND_ACCEL_PREFIX + " %d", 1, 10);
 
 		// block of actions
 		{
@@ -240,17 +242,16 @@ final class MyMenu extends JMenuBar {
 	 * @param c the Command
 	 */
 	void addCreateCommand(Command c) {
+
 		final JMenuItem jmic = new JMenuItem();
 
 		// different text and accelerator depending on command type (build-in vs user-created)
 		if (c.toString().matches("^(?:Create|Delete).*")) {
 			jmic.setText(c.toString().substring(7));
-			MyMenu.setAccel(jmic,
-					String.format("%s %d", BUILTIN_COMMAND_ACCEL_PREFIX, commandCounter++));
+			MyMenu.setAccel(jmic, builtin_command_gen.get());
 		} else {
 			jmic.setText(c.toString());
-			MyMenu.setAccel(jmic, String.format("%s %d", USER_COMMAND_ACCEL_PREFIX,
-					customCommandCounter++));
+			MyMenu.setAccel(jmic, custom_command_gen.get());
 		}
 
 		jmic.addActionListener(e -> {
