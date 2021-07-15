@@ -100,7 +100,7 @@ public abstract class Component implements Identifiable<String>, Serializable {
 	 */
 	protected void setIn(Branch branch, int index) {
 		throw new UnsupportedOperationException(String.format(
-		        "Components of type %s don't support setIn(Branch, int)", type().description()));
+				"Components of type %s don't support setIn(Branch, int)", type().description()));
 	}
 
 	/**
@@ -111,7 +111,7 @@ public abstract class Component implements Identifiable<String>, Serializable {
 	 */
 	protected void addOut(Branch branch, int index) {
 		throw new UnsupportedOperationException(String.format(
-		        "Components of type %s don't support addOut(Branch, int)", type().description()));
+				"Components of type %s don't support addOut(Branch, int)", type().description()));
 	}
 
 	/**
@@ -122,7 +122,7 @@ public abstract class Component implements Identifiable<String>, Serializable {
 	 */
 	protected void removeIn(Branch branch, int index) {
 		throw new UnsupportedOperationException(String.format(
-		        "Components of type %s don't support removeIn(Branch, int)", type().description()));
+				"Components of type %s don't support removeIn(Branch, int)", type().description()));
 	}
 
 	/**
@@ -133,8 +133,8 @@ public abstract class Component implements Identifiable<String>, Serializable {
 	 */
 	protected void removeOut(Branch branch, int index) {
 		throw new UnsupportedOperationException(String.format(
-		        "Components of type %s don't support removeOut(Branch, int)",
-		        type().description()));
+				"Components of type %s don't support removeOut(Branch, int)",
+				type().description()));
 	}
 
 	// 2 + 4 methods for destroying and restoring Components
@@ -154,7 +154,7 @@ public abstract class Component implements Identifiable<String>, Serializable {
 		destroySelf();
 	}
 
-	/** Each Component specifies how it should destroy itself. */
+	/** Each Component specifies how it should destroy itself */
 	protected abstract void destroySelf();
 
 	/** Restores the state of the Component after it was destroyed */
@@ -199,7 +199,7 @@ public abstract class Component implements Identifiable<String>, Serializable {
 	 *
 	 * @return the ComponentGraphics object
 	 */
-	public abstract ComponentGraphics getGraphics();
+	public abstract ComponentGraphic getGraphics();
 
 	/** @return the number of incoming connections */
 	protected int inCount() {
