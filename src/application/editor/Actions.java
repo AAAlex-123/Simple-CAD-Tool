@@ -16,6 +16,8 @@ import javax.swing.JOptionPane;
 
 import application.StringConstants;
 import command.Command;
+import components.Component;
+import components.ComponentFactory;
 import exceptions.MalformedBranchException;
 import myUtil.Utility;
 import requirement.Requirement;
@@ -102,7 +104,7 @@ public enum Actions {
 					return;
 				}
 
-				Actions.writeToFile(fname, context.getPastCommands());
+				Actions.writeToFile(fname, context.getComponents_(), context.getPastCommands());
 
 				context.status("File %s saved successfully", fname);
 				context.setFile(fname);
@@ -128,31 +130,39 @@ public enum Actions {
 			final String fname = (String) reqs.getV("filename");
 			final String ftype = (String) reqs.getV("filetype");
 
+			final List<Component> components = new ArrayList<>();
 			final List<Command> commands = new ArrayList<>();
 
 			try {
 				if (!reqs.fulfilled()) {
 					context.status("File %s cancelled",
-							ftype.equals(Actions.circuit) ? "open" : "import");
+							ftype.equals(Actions._circuit) ? "open" : "import");
 					return;
 				}
 
-				Actions.readFromFile(fname, commands);
+				Actions.readFromFile(fname, components, commands);
 
-				if (ftype.equals(Actions.circuit)) {
+				if (ftype.equals(Actions._circuit)) {
 
 					context.clear();
 
-					for (final Command c : commands) {
-						c.context(context);
-						context.execute(c);
-					}
+					Utility.foreach(components, component -> {
+						ComponentFactory.restoreSerialisedComponent(component);
+						context.addComponent(component);
+					});
+					Utility.foreach(commands, command -> {
+						// System.out.println(command.getClass());
+						command.context(context);
+						context.addToHistory(command);
+					});
+
+					// System.out.println(context.getPastCommands());
 
 					context.setFile(fname);
 					context.status("File %s opened successfully", fname);
 					context.setDirty(false);
 
-				} else if (ftype.equals(Actions.component)) {
+				} else if (ftype.equals(Actions._component)) {
 
 					final Command cgc = Command.create(commands, (String) reqs.getV("gatename"));
 					context.context().addCreateCommand(cgc);
@@ -215,7 +225,7 @@ public enum Actions {
 		public void execute() {
 			context.status("Someone doesn't know how to use a UI...");
 			final String[] messages = {
-					"Not-so-good help ahead, brance yourselves",
+					"Not-so-good help ahead, brace yourselves",
 					"Create new Editor / Close current Editor",
 					"Open a file in current Editor",
 					"Save the current file to disk / Save with a different name",
@@ -225,6 +235,7 @@ public enum Actions {
 					"Turn on/off InputPin / Focus Component",
 					"Creates a Component (by type and parameters)",
 					"Deletes a Component (by identifier)",
+					"Edit settings",
 					"Display these messages",
 					"Drag to move, click to turn on/off",
 					"Move with arrows (fast with shift), turn on/off with space",
@@ -241,6 +252,7 @@ public enum Actions {
 					"Edit: Turn on/off / Focus",
 					"Create",
 					"Delete",
+					"Preferences",
 					"Help",
 					"Mouse Actions",
 					"Keyboard Actions",
@@ -272,11 +284,11 @@ public enum Actions {
 	// bytes at the start and end of file
 	private static final Integer start, eof;
 	// the strings should match Requirement.Type
-	private static final String component, circuit;
+	private static final String _component, _circuit;
 
 	static {
-		component = "component";
-		circuit = "circuit";
+		_component = "component";
+		_circuit = "circuit";
 
 		start = 10;
 		eof = 42;
@@ -410,12 +422,17 @@ public enum Actions {
 	 * @param commands   the list of commands to write
 	 * @throws IOException when an IOExcetpion occurs
 	 */
-	protected static void writeToFile(String filename, List<Undoable> commands) throws IOException {
+	protected static void writeToFile(String filename, List<Component> components, List<Undoable> commands)
+			throws IOException {
 
 		final String outputFile = String.format("%s\\%s", StringConstants.USER_DATA, filename);
 
 		try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(outputFile))) {
 			oos.writeByte(Actions.start);
+
+			oos.writeInt(components.size());
+			for (final Component c : components)
+				oos.writeObject(c);
 
 			oos.writeInt(commands.size());
 			for (final Undoable u : commands)
@@ -436,9 +453,9 @@ public enum Actions {
 	 * @throws IncompatibleFileException when the file data corresponds to a
 	 *                                   previous version of the program
 	 */
-	protected static void readFromFile(String filename, List<Command> commands)
-	        throws FileNotFoundException, IOException, Actions.FileCorruptedException,
-	        Actions.IncompatibleFileException {
+	protected static void readFromFile(String filename, List<Component> components, List<Command> commands)
+			throws FileNotFoundException, IOException, Actions.FileCorruptedException,
+			Actions.IncompatibleFileException {
 
 		final String inputFile = String.format("%s\\%s", StringConstants.USER_DATA, filename);
 
@@ -450,10 +467,12 @@ public enum Actions {
 
 			// read commands
 			int count = ois.readInt();
-			for (int i = 0; i < count; ++i) {
-				final Command c = (Command) ois.readObject();
-				commands.add(c);
-			}
+			for (int i = 0; i < count; i++)
+				components.add((Component) ois.readObject());
+
+			count = ois.readInt();
+			for (int i = 0; i < count; ++i)
+				commands.add((Command) ois.readObject());
 
 			// read eof
 			if (ois.readByte() != Actions.eof)
