@@ -1,11 +1,15 @@
 package command;
 
 import java.awt.Frame;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.List;
 
 import application.editor.Editor;
 import application.editor.Undoable;
+import components.Component;
+import components.ComponentFactory;
 import components.ComponentType;
 import requirement.Requirements;
 
@@ -62,6 +66,12 @@ public abstract class Command implements Undoable, Serializable, Cloneable {
 		return new DeleteCommand(null);
 	}
 
+	/**
+	 * The {@code Component} that this {@code Command} manages. It is used to make
+	 * sure that the {@code Command} can be properly undone.
+	 */
+	protected Component associatedComponent;
+
 	/** What this Command needs to execute */
 	protected Requirements<String> requirements;
 
@@ -111,10 +121,15 @@ public abstract class Command implements Undoable, Serializable, Cloneable {
 	/**
 	 * Sets the Command's {@code context}.
 	 *
-	 * @param c the context
+	 * @param editor the context
 	 */
-	public final void context(Editor c) {
-		context = c;
+	public void context(Editor editor) {
+		context = editor;
+	}
+
+	private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+		in.defaultReadObject();
+		ComponentFactory.restoreSerialisedComponent(associatedComponent);
 	}
 
 	@Override

@@ -48,10 +48,10 @@ class CreateGateCommand extends CreateCommand {
 
 	@Override
 	public void execute() {
-		if (createdComponent != null) {
+		if (associatedComponent != null) {
 			// when re-executed, simply restore the already-created Component
-			context.addComponent(createdComponent);
-			ComponentFactory.restoreDeletedComponent(createdComponent);
+			context.addComponent(associatedComponent);
+			ComponentFactory.restoreDeletedComponent(associatedComponent);
 		} else {
 			// execute the sequence of commands to create the circuit in a temporary context
 			final Editor tempContext = new Editor(null, "");
@@ -85,16 +85,16 @@ class CreateGateCommand extends CreateCommand {
 				out[i] = outs.get(i);
 
 			// create the composite Gate and add it to the real context
-			createdComponent = ComponentFactory.createGate(in, out, description);
-			createdComponent.setID(requirements.getV("name"));
-			context.addComponent(createdComponent);
+			associatedComponent = ComponentFactory.createGate(in, out, description);
+			associatedComponent.setID(requirements.getV("name"));
+			context.addComponent(associatedComponent);
 		}
 	}
 
 	@Override
 	public void unexecute() {
-		ComponentFactory.destroyComponent(createdComponent);
-		context.removeComponent(createdComponent);
+		ComponentFactory.destroyComponent(associatedComponent);
+		context.removeComponent(associatedComponent);
 	}
 
 	@Override
