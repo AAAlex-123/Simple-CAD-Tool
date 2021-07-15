@@ -5,7 +5,6 @@ import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -39,20 +38,19 @@ public class Application {
 	public Application() {
 		window = new JFrame();
 		menu = new MyMenu(this);
-		editors = new Vector<>();
+		editors = new ArrayList<>();
 		editorPane = new JTabbedPane(SwingConstants.TOP, JTabbedPane.SCROLL_TAB_LAYOUT);
 		nameGenerator = new StringGenerator("new-%d");
 	}
 
 	/** Runs the application and configures the UI */
 	public void run() {
-
 		window.setLayout(new BorderLayout());
+		window.add(editorPane, BorderLayout.CENTER);
 		window.setJMenuBar(menu);
 		window.setTitle("Simple CAD Tool");
 		window.setSize(1000, 600);
 		window.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-
 		window.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
@@ -60,10 +58,9 @@ public class Application {
 			}
 		});
 
-		window.add(editorPane, BorderLayout.CENTER);
 		addEditor();
 
-		editorPane.addChangeListener((l) -> {
+		editorPane.addChangeListener(l -> {
 			Editor e = (Editor) editorPane.getSelectedComponent();
 			if (e != null)
 				setActiveEditor(e);
@@ -80,7 +77,7 @@ public class Application {
 		window.setVisible(true);
 	}
 
-	/** Terminates the application */
+	/** Terminates the Application */
 	public void terminate() {
 		Utility.foreach(new ArrayList<>(editors), this::removeEditor);
 
@@ -89,9 +86,9 @@ public class Application {
 	}
 
 	/**
-	 * Returns the application's frame
+	 * Returns the Application's frame
 	 *
-	 * @return the application's frame
+	 * @return the Application's frame
 	 */
 	public JFrame getFrame() {
 		return window;
@@ -197,7 +194,7 @@ public class Application {
 		 * @return this (used for chaining)
 		 */
 		final Actions context(Application app) {
-			this.context = app;
+			context = app;
 			return this;
 		}
 	}
