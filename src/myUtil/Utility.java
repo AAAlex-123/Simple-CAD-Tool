@@ -24,7 +24,8 @@ public final class Utility {
      */
     public static <T> void foreach(Iterable<T> iter, Consumer<T> consumer) {
         for (final T item : iter)
-            consumer.accept(item);
+			if (item != null)
+                consumer.accept(item);
     }
 
     /**

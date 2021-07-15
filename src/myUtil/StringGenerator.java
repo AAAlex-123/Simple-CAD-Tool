@@ -16,14 +16,18 @@ import java.util.function.Supplier;
  * <li>{@code start} defaults to {@code 0}</li>
  * <li>{@code end} defaults to {@code Integer.MAX_VALUE}</li>
  * </ul>
+ * <p>
+ * The generator can be used as a {@code Supplier}, {@code Iterator} or an
+ * {@code Iterable} and will follow the specifications of each class for each of
+ * the methods available.
  *
  * @author alexm
  */
-public final class StringGenerator implements Supplier<String>, Iterator<String> {
+public final class StringGenerator implements Supplier<String>, Iterator<String>, Iterable<String> {
 
 	private final String text;
-	private int       start;
-	private final int end;
+	private final int start, end;
+	private int current;
 
 	/**
 	 * Constructs the {@code Generator} with the {@code text} that will be
@@ -55,25 +59,34 @@ public final class StringGenerator implements Supplier<String>, Iterator<String>
 	 * @param end          the final value for the counter
 	 */
 	public StringGenerator(String textToFormat, int start, int end) {
-		this.text = textToFormat;
-		this.start = start;
+		text = textToFormat;
+		this.start = current = start;
 		this.end = end;
 	}
 
 	@Override
 	public String get() {
-		if (!hasNext())
-			throw new NoSuchElementException();
-		return String.format(text, start++);
+		return canProduceMore() ? String.format(text, current++) : "";
 	}
 
 	@Override
 	public boolean hasNext() {
-		return start < end;
+		return canProduceMore();
 	}
 
 	@Override
 	public String next() {
+		if (!canProduceMore())
+			throw new NoSuchElementException();
 		return get();
+	}
+
+	@Override
+	public Iterator<String> iterator() {
+		return new StringGenerator(text, start, end);
+	}
+
+	private boolean canProduceMore() {
+		return current < end;
 	}
 }
