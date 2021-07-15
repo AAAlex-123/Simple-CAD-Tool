@@ -1,70 +1,38 @@
 package components;
 
-import java.awt.Graphics;
-import java.awt.Point;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-import javax.imageio.ImageIO;
-
-import application.StringConstants;
-import exceptions.ComponentNotFoundException;
 import exceptions.MalformedGateException;
 
-/** Corresponds to the {@link ComponentType#OUTPUT_PIN OUTPUT_PIN} type. */
+/**
+ * Corresponds to the {@link ComponentType#OUTPUT_PIN OUTPUT_PIN} type
+ *
+ * @author alexm
+ */
 final class OutputPin extends Component {
 
-	private static final long serialVersionUID = 3L;
+	private static final long serialVersionUID = 4L;
 
-	private static final String sprite = StringConstants.COMPONENT_ICON_PATH
-			+ "output_pin_{state}.png";
-
-	private static final BufferedImage image_on, image_off;
-
-	static {
-		// yes it has to be done this way
-		BufferedImage temp_on = null, temp_off = null;
-		File file = null;
-
-		try {
-			file = new File(sprite.replace("{state}", "on"));
-			temp_on = ImageIO.read(file);
-		} catch (IOException e) {
-			System.err.printf("Could not load image %s%n", file);
-		}
-
-		try {
-			file = new File(sprite.replace("{state}", "off"));
-			temp_off = ImageIO.read(file);
-		} catch (IOException e) {
-			System.err.printf("Could not load image %s%n", file);
-		}
-
-		image_on = temp_on;
-		image_off = temp_off;
-	}
-
-	private Branch  inputBranch;
+	private Component inputBranch;
 	private boolean active;
+
+	private final ComponentGraphic g;
 
 	// information about the enclosing Gate necessary for signal transmission
 	private Gate outerGate;
 	private int  outerGateIndex;
 
-	/** Constructs the OuputPin */
+	/** Constructs an OuputPin */
 	OutputPin() {
+		g = new OutputPinGraphic(this);
 		active = false;
 	}
 
 	@Override
 	public ComponentType type() {
 		return ComponentType.OUTPUT_PIN;
-	}
-
-	@Override
-	protected int outCount() {
-		return 0;
 	}
 
 	@Override
@@ -81,7 +49,7 @@ final class OutputPin extends Component {
 		// propagate signal only if it's different
 		if (active != newActive) {
 			active = newActive;
-			repaint();
+			getGraphics().repaint();
 
 			// inform the enclosing Gate that an output has changed
 			if (outerGate != null)
@@ -90,18 +58,19 @@ final class OutputPin extends Component {
 	}
 
 	@Override
-	protected void destroySelf() {
-		if (inputBranch != null) {
-			inputBranch.destroy();
-			inputBranch = null;
-		}
+	protected int outCount() {
+		return 0;
 	}
 
-	@Override
-	protected void restoreDeletedSelf() {}
-
-	@Override
-	protected void restoreSerialisedSelf() {}
+	/**
+	 * Proper way for the client (the Factory) to get output.
+	 *
+	 * @return the active state of this OutputPin
+	 */
+	boolean getActive() {
+		checkChangeable();
+		return active;
+	}
 
 	@Override
 	protected boolean getActive(int index) {
@@ -143,16 +112,6 @@ final class OutputPin extends Component {
 	}
 
 	/**
-	 * Proper way for the client (the Factory) to get output.
-	 *
-	 * @return the active state of this OutputPin
-	 */
-	boolean getActive() {
-		checkChangeable();
-		return active;
-	}
-
-	/**
 	 * Marks this Component as unchangeable because it's hidden in a {@code Gate}
 	 * and sets the {@code gate} as the next component to be woken up. Normally
 	 * should only be called during the construction of the {@code gate}.
@@ -171,29 +130,36 @@ final class OutputPin extends Component {
 	}
 
 	@Override
-	protected void attachListeners() {
-		attachListeners_(DRAG_KB_FOCUS);
+	protected void destroySelf() {
+		if (inputBranch != null) {
+			inputBranch.destroy();
+			inputBranch = null;
+		}
 	}
 
 	@Override
-	protected void draw(Graphics g) {
-		g.drawImage(getActive(0) ? image_on : image_off, 0, 0, null);
+	protected void restoreDeletedSelf() {}
+
+	@Override
+	protected void restoreSerialisedSelf() {}
+
+	@Override
+	protected List<Component> getInputs() {
+		if (inputBranch == null)
+			return Collections.emptyList();
+
+		List<Component> ls = new ArrayList<>();
+		ls.add(inputBranch);
+		return Collections.unmodifiableList(ls);
 	}
 
 	@Override
-	protected void updateOnMovement() {
-		// this component is moved by the user; tell branch to update
-		if (inputBranch != null)
-			inputBranch.updateOnMovement();
+	protected List<List<Component>> getOutputs() {
+		return Collections.emptyList();
 	}
 
 	@Override
-	protected Point getBranchOutputCoords(Branch b, int index) {
-		checkIndex(index, inCount());
-
-		if (b != inputBranch)
-			throw new ComponentNotFoundException(b, this);
-
-		return new Point(getX(), getY() + (getHeight() / 2));
+	public ComponentGraphic getGraphics() {
+		return g;
 	}
 }
