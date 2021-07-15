@@ -71,8 +71,8 @@ final class MyMenu extends JMenuBar {
 	MyMenu(Application application) {
 
 		context = application;
-		builtin_command_gen = new StringGenerator(StringConstants.USER_COMMAND_ACCEL_PREFIX + " %d", 1, 10);
-		custom_command_gen = new StringGenerator(StringConstants.BUILTIN_COMMAND_ACCEL_PREFIX + " %d", 1, 10);
+		builtin_command_gen = new StringGenerator(StringConstants.BUILTIN_COMMAND_ACCEL_PREFIX + " %d", 1, 10);
+		custom_command_gen = new StringGenerator(StringConstants.USER_COMMAND_ACCEL_PREFIX + " %d", 1, 10);
 
 		// block of actions
 		{
