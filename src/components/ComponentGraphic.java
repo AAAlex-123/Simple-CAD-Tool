@@ -104,12 +104,16 @@ public abstract class ComponentGraphic extends JComponent {
 	 */
 	protected abstract void draw(Graphics g);
 
-	private final void drawPins(Graphics g) {
+	protected void drawPins(Graphics g) {
 		final List<Component> inputs = component.getInputs();
 		final List<List<Component>> outputs = component.getOutputs();
 
 		for (int i = 0; i < inputs.size(); ++i) {
-			g.setColor(inputs.get(i) != null ? inputs.get(i).getActive(0) ? Color.GREEN : Color.RED : Color.RED);
+			Component c = inputs.get(i);
+			if (c != null)
+				g.setColor(c.getActive(0) ? Color.GREEN : Color.RED);
+			else
+				g.setColor(Color.RED);
 			drawPin(g, new Point(dxi.apply(i), dyi.apply(i)));
 		}
 
@@ -128,8 +132,6 @@ public abstract class ComponentGraphic extends JComponent {
 				g.setColor(component.getActive(0) ? Color.GREEN : Color.RED);
 				drawPin(g, new Point(dxo.apply(i), dyo.apply(i)));
 			}
-			break;
-		case BRANCH:
 			break;
 		default:
 			for (int i = 0; i < outputs.size(); ++i) {
@@ -192,10 +194,12 @@ public abstract class ComponentGraphic extends JComponent {
 			throw new UnsupportedOperationException(String.format(
 					"Component of type %s don't support getBranchInputCoords(Branch, int)", type.description()));
 
-		for (List<Component> ls : component.getOutputs()) {
-			int index = ls.indexOf(branch);
-			if (index != -1)
+		List<List<Component>> outputs = component.getOutputs();
+		for (List<Component> ls : outputs) {
+			if (ls.contains(branch)) {
+				final int index = outputs.indexOf(ls);
 				return new Point(getX() + dxo().apply(index), getY() + dyo().apply(index));
+			}
 		}
 
 		throw new ComponentNotFoundException(branch, component);

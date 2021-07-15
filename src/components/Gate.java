@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Vector;
 
 import exceptions.ComponentNotFoundException;
 import exceptions.MalformedGateException;
@@ -29,7 +28,7 @@ class Gate extends Component {
 	 * Each pin has many Branches coming out of it (generic arrays aren't
 	 * supported)
 	 */
-	protected final Vector<Vector<Branch>> outputBranches;
+	protected final List<List<Branch>> outputBranches;
 
 	/** The Gate's inner Input Pins (should only be accessed by subclasses) */
 	protected final InputPin[] inputPins;
@@ -47,7 +46,7 @@ class Gate extends Component {
 	 */
 	Gate(int inN, int outN) {
 		inputBranches  = new Branch[inN];
-		outputBranches = new Vector<>(outN, 1);
+		outputBranches = new ArrayList<>(outN);
 		inputPins      = new InputPin[inN];
 		outputPins     = new OutputPin[outN];
 		g = new GateGraphic(this);
@@ -60,7 +59,7 @@ class Gate extends Component {
 		for (int i = 0; i < outN; ++i) {
 			outputPins[i] = new OutputPin();
 			outputPins[i].setOuterGate(this, i);
-			outputBranches.add(new Vector<>(1, 1));
+			outputBranches.add(new ArrayList<>(1));
 		}
 	}
 
@@ -77,7 +76,7 @@ class Gate extends Component {
 	 */
 	Gate(InputPin[] in, OutputPin[] out, String desc) {
 		inputBranches  = new Branch[in.length];
-		outputBranches = new Vector<>(out.length, 1);
+		outputBranches = new ArrayList<>(out.length);
 		inputPins      = in;
 		outputPins     = out;
 		g = new GateGraphic(this, desc);
@@ -92,7 +91,7 @@ class Gate extends Component {
 
 		for (int i = 0; i < outputPins.length; ++i) {
 			outputPins[i].setOuterGate(this, i);
-			outputBranches.add(new Vector<>(1, 1));
+			outputBranches.add(new ArrayList<>(1));
 		}
 	}
 
@@ -138,7 +137,7 @@ class Gate extends Component {
 		checkIndex(index, outCount());
 
 		foreach(outputBranches.get(index),
-		        b -> b.wake_up(outputPins[index].getActive(0), hidden()));
+				b -> b.wake_up(outputPins[index].getActive(0), hidden()));
 	}
 
 	@Override
@@ -201,7 +200,7 @@ class Gate extends Component {
 	@Override
 	protected void restoreDeletedSelf() {
 		for (int i = 0; i < outputPins.length; ++i)
-			outputBranches.add(new Vector<>(1, 1));
+			outputBranches.add(new ArrayList<>(1));
 	}
 
 	@Override

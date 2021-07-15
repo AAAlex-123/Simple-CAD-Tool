@@ -14,12 +14,12 @@ import application.StringConstants;
  *
  * @author alexm
  */
-final class GateORGraphic extends GateGraphics {
+final class GateORGraphic extends GateGraphic {
 
 	private static final long serialVersionUID = 1L;
 
 	private static final String sprite = StringConstants.COMPONENT_ICON_PATH
-	        + "gate_or.png";
+			+ "gate_or.png";
 
 	private static final BufferedImage image;
 

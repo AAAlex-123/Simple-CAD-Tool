@@ -51,11 +51,11 @@ final class Branch extends Component {
 		if (outIndex >= outComponent.inCount())
 			throw new MalformedBranchException(outComponent, outIndex);
 
-		g = new BranchGraphics(this);
-		this.in = inComponent;
-		this.out = outComponent;
-		this.indexIn = inIndex;
-		this.indexOut = outIndex;
+		g = new BranchGraphic(this);
+		in = inComponent;
+		out = outComponent;
+		indexIn = inIndex;
+		indexOut = outIndex;
 
 		connect();
 	}

@@ -18,7 +18,7 @@ final class GateAND extends PrimitiveGate {
 	 */
 	GateAND(int in) {
 		super(in, 1);
-		g = new GateANDGraphics(this);
+		g = new GateANDGraphic(this);
 	}
 
 	@Override
