@@ -5,7 +5,6 @@ import java.util.Vector;
 
 import application.editor.Editor;
 import application.editor.MissingComponentException;
-import components.Component;
 import components.ComponentFactory;
 import myUtil.Utility;
 import requirement.Requirements;
@@ -20,8 +19,6 @@ import requirement.StringType;
 class DeleteCommand extends Command {
 
 	private static final long serialVersionUID = 6L;
-
-	private Component componentToDelete;
 
 	private final List<Command> deleteCommands;
 
@@ -45,29 +42,36 @@ class DeleteCommand extends Command {
 
 	@Override
 	public void execute() throws MissingComponentException {
-		componentToDelete = context.getComponent_(requirements.getV("id"));
+		deleteCommands.clear();
+		associatedComponent = context.getComponent_(requirements.getV("id"));
 
-		ComponentFactory.destroyComponent(componentToDelete);
-		context.removeComponent(componentToDelete);
+		ComponentFactory.destroyComponent(associatedComponent);
+		context.removeComponent(associatedComponent);
 
-		Utility.foreach(context.getDeletedComponents(), c -> {
+		Utility.foreach(context.getDeletedComponents(), command -> {
 			final DeleteCommand deleteCommand = new DeleteCommand(context);
 			deleteCommands.add(deleteCommand);
 
 			// component is already deleted the command isn't executed
 			// instead it is just set up so it can be undone successfully
-			deleteCommand.requirements.fulfil("id", String.valueOf(c.getID()));
-			deleteCommand.componentToDelete = c;
+			deleteCommand.requirements.fulfil("id", String.valueOf(command.getID()));
+			deleteCommand.associatedComponent = command;
 
-			context.removeComponent(c);
+			context.removeComponent(command);
 		});
 	}
 
 	@Override
 	public void unexecute() {
-		ComponentFactory.restoreDeletedComponent(componentToDelete);
-		context.addComponent(componentToDelete);
+		ComponentFactory.restoreDeletedComponent(associatedComponent);
+		context.addComponent(associatedComponent);
 		Utility.foreach(deleteCommands, Command::unexecute);
+	}
+
+	@Override
+	public void context(Editor editor) {
+		super.context(editor);
+		Utility.foreach(deleteCommands, command -> command.context(editor));
 	}
 
 	@Override
