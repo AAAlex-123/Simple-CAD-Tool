@@ -1,10 +1,6 @@
 package command;
 
 import static components.ComponentType.BRANCH;
-import static components.ComponentType.GATEAND;
-import static components.ComponentType.GATENOT;
-import static components.ComponentType.GATEOR;
-import static components.ComponentType.GATEXOR;
 import static requirement.StringType.ANY;
 import static requirement.StringType.CUSTOM;
 import static requirement.StringType.NON_NEG_INTEGER;
@@ -34,12 +30,6 @@ class CreateCommand extends Command {
 	private static final long serialVersionUID = 6L;
 
 	private final ComponentType componentType;
-
-	/**
-	 * The {@code Component} created by this {@code Command}. It is used to make
-	 * sure that the {@code Command} can be properly undone.
-	 */
-	protected Component createdComponent;
 
 	private final List<Command> deleteCommands;
 
@@ -96,17 +86,17 @@ class CreateCommand extends Command {
 
 	@Override
 	public void execute() throws MissingComponentException, MalformedBranchException {
-		if (createdComponent != null) {
+		if (associatedComponent != null) {
 			// when re-executed, simply restore the already-created Component
-			context.addComponent(createdComponent);
-			ComponentFactory.restoreDeletedComponent(createdComponent);
+			context.addComponent(associatedComponent);
+			ComponentFactory.restoreDeletedComponent(associatedComponent);
 		} else {
 			switch (componentType) {
 			case INPUT_PIN:
-				createdComponent = ComponentFactory.createInputPin();
+				associatedComponent = ComponentFactory.createInputPin();
 				break;
 			case OUTPUT_PIN:
-				createdComponent = ComponentFactory.createOutputPin();
+				associatedComponent = ComponentFactory.createOutputPin();
 				break;
 			case BRANCH:
 				final Component in = context.getComponent_(requirements.getV("in id"));
@@ -114,38 +104,29 @@ class CreateCommand extends Command {
 				final int inIndex = Integer.parseInt(requirements.getV("in index"));
 				final int outIndex = Integer.parseInt(requirements.getV("out index"));
 
-				createdComponent = ComponentFactory.connectComponents(in, inIndex, out, outIndex);
+				associatedComponent = ComponentFactory.connectComponents(in, inIndex, out, outIndex);
 				break;
 			case GATEAND:
-				createdComponent = ComponentFactory.createPrimitiveGate(GATEAND,
-						Integer.parseInt(requirements.getV("in count")));
-				break;
 			case GATEOR:
-				createdComponent = ComponentFactory.createPrimitiveGate(GATEOR,
-						Integer.parseInt(requirements.getV("in count")));
-				break;
 			case GATENOT:
-				createdComponent = ComponentFactory.createPrimitiveGate(GATENOT,
-						Integer.parseInt(requirements.getV("in count")));
-				break;
 			case GATEXOR:
-				createdComponent = ComponentFactory.createPrimitiveGate(GATEXOR,
+				associatedComponent = ComponentFactory.createPrimitiveGate(componentType,
 						Integer.parseInt(requirements.getV("in count")));
 				break;
 			case GATE:
 				throw new RuntimeException(String.format(
-						"Cannot directly create Components of type %s", ComponentType.GATE));
+						"Cannot directly create Components of type %s", componentType));
 			default:
 				break;
 			}
 
-			createdComponent.setID(requirements.getV("name"));
-			context.addComponent(createdComponent);
+			associatedComponent.setID(requirements.getV("name"));
+			context.addComponent(associatedComponent);
 		}
 
 		// delete the branch that may have been deleted when creating this branch
 		// there can't be more than two branches deleted when creating a branch
-		if (createdComponent.type() == BRANCH) {
+		if (associatedComponent.type() == BRANCH) {
 			final List<Component> ls = context.getDeletedComponents();
 
 			if (ls.size() == 0)
@@ -176,8 +157,8 @@ class CreateCommand extends Command {
 			deleteCommands.clear();
 		}
 
-		ComponentFactory.destroyComponent(createdComponent);
-		context.removeComponent(createdComponent);
+		ComponentFactory.destroyComponent(associatedComponent);
+		context.removeComponent(associatedComponent);
 	}
 
 	@Override
