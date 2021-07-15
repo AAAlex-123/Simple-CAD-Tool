@@ -5,6 +5,7 @@ package application.editor;
  *
  * @author alexm
  */
+@FunctionalInterface
 public interface Undoable {
 
 	/**
@@ -15,5 +16,5 @@ public interface Undoable {
 	void execute() throws Exception;
 
 	/** Un-does the Undoable */
-	void unexecute();
+	default void unexecute() {}
 }
