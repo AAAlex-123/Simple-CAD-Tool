@@ -37,6 +37,17 @@ final class InputPin extends Component {
 	}
 
 	@Override
+	protected List<Component> getInputs() {
+		return Collections.unmodifiableList(Collections.emptyList());
+	}
+
+	@Override
+	protected List<List<Component>> getOutputs() {
+		List<List<Component>> ls = new ArrayList<>();
+		ls.add(Collections.unmodifiableList(outputBranches));
+		return Collections.unmodifiableList(ls);
+	}
+	@Override
 	protected void wake_up(boolean newActive, int index, boolean prevHidden) {
 		checkIndex(index, 1);
 
@@ -112,18 +123,6 @@ final class InputPin extends Component {
 
 	@Override
 	protected void restoreSerialisedSelf() {}
-
-	@Override
-	protected List<Component> getInputs() {
-		return Collections.unmodifiableList(Collections.emptyList());
-	}
-
-	@Override
-	protected List<List<Component>> getOutputs() {
-		List<List<Component>> ls = new ArrayList<>();
-		ls.add(Collections.unmodifiableList(outputBranches));
-		return Collections.unmodifiableList(ls);
-	}
 
 	@Override
 	public ComponentGraphic getGraphics() {
