@@ -36,8 +36,8 @@ public class ComponentGraph {
 	 * @throws IllegalArgumentException if the component's name isn't registered in the graph
 	 */
 	public void componentDeleted(String name) throws IllegalArgumentException {
-		if(nodes.remove(name) == null)
-			throw new IllegalArgumentException("There isn't any component named " + name + " in the graph!");
+		final Node removed = nodes.remove(name);
+		ComponentGraph.checkExists(removed);
 	}
 	
 	/**
@@ -50,11 +50,10 @@ public class ComponentGraph {
 	public void connectionRemoved(String connector, String target) throws IllegalArgumentException {
 		Node conNode = nodes.get(connector);
 		Node targetNode = nodes.get(target);
-		
-		if(conNode == null)
-			throw new IllegalArgumentException("There isn't any component named " + conNode + " in the graph!");
-		if(targetNode == null)
-			throw new IllegalArgumentException("There isn't any component named " + targetNode + " in the graph!");
+
+		ComponentGraph.checkExists(conNode);
+		ComponentGraph.checkExists(targetNode);
+
 		conNode.neighbours.remove(targetNode);
 	}
 	
@@ -71,10 +70,9 @@ public class ComponentGraph {
 	public boolean componentCanBeConnected(String connector, String target) throws IllegalArgumentException {
 		Node first = nodes.get(connector);
 		Node last = nodes.get(target);
-		if(first == null)
-			throw new IllegalArgumentException("There isn't any component named " + first + " in the graph!");
-		if(last == null)
-			throw new IllegalArgumentException("There isn't any component named " + last + " in the graph!");
+
+		ComponentGraph.checkExists(first);
+		ComponentGraph.checkExists(last);
 		
 		first.neighbours.add(last);
 		
@@ -124,8 +122,13 @@ public class ComponentGraph {
 		n.post = clock.value();
 		clock.tick();
 	}
-	
-	
+
+	private static void checkExists(Node node) {
+		if (Objects.isNull(node))
+			throw new IllegalArgumentException(
+			        String.format("There isn't any component named %s in the graph!", node));
+	}
+
 	private class Node {
 		List<Node> neighbours = new LinkedList<Node>();
 		
