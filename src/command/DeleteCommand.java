@@ -1,5 +1,7 @@
 package command;
 
+import static components.ComponentType.BRANCH;
+
 import java.util.List;
 import java.util.Vector;
 
@@ -48,7 +50,7 @@ class DeleteCommand extends Command {
 		ComponentFactory.destroyComponent(associatedComponent);
 		context.removeComponent(associatedComponent);
 		
-		if(associatedComponent.type() == ComponentType.BRANCH) {
+		if(associatedComponent.type() == BRANCH) {
 			String input = associatedComponent.getInputs().get(0).getID();
 			String output = associatedComponent.getOutputs().get(0).get(0).getID();
 			context.graph.connectionRemoved(input, output);
