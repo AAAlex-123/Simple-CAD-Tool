@@ -11,7 +11,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import exceptions.InitializationError;
 import myUtil.Utility;
 import requirement.Requirements;
 
@@ -48,13 +47,22 @@ public final class StringConstants {
 			}
 		};
 		reqs = new Requirements<>();
-		
-		StringConstants.loadFromFile();
-		for (final Entry<String, String> e : StringConstants.map.entrySet()) {
-			final String key = e.getKey(), value = e.getValue();
-			StringConstants.reqs.add(key);
-			StringConstants.reqs.offer(key, value);
-		
+		try {
+			StringConstants.loadFromFile();
+			for (final Entry<String, String> e : StringConstants.map.entrySet()) {
+				final String key = e.getKey(), value = e.getValue();
+				StringConstants.reqs.add(key);
+				StringConstants.reqs.offer(key, value);
+			}
+		} catch (final FileNotFoundException e) {
+			System.err.printf("File %s doesn't exist%n", StringConstants.SETTINGS_FILE);
+			System.exit(0);
+		} catch (final IOException e) {
+			System.err.printf(
+					"Error while reading from file %s. Inform the developer about 'StringConstants.static-IO'%n",
+					StringConstants.SETTINGS_FILE);
+			System.exit(0);
+		}
 	}
 
 	/**
@@ -83,7 +91,7 @@ public final class StringConstants {
 		}
 	}
 
-	private static void loadFromFile() throws InitializationError {
+	private static void loadFromFile() throws FileNotFoundException, IOException {
 
 		try (BufferedReader reader = new BufferedReader(
 				new FileReader(StringConstants.SETTINGS_FILE))) {
@@ -95,13 +103,6 @@ public final class StringConstants {
 					StringConstants.map.put(parts[0], parts[1]);
 				}
 			}
-		} catch(FileNotFoundException e) {
-			throw new InitializationError(String.format("File %s doesn't exist%n", StringConstants.SETTINGS_FILE));
-		} catch(IOException ioe) {
-			throw new InitializationError(String.format("Error while reading from file %s. Inform the developer about 'StringConstants.static-IO'%n",
-			StringConstants.SETTINGS_FILE));
-		} catch(Throwable e) {
-			throw new InitializationError(String.format("Error while reading file %s: %s", StringConstants.SETTINGS_FILE, e));
 		}
 
 		StringConstants.COMPONENT_ICON_PATH = StringConstants.map.get("Component_Icon_Directory");
