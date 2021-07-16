@@ -12,15 +12,14 @@ import static components.ComponentType.OUTPUT_PIN;
 import java.awt.BorderLayout;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 
 import application.Application;
+import application.StringConstants;
 import command.Command;
-import components.Branch;
 import components.Component;
 import components.ComponentFactory;
 import components.ComponentType;
@@ -51,7 +50,7 @@ public final class Editor extends JComponent {
 	private boolean           dirty;
 	private final StatusBar   statusBar;
 
-	private ComponentGraph graph;
+	public final ComponentGraph graph;
 	private final ItemManager<Component>   components;
 	private final UndoableHistory<Command> undoableHistory;
 
@@ -81,14 +80,14 @@ public final class Editor extends JComponent {
 		setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 		add(editorUI, BorderLayout.CENTER);
 
-		components.addGenerator(INPUT_PIN.description(), "in%d");
-		components.addGenerator(OUTPUT_PIN.description(), "out%d");
-		components.addGenerator(BRANCH.description(), "br%d");
-		components.addGenerator(GATE.description(), "custom%d");
-		components.addGenerator(GATEAND.description(), "and%d");
-		components.addGenerator(GATEOR.description(), "or%d");
-		components.addGenerator(GATENOT.description(), "not%d");
-		components.addGenerator(GATEXOR.description(), "xor%d");
+		components.addGenerator(INPUT_PIN.description(), StringConstants.G_INPUT_PIN);
+		components.addGenerator(OUTPUT_PIN.description(), StringConstants.G_OUTPUT_PIN);
+		components.addGenerator(BRANCH.description(), StringConstants.G_BRANCH);
+		components.addGenerator(GATE.description(), StringConstants.G_GATE);
+		components.addGenerator(GATEAND.description(), StringConstants.G_GATEAND);
+		components.addGenerator(GATEOR.description(), StringConstants.G_GATEOR);
+		components.addGenerator(GATENOT.description(), StringConstants.G_GATENOT);
+		components.addGenerator(GATEXOR.description(), StringConstants.G_GATEXOR);
 	}
 
 	/**
@@ -120,15 +119,6 @@ public final class Editor extends JComponent {
 	 * @param component the Component
 	 */
 	public void addComponent(Component component) {
-		//notify graph
-		if(component.type() == BRANCH) { 
-			Branch b = (Branch) component;
-			if(!graph.componentCanBeConnected(b.getInputID(), b.getOutputID())) //if unsafe, ignore
-				return; //throw exception to notify user???
-		} else
-			graph.componentAdded(component.getID());
-		
-		//add component
 		components.add(component);
 		editorUI.addComponent(component);
 		statusBar.setLabelText("count", "Component count: %d", components.size());
@@ -140,14 +130,6 @@ public final class Editor extends JComponent {
 	 * @param component the Component
 	 */
 	public void removeComponent(Component component) {
-		//notify graph
-		if(component.type() == BRANCH) { 
-			Branch b = (Branch) component;
-			graph.connectionRemoved(b.getInputID(), b.getOutputID());
-		} else
-			graph.componentDeleted(component.getID());
-		
-		//add component
 		components.remove(component);
 		editorUI.removeComponent(component);
 		statusBar.setLabelText("count", "Component count: %d", components.size());
@@ -242,7 +224,7 @@ public final class Editor extends JComponent {
 	 * @return the list
 	 */
 	public List<Undoable> getPastCommands() {
-		return new Vector<>(undoableHistory.getPast());
+		return new ArrayList<>(undoableHistory.getPast());
 	}
 
 	/**
@@ -335,5 +317,4 @@ public final class Editor extends JComponent {
 	public void error(Exception exception) {
 		error("%s", exception.getMessage());
 	}
-
 }
