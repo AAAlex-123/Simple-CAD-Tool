@@ -17,7 +17,7 @@ import exceptions.MalformedGateException;
  *
  * @author alexm
  */
-public final class Branch extends Component {
+final class Branch extends Component {
 
 	private static final long serialVersionUID = 4L;
 
@@ -58,20 +58,6 @@ public final class Branch extends Component {
 		indexOut = outIndex;
 
 		connect();
-	}
-	
-	/**
-	 * Get the id of the component whose <b>output</b> is connected to the branch.
-	 */
-	public String getInputID() {
-		return in.getID();
-	}
-	
-	/**
-	 * Get the id of the component whose <b>input</b> is connected to the branch.
-	 */
-	public String getOutputID() {
-		return out.getID();
 	}
 	
 	@Override
