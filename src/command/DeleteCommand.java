@@ -42,22 +42,29 @@ class DeleteCommand extends Command {
 
 	@Override
 	public void execute() throws MissingComponentException {
-		deleteCommands.clear();
 		associatedComponent = context.getComponent_(requirements.getV("id"));
 
 		ComponentFactory.destroyComponent(associatedComponent);
 		context.removeComponent(associatedComponent);
+		
+		if(associatedComponent.type() == ComponentType.BRANCH) {
+			String input = associatedComponent.getInputs().get(0).getID();
+			String output = associatedComponent.getOutputs().get(0).get(0).getID();
+			context.graph.connectionRemoved(input, output);
+		}
+		else
+			context.graph.componentDeleted(associatedComponent.getID());
 
-		Utility.foreach(context.getDeletedComponents(), command -> {
+		Utility.foreach(context.getDeletedComponents(), c -> {
 			final DeleteCommand deleteCommand = new DeleteCommand(context);
 			deleteCommands.add(deleteCommand);
 
 			// component is already deleted the command isn't executed
 			// instead it is just set up so it can be undone successfully
-			deleteCommand.requirements.fulfil("id", String.valueOf(command.getID()));
-			deleteCommand.associatedComponent = command;
+			deleteCommand.requirements.fulfil("id", String.valueOf(c.getID()));
+			deleteCommand.associatedComponent = c;
 
-			context.removeComponent(command);
+			context.removeComponent(c);
 		});
 	}
 
