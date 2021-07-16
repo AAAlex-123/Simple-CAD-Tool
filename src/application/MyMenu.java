@@ -41,6 +41,7 @@ import command.Command;
 import components.Component;
 import components.ComponentFactory;
 import exceptions.InvalidComponentException;
+import localisation.Languages;
 import myUtil.StringGenerator;
 import requirement.Requirements;
 import requirement.StringType;
@@ -71,8 +72,8 @@ final class MyMenu extends JMenuBar {
 	MyMenu(Application application) {
 
 		context = application;
-		builtin_command_gen = new StringGenerator(StringConstants.BUILTIN_COMMAND_ACCEL_PREFIX + " %d", 1, 10);
-		custom_command_gen = new StringGenerator(StringConstants.USER_COMMAND_ACCEL_PREFIX + " %d", 1, 10);
+		builtin_command_gen = new StringGenerator(StringConstants.BUILTIN_COMMAND_ACCEL_PREFIX + " %d", 1, 10); //$NON-NLS-1$
+		custom_command_gen = new StringGenerator(StringConstants.USER_COMMAND_ACCEL_PREFIX + " %d", 1, 10); //$NON-NLS-1$
 
 		// block of actions
 		{
@@ -108,7 +109,7 @@ final class MyMenu extends JMenuBar {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					final Editor activeEditor = context.getActiveEditor();
-					Actions.SAVE.specify("filename", activeEditor.getFile()).context(activeEditor)
+					Actions.SAVE.specify("filename", activeEditor.getFile()).context(activeEditor) //$NON-NLS-1$
 					.execute();
 				}
 			};
@@ -124,7 +125,7 @@ final class MyMenu extends JMenuBar {
 			a_open = new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					Actions.OPEN.specify("gatename", "N/A").specify("filetype", "circuit")
+					Actions.OPEN.specify("gatename", "N/A").specify("filetype", "circuit") //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 					.specifyWithDialog(context.getActiveEditor())
 					.context(context.getActiveEditor()).execute();
 				}
@@ -140,7 +141,7 @@ final class MyMenu extends JMenuBar {
 			a_import = new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					Actions.OPEN.specify("filetype", "component")
+					Actions.OPEN.specify("filetype", "component") //$NON-NLS-1$ //$NON-NLS-2$
 					.specifyWithDialog(context.getActiveEditor())
 					.context(context.getActiveEditor()).execute();
 				}
@@ -152,7 +153,7 @@ final class MyMenu extends JMenuBar {
 					final Editor activeEditor = context.getActiveEditor();
 					final Command c = Command.delete();
 					c.fillRequirements(application.getFrame(), activeEditor);
-					Actions.DELETE.specify("command", c).context(activeEditor).execute();
+					Actions.DELETE.specify("command", c).context(activeEditor).execute(); //$NON-NLS-1$
 				}
 			};
 
@@ -172,16 +173,16 @@ final class MyMenu extends JMenuBar {
 		}
 
 		// --- file ---
-		m_file = new JMenu("File");
-		f_new = new JMenuItem("New");
-		f_close = new JMenuItem("Close");
-		f_open = new JMenuItem("Open");
-		f_save = new JMenuItem("Save");
-		f_save_as = new JMenuItem("Save as");
-		f_clear = new JMenuItem("Clear");
-		f_import = new JMenuItem("Import");
-		f_undo = new JMenuItem("Undo");
-		f_redo = new JMenuItem("Redo");
+		m_file = new JMenu(Languages.getString("MyMenu.10")); //$NON-NLS-1$
+		f_new = new JMenuItem(Languages.getString("MyMenu.11")); //$NON-NLS-1$
+		f_close = new JMenuItem(Languages.getString("MyMenu.12")); //$NON-NLS-1$
+		f_open = new JMenuItem(Languages.getString("MyMenu.13")); //$NON-NLS-1$
+		f_save = new JMenuItem(Languages.getString("MyMenu.14")); //$NON-NLS-1$
+		f_save_as = new JMenuItem(Languages.getString("MyMenu.15")); //$NON-NLS-1$
+		f_clear = new JMenuItem(Languages.getString("MyMenu.16")); //$NON-NLS-1$
+		f_import = new JMenuItem(Languages.getString("MyMenu.17")); //$NON-NLS-1$
+		f_undo = new JMenuItem(Languages.getString("MyMenu.18")); //$NON-NLS-1$
+		f_redo = new JMenuItem(Languages.getString("MyMenu.19")); //$NON-NLS-1$
 
 		m_file.add(f_new);
 		m_file.add(f_close);
@@ -199,32 +200,32 @@ final class MyMenu extends JMenuBar {
 		add(m_file);
 
 		// --- edit ---
-		m_edit = new JMenu("Edit");
-		e_activate = new JMenuItem("Turn on/off");
-		e_focus = new JMenuItem("Focus");
+		m_edit = new JMenu(Languages.getString("MyMenu.20")); //$NON-NLS-1$
+		e_activate = new JMenuItem(Languages.getString("MyMenu.21")); //$NON-NLS-1$
+		e_focus = new JMenuItem(Languages.getString("MyMenu.22")); //$NON-NLS-1$
 		m_edit.add(e_activate);
 		m_edit.add(e_focus);
 		add(m_edit);
 
 		// --- create ---
-		m_create = new JMenu("Create");
+		m_create = new JMenu(Languages.getString("MyMenu.23")); //$NON-NLS-1$
 		add(m_create);
 
 		// --- delete ---
-		m_delete = new JMenu("Delete");
-		d_component = new JMenuItem("Component");
+		m_delete = new JMenu(Languages.getString("MyMenu.24")); //$NON-NLS-1$
+		d_component = new JMenuItem(Languages.getString("MyMenu.25")); //$NON-NLS-1$
 		m_delete.add(d_component);
 		add(m_delete);
 
 		// --- preferences ---
-		m_preferences = new JMenu("Preferences");
-		p_settings = new JMenuItem("Settings");
+		m_preferences = new JMenu(Languages.getString("MyMenu.26")); //$NON-NLS-1$
+		p_settings = new JMenuItem(Languages.getString("MyMenu.27")); //$NON-NLS-1$
 		m_preferences.add(p_settings);
 		add(m_preferences);
 
 		// --- help ---
-		m_help = new JMenu("Help");
-		h_help = new JMenuItem("Help I can't use this application :(");
+		m_help = new JMenu(Languages.getString("MyMenu.28")); //$NON-NLS-1$
+		h_help = new JMenuItem(Languages.getString("MyMenu.29")); //$NON-NLS-1$
 		m_help.add(h_help);
 		add(m_help);
 
@@ -246,7 +247,7 @@ final class MyMenu extends JMenuBar {
 		final JMenuItem jmic = new JMenuItem();
 
 		// different text and accelerator depending on command type (build-in vs user-created)
-		if (c.toString().matches("^(?:Create|Delete).*")) {
+		if (c.toString().matches("^(?:Create|Delete).*")) { //$NON-NLS-1$
 			jmic.setText(c.toString().substring(7));
 			MyMenu.setAccel(jmic, builtin_command_gen.get());
 		} else {
@@ -257,7 +258,7 @@ final class MyMenu extends JMenuBar {
 		jmic.addActionListener(e -> {
 			final Command cloned = c.clone();
 			cloned.fillRequirements(context.getFrame(), context.getActiveEditor());
-			Actions.CREATE.specify("command", cloned).context(context.getActiveEditor()).execute();
+			Actions.CREATE.specify("command", cloned).context(context.getActiveEditor()).execute(); //$NON-NLS-1$
 		});
 
 		m_create.add(jmic);
@@ -292,12 +293,12 @@ final class MyMenu extends JMenuBar {
 			final Editor activeEditor = context.getActiveEditor();
 
 			final Requirements<String> reqs = new Requirements<>();
-			reqs.add("id", StringType.ANY);
-			reqs.add("active", StringType.ON_OFF);
-			reqs.fulfillWithDialog(context.getFrame(), "Turn Input Pin on/off");
+			reqs.add("id", StringType.ANY); //$NON-NLS-1$
+			reqs.add("active", StringType.ON_OFF); //$NON-NLS-1$
+			reqs.fulfillWithDialog(context.getFrame(), Languages.getString("MyMenu.34")); //$NON-NLS-1$
 
 			if (reqs.fulfilled()) {
-				final String id = reqs.getV("id");
+				final String id = reqs.getV("id"); //$NON-NLS-1$
 				Component comp;
 				try {
 					comp = context.getActiveEditor().getComponent_(id);
@@ -306,16 +307,16 @@ final class MyMenu extends JMenuBar {
 					return;
 				}
 
-				final boolean active = reqs.getV("active").equals("on");
+				final boolean active = reqs.getV("active").equals("on"); //$NON-NLS-1$ //$NON-NLS-2$
 				try {
 					ComponentFactory.setActive(comp, active);
 				} catch (final InvalidComponentException e1) {
 					activeEditor.error(e1);
 					return;
 				}
-				activeEditor.status("Activated Input Pin");
+				activeEditor.status(Languages.getString("MyMenu.38")); //$NON-NLS-1$
 			} else {
-				activeEditor.status("Activate Input Pin cancelled");
+				activeEditor.status(Languages.getString("MyMenu.39")); //$NON-NLS-1$
 			}
 		});
 
@@ -323,11 +324,11 @@ final class MyMenu extends JMenuBar {
 			final Editor activeEditor = context.getActiveEditor();
 
 			final Requirements<String> reqs = new Requirements<>();
-			reqs.add("id", StringType.ANY);
-			reqs.fulfillWithDialog(context.getFrame(), "Focus Component");
+			reqs.add("id", StringType.ANY); //$NON-NLS-1$
+			reqs.fulfillWithDialog(context.getFrame(), Languages.getString("MyMenu.41")); //$NON-NLS-1$
 
 			if (reqs.fulfilled()) {
-				final String id = reqs.getV("id");
+				final String id = reqs.getV("id"); //$NON-NLS-1$
 				Component comp;
 				try {
 					comp = activeEditor.getComponent_(id);
@@ -336,10 +337,10 @@ final class MyMenu extends JMenuBar {
 					return;
 				}
 				comp.getGraphics().requestFocus();
-				activeEditor.status("Focusing Component");
+				activeEditor.status(Languages.getString("MyMenu.43")); //$NON-NLS-1$
 
 			} else {
-				activeEditor.status("Focus Component cancelled");
+				activeEditor.status(Languages.getString("MyMenu.44")); //$NON-NLS-1$
 			}
 		});
 	}
@@ -362,24 +363,24 @@ final class MyMenu extends JMenuBar {
 	}
 
 	private void icons() {
-		MyMenu.setIcon(m_file, "file");
-		MyMenu.setIcon(f_new, "new");
-		MyMenu.setIcon(f_close, "close");
-		MyMenu.setIcon(f_save, "save");
-		MyMenu.setIcon(f_save_as, "save_as");
-		MyMenu.setIcon(f_open, "open");
-		MyMenu.setIcon(f_clear, "clear");
-		MyMenu.setIcon(f_undo, "undo");
-		MyMenu.setIcon(f_redo, "redo");
-		MyMenu.setIcon(f_import, "import");
-		MyMenu.setIcon(m_edit, "edit");
-		MyMenu.setIcon(e_activate, "activate");
-		MyMenu.setIcon(e_focus, "focus");
-		MyMenu.setIcon(m_create, "create");
-		MyMenu.setIcon(m_delete, "delete");
-		MyMenu.setIcon(m_preferences, "preferences");
-		MyMenu.setIcon(p_settings, "settings");
-		MyMenu.setIcon(m_help, "help");
+		MyMenu.setIcon(m_file, "file"); //$NON-NLS-1$
+		MyMenu.setIcon(f_new, "new"); //$NON-NLS-1$
+		MyMenu.setIcon(f_close, "close"); //$NON-NLS-1$
+		MyMenu.setIcon(f_save, "save"); //$NON-NLS-1$
+		MyMenu.setIcon(f_save_as, "save_as"); //$NON-NLS-1$
+		MyMenu.setIcon(f_open, "open"); //$NON-NLS-1$
+		MyMenu.setIcon(f_clear, "clear"); //$NON-NLS-1$
+		MyMenu.setIcon(f_undo, "undo"); //$NON-NLS-1$
+		MyMenu.setIcon(f_redo, "redo"); //$NON-NLS-1$
+		MyMenu.setIcon(f_import, "import"); //$NON-NLS-1$
+		MyMenu.setIcon(m_edit, "edit"); //$NON-NLS-1$
+		MyMenu.setIcon(e_activate, "activate"); //$NON-NLS-1$
+		MyMenu.setIcon(e_focus, "focus"); //$NON-NLS-1$
+		MyMenu.setIcon(m_create, "create"); //$NON-NLS-1$
+		MyMenu.setIcon(m_delete, "delete"); //$NON-NLS-1$
+		MyMenu.setIcon(m_preferences, "preferences"); //$NON-NLS-1$
+		MyMenu.setIcon(p_settings, "settings"); //$NON-NLS-1$
+		MyMenu.setIcon(m_help, "help"); //$NON-NLS-1$
 	}
 
 	private static void setAccel(JMenuItem jmi, String s) {
@@ -387,9 +388,9 @@ final class MyMenu extends JMenuBar {
 	}
 
 	private static void setIcon(JMenuItem jmi, String desc) {
-		final String filename = String.format("%s%s_icon.png", MENU_ICON_PATH,
+		final String filename    = String.format("%s%s_icon.png", MENU_ICON_PATH,              //$NON-NLS-1$
 				desc);
-		final String description = String.format("%s icon", desc);
+		final String description = String.format("%s icon", desc);                             //$NON-NLS-1$
 		jmi.setIcon(new ImageIcon(filename, description));
 	}
 }
