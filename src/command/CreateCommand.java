@@ -18,6 +18,7 @@ import components.ComponentType;
 import exceptions.MalformedBranchException;
 import myUtil.Utility;
 import requirement.Requirements;
+import exceptions.CycleException;
 
 /**
  * A Command that creates a basic {@code Component} and subsequently adds it to
@@ -84,8 +85,15 @@ class CreateCommand extends Command {
 		super.fillRequirements(parent, newContext);
 	}
 
+	 /**
+	  * Creates a component
+	  * 
+	  * @throws CycleException if the creation of a branch leads to a cyclical (feedback) circuit
+	  * @throws MissingComponentException if the ends of a branch aren't valid components
+	  * @throws MalformedBranchException if a branch could not be properly created
+	  */
 	@Override
-	public void execute() throws MissingComponentException, MalformedBranchException {
+	public void execute() throws CycleException, MissingComponentException, MalformedBranchException {
 		if (associatedComponent != null) {
 			// when re-executed, simply restore the already-created Component
 			context.addComponent(associatedComponent);
@@ -101,27 +109,43 @@ class CreateCommand extends Command {
 			case BRANCH:
 				final Component in = context.getComponent_(requirements.getV("in id"));
 				final Component out = context.getComponent_(requirements.getV("out id"));
+				
+				if(!context.graph.componentCanBeConnected(in.getID(), out.getID())) //if unsafe, notify editor
+					throw new CycleException(in,out); 
+				
 				final int inIndex = Integer.parseInt(requirements.getV("in index"));
 				final int outIndex = Integer.parseInt(requirements.getV("out index"));
 
 				associatedComponent = ComponentFactory.connectComponents(in, inIndex, out, outIndex);
 				break;
 			case GATEAND:
+				associatedComponent = ComponentFactory.createPrimitiveGate(GATEAND,
+						Integer.parseInt(requirements.getV("in count")));
+				break;
 			case GATEOR:
+				associatedComponent = ComponentFactory.createPrimitiveGate(GATEOR,
+						Integer.parseInt(requirements.getV("in count")));
+				break;
 			case GATENOT:
+				associatedComponent = ComponentFactory.createPrimitiveGate(GATENOT,
+						Integer.parseInt(requirements.getV("in count")));
+				break;
 			case GATEXOR:
-				associatedComponent = ComponentFactory.createPrimitiveGate(componentType,
+				associatedComponent = ComponentFactory.createPrimitiveGate(GATEXOR,
 						Integer.parseInt(requirements.getV("in count")));
 				break;
 			case GATE:
 				throw new RuntimeException(String.format(
-						"Cannot directly create Components of type %s", componentType));
+						"Cannot directly create Components of type %s", ComponentType.GATE));
 			default:
 				break;
 			}
 
 			associatedComponent.setID(requirements.getV("name"));
 			context.addComponent(associatedComponent);
+			
+			if(componentType != BRANCH) //notify graph if not notified already
+				context.graph.componentAdded(associatedComponent.getID());
 		}
 
 		// delete the branch that may have been deleted when creating this branch
