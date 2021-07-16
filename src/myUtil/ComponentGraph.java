@@ -128,7 +128,7 @@ public class ComponentGraph {
 		List<Node> neighbours = new LinkedList<Node>();
 		
 		//used by the DFS algorithm above
-		int previous;
+		int prev;
 		int post;
 		boolean visited;
 	
