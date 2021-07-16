@@ -16,7 +16,7 @@ public class CycleException extends Exception {
 	private static final long serialVersionUID = -4668906301492855812L;
 
 	public CycleException(Component comp1, Component comp2) {
-		this(String.format("Cycle formed between components %s and %s. The connection between them has been deleted.", comp1.getID(),comp2.getID()));
+		this(String.format("Cycle formed between components %s and %s.", comp1.getID(),comp2.getID()));
 	}
 	
 	public CycleException(String message) {
