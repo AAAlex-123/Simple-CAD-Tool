@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import application.editor.Editor;
+import application.editor.CycleException;
 import application.editor.MissingComponentException;
 import components.Component;
 import components.ComponentFactory;
@@ -18,7 +19,6 @@ import components.ComponentType;
 import exceptions.MalformedBranchException;
 import myUtil.Utility;
 import requirement.Requirements;
-import exceptions.CycleException;
 
 /**
  * A Command that creates a basic {@code Component} and subsequently adds it to
