@@ -110,7 +110,18 @@ class CreateCommand extends Command {
 				final Component in = context.getComponent_(requirements.getV("in id"));
 				final Component out = context.getComponent_(requirements.getV("out id"));
 				
-				if(!context.graph.componentCanBeConnected(in.getID(), out.getID())) //if unsafe, notify editor
+				/*
+				 * If connecting the Branch leads to a cycle being created, the connection is aborted.
+				 * This has the (unintended) consequence of not checking whether or not the connection
+				 * is valid in the first place (no MalformedBranchException is thrown).
+				 * As a result, the user is, in some cases, warned that a cycle is going to be created
+				 * but in reality such a connection is not valid, due to the nature of the Components
+				 * being connected.
+				 * This is a compromise we're willing to make since creating the Branch and then, if
+				 * a cycle is created, deleting it would require additional code to restore everything,
+				 * making this method needlessly complicated and hard to understand.
+				 */
+				if (!context.graph.componentCanBeConnected(in.getID(), out.getID()))
 					throw new CycleException(in,out); 
 				
 				final int inIndex = Integer.parseInt(requirements.getV("in index"));
