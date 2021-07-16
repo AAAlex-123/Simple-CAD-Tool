@@ -119,24 +119,15 @@ class CreateCommand extends Command {
 				associatedComponent = ComponentFactory.connectComponents(in, inIndex, out, outIndex);
 				break;
 			case GATEAND:
-				associatedComponent = ComponentFactory.createPrimitiveGate(GATEAND,
-						Integer.parseInt(requirements.getV("in count")));
-				break;
 			case GATEOR:
-				associatedComponent = ComponentFactory.createPrimitiveGate(GATEOR,
-						Integer.parseInt(requirements.getV("in count")));
-				break;
 			case GATENOT:
-				associatedComponent = ComponentFactory.createPrimitiveGate(GATENOT,
-						Integer.parseInt(requirements.getV("in count")));
-				break;
 			case GATEXOR:
-				associatedComponent = ComponentFactory.createPrimitiveGate(GATEXOR,
+				associatedComponent = ComponentFactory.createPrimitiveGate(componentType,
 						Integer.parseInt(requirements.getV("in count")));
 				break;
 			case GATE:
 				throw new RuntimeException(String.format(
-						"Cannot directly create Components of type %s", ComponentType.GATE));
+						"Cannot directly create Components of type %s", componentType));
 			default:
 				break;
 			}
