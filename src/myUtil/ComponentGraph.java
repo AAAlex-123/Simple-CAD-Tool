@@ -38,8 +38,8 @@ public class ComponentGraph {
 	/**
 	 * Notify the graph that a branch connecting 2 nodes was deleted.
 	 * 
-	 * @param connector the <b>branch's</br> input component
-	 * @param target the <b>branch's</br> output component
+	 * @param connector the <b>branch's</b> input component
+	 * @param target the <b>branch's</b> output component
 	 * @throws IllegalArgumentException if either of the components' names aren't registered in the graph.
 	 */
 	public void connectionRemoved(String connector, String target) throws IllegalArgumentException {
@@ -57,8 +57,8 @@ public class ComponentGraph {
 	 * Make sure to perform the check <i>before</i> the actual branch is added.
 	 * The connection will be added to the graph if it's deemed safe to do so.
 	 * 
-	 * @param connector the <b>branch's</br> input component
-	 * @param target the <b>branch's</br> output component
+	 * @param connector the <b>branch's</b> input component
+	 * @param target the <b>branch's</b> output component
 	 * @return true if the operation is safe, false if the operation will lead to an endless loop
 	 * @throws IllegalArgumentException if either of the components' names aren't registered in the graph.
 	 */
