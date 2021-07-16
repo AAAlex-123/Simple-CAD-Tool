@@ -61,6 +61,22 @@ public abstract class Component implements Identifiable<String>, Serializable {
 	 * @return the type
 	 */
 	public abstract ComponentType type();
+	
+	/**
+	 * Returns an unmodifiable list with the inputs of this Component as specified
+	 * by {@link Collections#unmodifiableList(List)}
+	 *
+	 * @return the List
+	 */
+	public abstract List<Component> getInputs();
+
+	/**
+	 * Returns an unmodifiable list with a list of outputs of this Component as
+	 * specified by {@link Collections#unmodifiableList(List)}
+	 *
+	 * @return the List
+	 */
+	public abstract List<List<Component>> getOutputs();
 
 	/**
 	 * The core of the library: all Components are able to propagate a received
@@ -175,24 +191,6 @@ public abstract class Component implements Identifiable<String>, Serializable {
 
 	/** Each Component specifies how it is restored after serialisation */
 	protected abstract void restoreSerialisedSelf();
-
-	// 3 methods to access specific parts and information of the Component
-
-	/**
-	 * Returns an unmodifiable list with the inputs of this Component as specified
-	 * by {@link Collections#unmodifiableList(List)}
-	 *
-	 * @return the List
-	 */
-	protected abstract List<Component> getInputs();
-
-	/**
-	 * Returns an unmodifiable list with a list of outputs of this Component as
-	 * specified by {@link Collections#unmodifiableList(List)}
-	 *
-	 * @return the List
-	 */
-	protected abstract List<List<Component>> getOutputs();
 
 	/**
 	 * Returns the {@code ComponentGraphics} object associated with this Component.
