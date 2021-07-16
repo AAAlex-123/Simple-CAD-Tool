@@ -79,14 +79,14 @@ public class ComponentGraph {
 		first.neighbours.add(last);
 		
 		//DFS on graph 
-		clock = 1;
+		final Clock clock = new Clock();
 		for(String key_n : nodes.keySet()) 
 			nodes.get(key_n).visited = false;
 
 		for(String key_n : nodes.keySet()) {
 			Node n = nodes.get(key_n);
 			if(!n.visited)
-				explore(n);
+				explore(n, clock);
 		}
 		
 		/*
@@ -112,17 +112,17 @@ public class ComponentGraph {
 	}
 	
 	
-	private void explore(Node n) {
-		n.previous = clock;
-		clock++;
+	private void explore(Node n, Clock clock) {
+		n.prev = clock.value();
+		clock.tick();
 		n.visited = true;
-		
-		for(Node v : n.neighbours) 
-			if(!v.visited) 
-				explore(v);
-			
-		n.post = clock;
-		clock++;
+
+		for (final Node v : n.neighbours)
+			if (!v.visited)
+				explore(v, clock);
+
+		n.post = clock.value();
+		clock.tick();
 	}
 	
 	
@@ -135,5 +135,19 @@ public class ComponentGraph {
 		boolean visited;
 	
 	}
+	
+	private class Clock {
 
+		private int value = 0;
+
+		public Clock() {}
+
+		public void tick() {
+			++value;
+		}
+
+		public int value() {
+			return value;
+		}
+	}
 }
