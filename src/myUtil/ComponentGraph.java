@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Objects;
 
 /**
  * A class monitoring the relations between all components to prevent major logical errors such as 
@@ -15,12 +15,7 @@ import java.util.Map;
  */
 public class ComponentGraph {
 	private Map<String, Node> nodes = new HashMap<String, Node>();
-	
-	/**
-	 * Used by the DFS algorithm.
-	 */
-	private int clock;
-		
+
 	/**
 	 * Notify the graph that a component has been added to the UI.
 	 * @param name the name of the new component
