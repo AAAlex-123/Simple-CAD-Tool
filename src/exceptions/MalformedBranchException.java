@@ -4,6 +4,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import components.Component;
+import localisation.Languages;
 
 /** Thrown when a Branch could not be normally created */
 public final class MalformedBranchException extends Exception {
@@ -30,22 +31,22 @@ public final class MalformedBranchException extends Exception {
 	}
 
 	private static String formatMessage(Component in, Component out) {
-		String s1 = in == null ? "null" : in.type().description();
-		String s2 = out == null ? "null" : out.type().description();
-		return String.format("Can't create Branch from %s to %s", s1, s2);
+		String s1 = in == null ? "null" : in.type().description(); //$NON-NLS-1$
+		String s2 = out == null ? "null" : out.type().description(); //$NON-NLS-1$
+		return String.format(Languages.getString("MalformedBranchException.2"), s1, s2); //$NON-NLS-1$
 	}
 
 	private static String formatMessage(Component c, int index) {
-		Pattern p = Pattern.compile("(.*?): (\\d+)-(\\d+), UID: (\\w+), hidden: (true|false)");
+		Pattern p = Pattern.compile("(.*?): (\\d+)-(\\d+), UID: (\\w+), hidden: (true|false)"); //$NON-NLS-1$
 		Matcher m = p.matcher(c.toString());
 		m.find();
 		String comp = m.group(1);
 		int i1 = Integer.valueOf(m.group(2));
 		int i2 = Integer.valueOf(m.group(3));
 		String id = m.group(4);
-		String s1 = i1 != 1 ? "s" : "";
-		String s2 = i2 != 1 ? "s" : "";
-		return String.format("Invalid index %d for %s (ID=%s) with %d input%s and %d output%s",
-		        index, comp, id, i1, s1, i2, s2);
+		String s1 = i1 != 1 ? Languages.getString("MalformedBranchException.4") : Languages.getString("MalformedBranchException.5"); //$NON-NLS-1$ //$NON-NLS-2$
+		String s2 = i2 != 1 ? Languages.getString("MalformedBranchException.6") : Languages.getString("MalformedBranchException.7"); //$NON-NLS-1$ //$NON-NLS-2$
+		return String.format(Languages.getString("MalformedBranchException.8"), //$NON-NLS-1$
+				index, comp, id, i1, s1, i2, s2);
 	}
 }
