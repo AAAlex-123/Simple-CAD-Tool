@@ -45,7 +45,7 @@ final class BranchGraphic extends ComponentGraphic {
 		else if (direction == -1)
 			g.drawLine(5, getHeight() - 6, getWidth() - 5, 5);
 		else
-			throw new RuntimeException("Invalid Branch direction");
+			throw new RuntimeException("Invalid Branch direction"); //$NON-NLS-1$
 	}
 
 	@Override
