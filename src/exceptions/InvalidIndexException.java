@@ -13,6 +13,6 @@ public final class InvalidIndexException extends RuntimeException {
 	 * @param index the invalid index
 	 */
 	public InvalidIndexException(Component c, int index) {
-		super(String.format("Invalid index %d for component of type %s.", index, c));
+		super(String.format("Invalid index %d for component of type %s.", index, c)); //$NON-NLS-1$
 	}
 }
