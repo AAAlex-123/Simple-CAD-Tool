@@ -14,6 +14,7 @@ import javax.swing.KeyStroke;
 
 import application.editor.Actions;
 import application.editor.Editor;
+import application.editor.EditorStrings;
 import application.editor.MissingComponentException;
 import command.Command;
 import components.Component;
