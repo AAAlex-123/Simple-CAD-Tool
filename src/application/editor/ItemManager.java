@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
+import localisation.Languages;
 import myUtil.StringGenerator;
 import myUtil.Utility;
 
@@ -152,7 +153,7 @@ class ItemManager<T extends components.Identifiable<String>> {
 		 * @param id the duplicate id
 		 */
 		public DuplicateIdException(String id) {
-			super(String.format("Another Item associated with ID %s", id));
+			super(String.format("Another Item associated with ID %s", id)); 
 		}
 	}
 }
