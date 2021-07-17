@@ -1,4 +1,6 @@
 package requirement;
+import static localisation.RequirementStrings.NO;
+import static localisation.RequirementStrings.YES;
 
 import java.awt.Frame;
 import java.io.Serializable;
@@ -6,6 +8,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import localisation.Languages;
 import myUtil.Utility;
 
 /**
@@ -143,8 +146,8 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 			return;
 
 		final RequirementsDialog rd = new RequirementsDialog(description,
-		        (Requirements<String>) this,
-		        frame);
+				(Requirements<String>) this,
+				frame);
 		rd.setVisible(true);
 	}
 
@@ -185,8 +188,8 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
-		sb.append(String.format("Requirements fulfilled: %s, finalised: %s%n",
-		        fulfilled() ? "yes" : "no", finalised() ? "yes" : "no"));
+		sb.append(String.format(Languages.getString("Requirements.0"), //$NON-NLS-1$
+				fulfilled() ? YES : NO, finalised() ? YES : NO));
 		Utility.foreach(this, r -> sb.append(r));
 		return sb.toString();
 	}
