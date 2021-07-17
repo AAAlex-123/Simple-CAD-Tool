@@ -2,6 +2,7 @@ package exceptions;
 
 import components.Component;
 import components.ComponentType;
+import localisation.Languages;
 
 /** Thrown when a Component of a wrong type is provided in a Factory method. */
 public final class InvalidComponentException extends RuntimeException {
@@ -14,7 +15,7 @@ public final class InvalidComponentException extends RuntimeException {
 	 * @param correctType the correct type
 	 */
 	public InvalidComponentException(Component c, ComponentType correctType) {
-		super(String.format("Expected type %s but got Component of type %s", correctType.description(),
+		super(String.format(Languages.getString("InvalidComponentException.0"), correctType.description(), //$NON-NLS-1$
 				c.type().description()));
 	}
 

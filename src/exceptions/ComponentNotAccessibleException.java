@@ -15,6 +15,6 @@ public final class ComponentNotAccessibleException extends RuntimeException {
 	 * @param c the Component that is not accessible
 	 */
 	public ComponentNotAccessibleException(Component c) {
-		super(String.format("Can't access or modify component %s hidden inside a gate.", c));
+		super(String.format("Can't access or modify component %s hidden inside a gate.", c)); //$NON-NLS-1$
 	}
 }
