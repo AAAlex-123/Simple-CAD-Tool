@@ -77,7 +77,7 @@ public final class StatusBar extends JPanel {
 	 * @param type    the Label's text type
 	 */
 	public void addLabel(String labelID, TextType type) {
-		final JLabel newLabel = new JLabel(" ");
+		final JLabel newLabel = new JLabel(" "); //$NON-NLS-1$
 		newLabel.setHorizontalAlignment(SwingConstants.LEFT);
 		type.format(newLabel);
 
@@ -146,7 +146,7 @@ public final class StatusBar extends JPanel {
 		 * @param labelID the ID for which no Label exists
 		 */
 		public MissingLabelException(String labelID) {
-			super(String.format("No label with ID %s exists", labelID));
+			super(String.format("No label with ID %s exists", labelID)); //$NON-NLS-1$
 		}
 	}
 }
