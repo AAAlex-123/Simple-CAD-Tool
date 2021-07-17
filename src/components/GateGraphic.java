@@ -9,6 +9,7 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 import application.StringConstants;
+import exceptions.MissingSpriteException;
 
 /**
  * Handles the Graphics of a {@link Gate}.
@@ -20,7 +21,7 @@ class GateGraphic extends ComponentGraphic {
 	private static final long serialVersionUID = 1L;
 
 	private static final String sprite = StringConstants.COMPONENT_ICON_PATH
-			+ "gate.png";
+			+ "gate.png"; //$NON-NLS-1$
 
 	private static final BufferedImage image;
 
@@ -32,7 +33,7 @@ class GateGraphic extends ComponentGraphic {
 			file = new File(sprite);
 			temp = ImageIO.read(file);
 		} catch (IOException e) {
-			System.err.printf("Could not load image %s%n", file);
+			throw new MissingSpriteException(file);
 		}
 
 		image = temp;
@@ -47,7 +48,7 @@ class GateGraphic extends ComponentGraphic {
 	 * @param c the related Component
 	 */
 	public GateGraphic(Component c) {
-		this(c, "");
+		this(c, ""); //$NON-NLS-1$
 	}
 
 	/**
