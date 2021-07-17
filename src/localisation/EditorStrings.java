@@ -1,6 +1,4 @@
-package application.editor;
-
-import localisation.Languages;
+package localisation;
 
 /**
  * Strings to be externalised once from here.
