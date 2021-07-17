@@ -13,6 +13,6 @@ public class MissingRequirementException extends RuntimeException {
 	 * @param key the key for which there is no Requirement
 	 */
 	public MissingRequirementException(String key) {
-		super(String.format("No Requirement with key %s exists", key));
+		super(String.format("No Requirement with key %s exists", key)); //$NON-NLS-1$
 	}
 }
