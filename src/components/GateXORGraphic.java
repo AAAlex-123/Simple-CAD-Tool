@@ -8,6 +8,7 @@ import java.util.function.Function;
 import javax.imageio.ImageIO;
 
 import application.StringConstants;
+import exceptions.MissingSpriteException;
 
 /**
  * Handles the Graphics of a {@link GateNOT}.
@@ -18,7 +19,7 @@ final class GateXORGraphic extends GateGraphic {
 
 	private static final long serialVersionUID = 1L;
 
-	private static final String sprite = StringConstants.COMPONENT_ICON_PATH + "gate_xor.png";
+	private static final String sprite = StringConstants.COMPONENT_ICON_PATH + "gate_xor.png"; //$NON-NLS-1$
 
 	private static final BufferedImage image;
 
@@ -30,7 +31,7 @@ final class GateXORGraphic extends GateGraphic {
 			file = new File(sprite);
 			temp = ImageIO.read(file);
 		} catch (IOException e) {
-			System.err.printf("Could not load image %s", file);
+			throw new MissingSpriteException(file);
 		}
 
 		image = temp;
