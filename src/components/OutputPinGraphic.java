@@ -8,6 +8,7 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 import application.StringConstants;
+import exceptions.MissingSpriteException;
 
 /**
  * Handles the Graphics of an {@link OutputPin}.
@@ -19,7 +20,7 @@ final class OutputPinGraphic extends ComponentGraphic {
 	private static final long serialVersionUID = 1L;
 
 	private static final String sprite = StringConstants.COMPONENT_ICON_PATH
-	        + "output_pin_{state}.png";
+			+ "output_pin_{state}.png"; //$NON-NLS-1$
 
 	private static final BufferedImage image_on, image_off;
 
@@ -28,17 +29,17 @@ final class OutputPinGraphic extends ComponentGraphic {
 		File          file    = null;
 
 		try {
-			file = new File(sprite.replace("{state}", "on"));
+			file = new File(sprite.replace("{state}", "on")); //$NON-NLS-1$ //$NON-NLS-2$
 			temp_on = ImageIO.read(file);
 		} catch (IOException e) {
-			System.err.printf("Could not load image %s%n", file);
+			throw new MissingSpriteException(file);
 		}
 
 		try {
-			file = new File(sprite.replace("{state}", "off"));
+			file = new File(sprite.replace("{state}", "off")); //$NON-NLS-1$ //$NON-NLS-2$
 			temp_off = ImageIO.read(file);
 		} catch (IOException e) {
-			System.err.printf("Could not load image %s%n", file);
+			throw new MissingSpriteException(file);
 		}
 
 		image_on = temp_on;
