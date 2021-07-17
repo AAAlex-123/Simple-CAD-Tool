@@ -2,6 +2,7 @@ package command;
 
 import static components.ComponentType.INPUT_PIN;
 import static components.ComponentType.OUTPUT_PIN;
+import static localisation.CommandStrings.NAME;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,7 +55,7 @@ class CreateGateCommand extends CreateCommand {
 			ComponentFactory.restoreDeletedComponent(associatedComponent);
 		} else {
 			// execute the sequence of commands to create the circuit in a temporary context
-			final Editor tempContext = new Editor(null, "");
+			final Editor tempContext = new Editor(null, null);
 
 			Utility.foreach(commands, c -> {
 				final Command cloned = c.clone();
@@ -86,7 +87,7 @@ class CreateGateCommand extends CreateCommand {
 
 			// create the composite Gate and add it to the real context
 			associatedComponent = ComponentFactory.createGate(in, out, description);
-			associatedComponent.setID(requirements.getV("name"));
+			associatedComponent.setID(requirements.getV(NAME));
 			context.addComponent(associatedComponent);
 		}
 	}
