@@ -2,6 +2,8 @@ package exceptions;
 
 import java.io.File;
 
+import localisation.Languages;
+
 /**
  * Thrown when a ComponentGraphic couldn't load its sprite.
  *
@@ -15,6 +17,6 @@ public final class MissingSpriteException extends RuntimeException {
 	 * @param filename
 	 */
 	public MissingSpriteException(File filename) {
-		super(String.format("Could not load image %s", filename));
+		super(String.format(Languages.getString("MissingSpriteException.0"), filename)); //$NON-NLS-1$
 	}
 }
