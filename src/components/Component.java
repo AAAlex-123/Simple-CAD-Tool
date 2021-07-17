@@ -50,7 +50,7 @@ public abstract class Component implements Identifiable<String>, Serializable {
 
 	/** Constructs the Component */
 	protected Component() {
-		componentID = "";
+		componentID = ""; //$NON-NLS-1$
 		hidden = false;
 		toBeRemoved = false;
 	}
@@ -100,7 +100,7 @@ public abstract class Component implements Identifiable<String>, Serializable {
 	 */
 	protected void setIn(Branch branch, int index) {
 		throw new UnsupportedOperationException(String.format(
-				"Components of type %s don't support setIn(Branch, int)", type().description()));
+				"Components of type %s don't support setIn(Branch, int)", type().description())); //$NON-NLS-1$
 	}
 
 	/**
@@ -111,7 +111,7 @@ public abstract class Component implements Identifiable<String>, Serializable {
 	 */
 	protected void addOut(Branch branch, int index) {
 		throw new UnsupportedOperationException(String.format(
-				"Components of type %s don't support addOut(Branch, int)", type().description()));
+				"Components of type %s don't support addOut(Branch, int)", type().description())); //$NON-NLS-1$
 	}
 
 	/**
@@ -122,7 +122,7 @@ public abstract class Component implements Identifiable<String>, Serializable {
 	 */
 	protected void removeIn(Branch branch, int index) {
 		throw new UnsupportedOperationException(String.format(
-				"Components of type %s don't support removeIn(Branch, int)", type().description()));
+				"Components of type %s don't support removeIn(Branch, int)", type().description())); //$NON-NLS-1$
 	}
 
 	/**
@@ -133,7 +133,7 @@ public abstract class Component implements Identifiable<String>, Serializable {
 	 */
 	protected void removeOut(Branch branch, int index) {
 		throw new UnsupportedOperationException(String.format(
-				"Components of type %s don't support removeOut(Branch, int)",
+				"Components of type %s don't support removeOut(Branch, int)", //$NON-NLS-1$
 				type().description()));
 	}
 
@@ -316,7 +316,7 @@ public abstract class Component implements Identifiable<String>, Serializable {
 
 	@Override
 	public final String toString() {
-		return String.format("%s: %d-%d, UID: %s, hidden: %s", type().description(), inCount(),
+		return String.format("%s: %d-%d, UID: %s, hidden: %s", type().description(), inCount(), //$NON-NLS-1$
 				outCount(), getID(), hidden());
 	}
 }

@@ -101,7 +101,7 @@ public final class ComponentFactory {
 		case GATEXOR:
 			return new GateXOR(inCount);
 		default:
-			throw new RuntimeException("wrong primitive gate type");
+			throw new RuntimeException(String.format("Type %s doesn't correspond to Primitive Gate", type)); //$NON-NLS-1$
 		}
 	}
 

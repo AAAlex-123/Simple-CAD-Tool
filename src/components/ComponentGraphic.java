@@ -89,7 +89,7 @@ public abstract class ComponentGraphic extends JComponent {
 	@Override
 	public final void paintComponent(Graphics g) {
 		if (component.hidden())
-			throw new RuntimeException("Hidden Components can't be drawn");
+			throw new RuntimeException("Hidden Components can't be drawn"); //$NON-NLS-1$
 
 		super.paintComponent(g);
 		draw(g);
@@ -192,7 +192,7 @@ public abstract class ComponentGraphic extends JComponent {
 		ComponentType type = component.type();
 		if ((type == BRANCH) || (type == OUTPUT_PIN))
 			throw new UnsupportedOperationException(String.format(
-					"Component of type %s don't support getBranchInputCoords(Branch, int)", type.description()));
+					"Component of type %s don't support getBranchInputCoords(Branch, int)", type.description())); //$NON-NLS-1$
 
 		List<List<Component>> outputs = component.getOutputs();
 		for (List<Component> ls : outputs) {
@@ -217,7 +217,7 @@ public abstract class ComponentGraphic extends JComponent {
 		ComponentType type = component.type();
 		if ((type == BRANCH) || (type == INPUT_PIN))
 			throw new UnsupportedOperationException(String
-					.format("Component of type %s don't support getBranchOutputCoords(Branch, int)",
+					.format("Component of type %s don't support getBranchOutputCoords(Branch, int)", //$NON-NLS-1$
 							type.description()));
 
 		int index = component.getInputs().indexOf(branch);
