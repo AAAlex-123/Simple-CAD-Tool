@@ -1,5 +1,8 @@
 package command;
 
+import static localisation.CommandStrings.DELETE_STR;
+import static localisation.CommandStrings.ID;
+
 import java.util.List;
 import java.util.Vector;
 
@@ -30,7 +33,7 @@ class DeleteCommand extends Command {
 	DeleteCommand(Editor editor) {
 		super(editor);
 		deleteCommands = new Vector<>();
-		requirements.add("id", StringType.ANY);
+		requirements.add(ID, StringType.ANY);
 	}
 
 	@Override
@@ -43,7 +46,7 @@ class DeleteCommand extends Command {
 	@Override
 	public void execute() throws MissingComponentException {
 		deleteCommands.clear();
-		associatedComponent = context.getComponent_(requirements.getV("id"));
+		associatedComponent = context.getComponent_(requirements.getV(ID));
 
 		ComponentFactory.destroyComponent(associatedComponent);
 		context.removeComponent(associatedComponent);
@@ -54,7 +57,7 @@ class DeleteCommand extends Command {
 
 			// component is already deleted the command isn't executed
 			// instead it is just set up so it can be undone successfully
-			deleteCommand.requirements.fulfil("id", String.valueOf(command.getID()));
+			deleteCommand.requirements.fulfil(ID, String.valueOf(command.getID()));
 			deleteCommand.associatedComponent = command;
 
 			context.removeComponent(command);
@@ -76,6 +79,6 @@ class DeleteCommand extends Command {
 
 	@Override
 	public String toString() {
-		return "Delete";
+		return DELETE_STR;
 	}
 }
