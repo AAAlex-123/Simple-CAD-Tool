@@ -1,6 +1,14 @@
 package command;
 
 import static components.ComponentType.BRANCH;
+import static localisation.CommandStrings.CREATE_STR;
+import static localisation.CommandStrings.ID;
+import static localisation.CommandStrings.IN_COUNT;
+import static localisation.CommandStrings.IN_ID;
+import static localisation.CommandStrings.IN_INDEX;
+import static localisation.CommandStrings.NAME;
+import static localisation.CommandStrings.OUT_ID;
+import static localisation.CommandStrings.OUT_INDEX;
 import static requirement.StringType.ANY;
 import static requirement.StringType.CUSTOM;
 import static requirement.StringType.NON_NEG_INTEGER;
@@ -16,6 +24,7 @@ import components.Component;
 import components.ComponentFactory;
 import components.ComponentType;
 import exceptions.MalformedBranchException;
+import localisation.Languages;
 import myUtil.Utility;
 import requirement.Requirements;
 
@@ -46,23 +55,23 @@ class CreateCommand extends Command {
 
 		switch (componentType) {
 		case BRANCH:
-			requirements.add("in id", ANY);
-			requirements.add("in index", NON_NEG_INTEGER);
-			requirements.add("out id", ANY);
-			requirements.add("out index", NON_NEG_INTEGER);
+			requirements.add(IN_ID, ANY);
+			requirements.add(IN_INDEX, NON_NEG_INTEGER);
+			requirements.add(OUT_ID, ANY);
+			requirements.add(OUT_INDEX, NON_NEG_INTEGER);
 			break;
 		case GATEAND:
 		case GATENOT:
 		case GATEOR:
 		case GATEXOR:
-			requirements.add("in count", POS_INTEGER);
+			requirements.add(IN_COUNT, POS_INTEGER);
 			break;
 		case INPUT_PIN:
 		case OUTPUT_PIN:
 		default:
 			break;
 		}
-		requirements.add("name", CUSTOM);
+		requirements.add(NAME, CUSTOM);
 	}
 
 	@Override
@@ -77,10 +86,10 @@ class CreateCommand extends Command {
 		context(newContext);
 
 		// alter the `CUSTOM` type for this specific use
-		CUSTOM.alter(constructRegex(), "Available, no spaces");
+		CUSTOM.alter(constructRegex(), Languages.getString("CreateCommand.0")); //$NON-NLS-1$
 
 		// provide preset
-		requirements.get("name").offer(context.getNextID(componentType));
+		requirements.get(NAME).offer(context.getNextID(componentType));
 		super.fillRequirements(parent, newContext);
 	}
 
@@ -99,10 +108,10 @@ class CreateCommand extends Command {
 				associatedComponent = ComponentFactory.createOutputPin();
 				break;
 			case BRANCH:
-				final Component in = context.getComponent_(requirements.getV("in id"));
-				final Component out = context.getComponent_(requirements.getV("out id"));
-				final int inIndex = Integer.parseInt(requirements.getV("in index"));
-				final int outIndex = Integer.parseInt(requirements.getV("out index"));
+				final Component in = context.getComponent_(requirements.getV(IN_ID));
+				final Component out = context.getComponent_(requirements.getV(OUT_ID));
+				final int inIndex = Integer.parseInt(requirements.getV(IN_INDEX));
+				final int outIndex = Integer.parseInt(requirements.getV(OUT_INDEX));
 
 				associatedComponent = ComponentFactory.connectComponents(in, inIndex, out, outIndex);
 				break;
@@ -111,16 +120,15 @@ class CreateCommand extends Command {
 			case GATENOT:
 			case GATEXOR:
 				associatedComponent = ComponentFactory.createPrimitiveGate(componentType,
-						Integer.parseInt(requirements.getV("in count")));
+						Integer.parseInt(requirements.getV(IN_COUNT)));
 				break;
 			case GATE:
-				throw new RuntimeException(String.format(
-						"Cannot directly create Components of type %s", componentType));
+				throw new RuntimeException(String.format(Languages.getString("CreateCommand.1"), componentType)); //$NON-NLS-1$
 			default:
 				break;
 			}
 
-			associatedComponent.setID(requirements.getV("name"));
+			associatedComponent.setID(requirements.getV(NAME));
 			context.addComponent(associatedComponent);
 		}
 
@@ -133,12 +141,11 @@ class CreateCommand extends Command {
 				return;
 
 			if (ls.size() > 1)
-				throw new RuntimeException(
-						"There can't be more than 1 deleted Branches after creating a Branch");
+				throw new RuntimeException("There can't be more than 1 deleted Branches after creating a Branch"); //$NON-NLS-1$
 
 			final Command d = new DeleteCommand(context);
 			deleteCommands.add(d);
-			d.requirements.fulfil("id", String.valueOf(ls.get(0).getID()));
+			d.requirements.fulfil(ID, String.valueOf(ls.get(0).getID()));
 
 			try {
 				// the Component with that id for sure exists; this statement can't throw
@@ -163,19 +170,19 @@ class CreateCommand extends Command {
 
 	@Override
 	public String toString() {
-		return "Create " + componentType.description();
+		return String.format("%s %s", CREATE_STR, componentType.description()); //$NON-NLS-1$
 	}
 
 	private String constructRegex() {
 		// Construct the following regex: ^(?!foo$|bar$|)[^\s]*$
 		// to match IDs that don't contain blanks and are not in use
-		final StringBuilder regex = new StringBuilder("^(?!$");
+		final StringBuilder regex = new StringBuilder(Languages.getString("CreateCommand.4")); //$NON-NLS-1$
 		Utility.foreach(context.getComponents_(), c -> {
-			regex.append("|");
+			regex.append("|"); //$NON-NLS-1$
 			regex.append(c.getID());
-			regex.append("$");
+			regex.append("$"); //$NON-NLS-1$
 		});
-		regex.append(")[^\\s]*$");
+		regex.append(")[^\\s]*$"); //$NON-NLS-1$
 		return regex.toString();
 	}
 }
