@@ -1,27 +1,5 @@
 package application;
 
-import static application.StringConstants.D_COMPONENT_ACCEL;
-import static application.StringConstants.E_ACTIVATE_ACCEL;
-import static application.StringConstants.E_FOCUS_ACCEL;
-import static application.StringConstants.F_CLEAR_ACCEL;
-import static application.StringConstants.F_CLOSE_ACCEL;
-import static application.StringConstants.F_IMPORT_ACCEL;
-import static application.StringConstants.F_NEW_ACCEL;
-import static application.StringConstants.F_OPEN_ACCEL;
-import static application.StringConstants.F_REDO_ACCEL;
-import static application.StringConstants.F_SAVE_ACCEL;
-import static application.StringConstants.F_SAVE_AS_ACCEL;
-import static application.StringConstants.F_UNDO_ACCEL;
-import static application.StringConstants.H_HELP_ACCEL;
-import static application.StringConstants.MENU_ICON_PATH;
-import static application.StringConstants.M_CREATE_MNEMONIC;
-import static application.StringConstants.M_DELETE_MNEMONIC;
-import static application.StringConstants.M_EDIT_MNEMONIC;
-import static application.StringConstants.M_FILE_MNEMONIC;
-import static application.StringConstants.M_HELP_MNEMONIC;
-import static application.StringConstants.M_PREFERENCES_MNEMONIC;
-import static application.StringConstants.P_SETTINGS_ACCEL;
-
 import java.awt.event.ActionEvent;
 import java.util.function.Supplier;
 
@@ -36,6 +14,7 @@ import javax.swing.KeyStroke;
 
 import application.editor.Actions;
 import application.editor.Editor;
+import application.editor.EditorStrings;
 import application.editor.MissingComponentException;
 import command.Command;
 import components.Component;
@@ -47,7 +26,10 @@ import requirement.Requirements;
 import requirement.StringType;
 
 /**
- * Menu bar for the Application.
+ * Menu bar for the Application. This class also handles the mnemonics and
+ * accelerators with which the user interacts with the menu. The Actions for the
+ * listeners of each menu item are also defined in this class and they are the
+ * ones that call the Actions of the Editor and the Application.
  *
  * @author alexm
  */
@@ -57,10 +39,10 @@ final class MyMenu extends JMenuBar {
 
 	private final JMenu     m_file, m_edit, m_create, m_delete, m_preferences, m_help;
 	private final JMenuItem f_new, f_close, f_save, f_save_as, f_open, f_clear, f_import, f_undo,
-	f_redo, e_activate, e_focus, d_component, p_settings, h_help;
+	        f_redo, e_activate, e_focus, d_component, p_settings, h_help;
 
 	private final Action a_new, a_close, a_undo, a_redo, a_save, a_save_as, a_open, a_clear,
-	a_import, a_delete, a_edit, a_help;
+	        a_import, a_delete, a_edit, a_help;
 
 	private final Supplier<String> builtin_command_gen, custom_command_gen;
 
@@ -72,25 +54,15 @@ final class MyMenu extends JMenuBar {
 	MyMenu(Application application) {
 
 		context = application;
-		builtin_command_gen = new StringGenerator(StringConstants.BUILTIN_COMMAND_ACCEL_PREFIX + " %d", 1, 10); //$NON-NLS-1$
-		custom_command_gen = new StringGenerator(StringConstants.USER_COMMAND_ACCEL_PREFIX + " %d", 1, 10); //$NON-NLS-1$
+		builtin_command_gen = new StringGenerator(
+		        String.format("%s %%d", StringConstants.BUILTIN_COMMAND_ACCEL_PREFIX), 1, 10); //$NON-NLS-1$
 
-		// block of actions
+		custom_command_gen = new StringGenerator(
+		        String.format("%s %%d", StringConstants.USER_COMMAND_ACCEL_PREFIX), 1, 10); //$NON-NLS-1$
+
+		// block of actions (they need context, therefore they must be placed inside the constructor)
 		{
-			a_undo = new AbstractAction() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					Actions.UNDO.context(context.getActiveEditor()).execute();
-				}
-			};
-
-			a_redo = new AbstractAction() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					Actions.REDO.context(context.getActiveEditor()).execute();
-				}
-			};
-
+			// Application Actions
 			a_new = new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
@@ -105,12 +77,35 @@ final class MyMenu extends JMenuBar {
 				}
 			};
 
+			a_edit = new AbstractAction() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					Application.Actions.EDIT_SETTINGS.context(context).execute();
+				}
+			};
+
+			// Editor Actions
+			a_undo = new AbstractAction() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					Actions.UNDO.context(context.getActiveEditor()).execute();
+				}
+			};
+
+			a_redo = new AbstractAction() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					Actions.REDO.context(context.getActiveEditor()).execute();
+				}
+			};
+
 			a_save = new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					final Editor activeEditor = context.getActiveEditor();
-					Actions.SAVE.specify("filename", activeEditor.getFile()).context(activeEditor) //$NON-NLS-1$
-					.execute();
+					Actions.SAVE.specify(EditorStrings.FILENAME, activeEditor.getFile())
+					        .context(activeEditor)
+					        .execute();
 				}
 			};
 
@@ -118,16 +113,17 @@ final class MyMenu extends JMenuBar {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					Actions.SAVE.specifyWithDialog(context.getActiveEditor())
-					.context(context.getActiveEditor()).execute();
+					        .context(context.getActiveEditor()).execute();
 				}
 			};
 
 			a_open = new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					Actions.OPEN.specify("gatename", "N/A").specify("filetype", "circuit") //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-					.specifyWithDialog(context.getActiveEditor())
-					.context(context.getActiveEditor()).execute();
+					Actions.OPEN.specify(EditorStrings.GATENAME, EditorStrings.NA)
+					        .specify(EditorStrings.FILETYPE, EditorStrings.CIRCUIT)
+					        .specifyWithDialog(context.getActiveEditor())
+					        .context(context.getActiveEditor()).execute();
 				}
 			};
 
@@ -141,26 +137,20 @@ final class MyMenu extends JMenuBar {
 			a_import = new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					Actions.OPEN.specify("filetype", "component") //$NON-NLS-1$ //$NON-NLS-2$
-					.specifyWithDialog(context.getActiveEditor())
-					.context(context.getActiveEditor()).execute();
+					Actions.OPEN.specify(EditorStrings.FILETYPE, EditorStrings.COMPONENT)
+					        .specifyWithDialog(context.getActiveEditor())
+					        .context(context.getActiveEditor()).execute();
 				}
 			};
 
 			a_delete = new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					final Editor activeEditor = context.getActiveEditor();
-					final Command c = Command.delete();
+					final Editor  activeEditor = context.getActiveEditor();
+					final Command c            = Command.delete();
 					c.fillRequirements(application.getFrame(), activeEditor);
-					Actions.DELETE.specify("command", c).context(activeEditor).execute(); //$NON-NLS-1$
-				}
-			};
-
-			a_edit = new AbstractAction() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					Application.Actions.EDIT_SETTINGS.context(context).execute();
+					Actions.DELETE.specify(EditorStrings.COMMAND, c).context(activeEditor)
+					        .execute();
 				}
 			};
 
@@ -247,7 +237,7 @@ final class MyMenu extends JMenuBar {
 		final JMenuItem jmic = new JMenuItem();
 
 		// different text and accelerator depending on command type (build-in vs user-created)
-		if (c.toString().matches("^(?:Create|Delete).*")) { //$NON-NLS-1$
+		if (c.toString().matches("^(?:Create|Delete).*")) { //$NON-NLS-1$ TODO: externalise
 			jmic.setText(c.toString().substring(7));
 			MyMenu.setAccel(jmic, builtin_command_gen.get());
 		} else {
@@ -258,19 +248,20 @@ final class MyMenu extends JMenuBar {
 		jmic.addActionListener(e -> {
 			final Command cloned = c.clone();
 			cloned.fillRequirements(context.getFrame(), context.getActiveEditor());
-			Actions.CREATE.specify("command", cloned).context(context.getActiveEditor()).execute(); //$NON-NLS-1$
+			Actions.CREATE.specify(EditorStrings.COMMAND, cloned).context(context.getActiveEditor())
+			        .execute();
 		});
 
 		m_create.add(jmic);
 	}
 
 	private void mnemonics() {
-		m_file.setMnemonic(M_FILE_MNEMONIC);
-		m_edit.setMnemonic(M_EDIT_MNEMONIC);
-		m_create.setMnemonic(M_CREATE_MNEMONIC);
-		m_delete.setMnemonic(M_DELETE_MNEMONIC);
-		m_preferences.setMnemonic(M_PREFERENCES_MNEMONIC);
-		m_help.setMnemonic(M_HELP_MNEMONIC);
+		m_file.setMnemonic(StringConstants.M_FILE_MNEMONIC);
+		m_edit.setMnemonic(StringConstants.M_EDIT_MNEMONIC);
+		m_create.setMnemonic(StringConstants.M_CREATE_MNEMONIC);
+		m_delete.setMnemonic(StringConstants.M_DELETE_MNEMONIC);
+		m_preferences.setMnemonic(StringConstants.M_PREFERENCES_MNEMONIC);
+		m_help.setMnemonic(StringConstants.M_HELP_MNEMONIC);
 	}
 
 	private void listeners() {
@@ -299,7 +290,7 @@ final class MyMenu extends JMenuBar {
 
 			if (reqs.fulfilled()) {
 				final String id = reqs.getV("id"); //$NON-NLS-1$
-				Component comp;
+				final Component comp;
 				try {
 					comp = context.getActiveEditor().getComponent_(id);
 				} catch (final MissingComponentException e1) {
@@ -329,7 +320,7 @@ final class MyMenu extends JMenuBar {
 
 			if (reqs.fulfilled()) {
 				final String id = reqs.getV("id"); //$NON-NLS-1$
-				Component comp;
+				Component    comp;
 				try {
 					comp = activeEditor.getComponent_(id);
 				} catch (final MissingComponentException e1) {
@@ -346,20 +337,20 @@ final class MyMenu extends JMenuBar {
 	}
 
 	private void accelerators() {
-		MyMenu.setAccel(f_new, F_NEW_ACCEL);
-		MyMenu.setAccel(f_close, F_CLOSE_ACCEL);
-		MyMenu.setAccel(f_save, F_SAVE_ACCEL);
-		MyMenu.setAccel(f_save_as, F_SAVE_AS_ACCEL);
-		MyMenu.setAccel(f_open, F_OPEN_ACCEL);
-		MyMenu.setAccel(f_clear, F_CLEAR_ACCEL);
-		MyMenu.setAccel(f_import, F_IMPORT_ACCEL);
-		MyMenu.setAccel(f_undo, F_UNDO_ACCEL);
-		MyMenu.setAccel(f_redo, F_REDO_ACCEL);
-		MyMenu.setAccel(e_activate, E_ACTIVATE_ACCEL);
-		MyMenu.setAccel(e_focus, E_FOCUS_ACCEL);
-		MyMenu.setAccel(d_component, D_COMPONENT_ACCEL);
-		MyMenu.setAccel(p_settings, P_SETTINGS_ACCEL);
-		MyMenu.setAccel(h_help, H_HELP_ACCEL);
+		MyMenu.setAccel(f_new, StringConstants.F_NEW_ACCEL);
+		MyMenu.setAccel(f_close, StringConstants.F_CLOSE_ACCEL);
+		MyMenu.setAccel(f_save, StringConstants.F_SAVE_ACCEL);
+		MyMenu.setAccel(f_save_as, StringConstants.F_SAVE_AS_ACCEL);
+		MyMenu.setAccel(f_open, StringConstants.F_OPEN_ACCEL);
+		MyMenu.setAccel(f_clear, StringConstants.F_CLEAR_ACCEL);
+		MyMenu.setAccel(f_import, StringConstants.F_IMPORT_ACCEL);
+		MyMenu.setAccel(f_undo, StringConstants.F_UNDO_ACCEL);
+		MyMenu.setAccel(f_redo, StringConstants.F_REDO_ACCEL);
+		MyMenu.setAccel(e_activate, StringConstants.E_ACTIVATE_ACCEL);
+		MyMenu.setAccel(e_focus, StringConstants.E_FOCUS_ACCEL);
+		MyMenu.setAccel(d_component, StringConstants.D_COMPONENT_ACCEL);
+		MyMenu.setAccel(p_settings, StringConstants.P_SETTINGS_ACCEL);
+		MyMenu.setAccel(h_help, StringConstants.H_HELP_ACCEL);
 	}
 
 	private void icons() {
@@ -388,9 +379,9 @@ final class MyMenu extends JMenuBar {
 	}
 
 	private static void setIcon(JMenuItem jmi, String desc) {
-		final String filename    = String.format("%s%s_icon.png", MENU_ICON_PATH,              //$NON-NLS-1$
-				desc);
-		final String description = String.format("%s icon", desc);                             //$NON-NLS-1$
+		final String filename    = String.format("%s%s_icon.png", StringConstants.MENU_ICON_PATH,              //$NON-NLS-1$
+		        desc);
+		final String description = String.format("%s icon", desc);                                             //$NON-NLS-1$
 		jmi.setIcon(new ImageIcon(filename, description));
 	}
 }
