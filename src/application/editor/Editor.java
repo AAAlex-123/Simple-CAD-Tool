@@ -23,6 +23,7 @@ import command.Command;
 import components.Component;
 import components.ComponentFactory;
 import components.ComponentType;
+import localisation.EditorStrings;
 import localisation.Languages;
 import myUtil.Utility;
 

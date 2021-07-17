@@ -20,6 +20,7 @@ import command.Command;
 import components.Component;
 import components.ComponentFactory;
 import exceptions.InvalidComponentException;
+import localisation.EditorStrings;
 import localisation.Languages;
 import myUtil.StringGenerator;
 import requirement.Requirements;

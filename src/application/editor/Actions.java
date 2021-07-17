@@ -19,6 +19,7 @@ import command.Command;
 import components.Component;
 import components.ComponentFactory;
 import exceptions.MalformedBranchException;
+import localisation.EditorStrings;
 import localisation.Languages;
 import myUtil.Utility;
 import requirement.Requirement;
