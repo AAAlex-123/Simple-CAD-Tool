@@ -1,5 +1,9 @@
 package application;
 
+import static localisation.CommandStrings.CREATE_STR;
+import static localisation.CommandStrings.DELETE_STR;
+import static localisation.CommandStrings.ID;
+
 import java.awt.event.ActionEvent;
 import java.util.function.Supplier;
 
@@ -20,7 +24,6 @@ import command.Command;
 import components.Component;
 import components.ComponentFactory;
 import exceptions.InvalidComponentException;
-import localisation.EditorStrings;
 import localisation.Languages;
 import myUtil.StringGenerator;
 import requirement.Requirements;
@@ -238,7 +241,7 @@ final class MyMenu extends JMenuBar {
 		final JMenuItem jmic = new JMenuItem();
 
 		// different text and accelerator depending on command type (build-in vs user-created)
-		if (c.toString().matches("^(?:Create|Delete).*")) { //$NON-NLS-1$ TODO: externalise
+		if (c.toString().matches(String.format("^(?:%s|%s).*", CREATE_STR, DELETE_STR))) {
 			jmic.setText(c.toString().substring(7));
 			MyMenu.setAccel(jmic, builtin_command_gen.get());
 		} else {
@@ -285,12 +288,12 @@ final class MyMenu extends JMenuBar {
 			final Editor activeEditor = context.getActiveEditor();
 
 			final Requirements<String> reqs = new Requirements<>();
-			reqs.add("id", StringType.ANY); //$NON-NLS-1$
-			reqs.add("active", StringType.ON_OFF); //$NON-NLS-1$
+			reqs.add(ID, StringType.ANY);
+			reqs.add("active", StringType.ON_OFF); //$NON-NLS-1$ TODO: externalise
 			reqs.fulfillWithDialog(context.getFrame(), Languages.getString("MyMenu.34")); //$NON-NLS-1$
 
 			if (reqs.fulfilled()) {
-				final String id = reqs.getV("id"); //$NON-NLS-1$
+				final String id = reqs.getV(ID);
 				final Component comp;
 				try {
 					comp = context.getActiveEditor().getComponent_(id);
@@ -299,7 +302,7 @@ final class MyMenu extends JMenuBar {
 					return;
 				}
 
-				final boolean active = reqs.getV("active").equals("on"); //$NON-NLS-1$ //$NON-NLS-2$
+				final boolean active = reqs.getV("active").equals("on"); //$NON-NLS-1$ //$NON-NLS-2$ TODO: externalise
 				try {
 					ComponentFactory.setActive(comp, active);
 				} catch (final InvalidComponentException e1) {
@@ -316,11 +319,11 @@ final class MyMenu extends JMenuBar {
 			final Editor activeEditor = context.getActiveEditor();
 
 			final Requirements<String> reqs = new Requirements<>();
-			reqs.add("id", StringType.ANY); //$NON-NLS-1$
+			reqs.add(ID, StringType.ANY);
 			reqs.fulfillWithDialog(context.getFrame(), Languages.getString("MyMenu.41")); //$NON-NLS-1$
 
 			if (reqs.fulfilled()) {
-				final String id = reqs.getV("id"); //$NON-NLS-1$
+				final String id = reqs.getV(ID);
 				Component    comp;
 				try {
 					comp = activeEditor.getComponent_(id);
