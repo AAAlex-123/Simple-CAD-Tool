@@ -3,6 +3,7 @@ package application;
 import static localisation.CommandStrings.CREATE_STR;
 import static localisation.CommandStrings.DELETE_STR;
 import static localisation.CommandStrings.ID;
+import static localisation.RequirementStrings.ON;
 
 import java.awt.event.ActionEvent;
 import java.util.function.Supplier;
@@ -24,6 +25,7 @@ import command.Command;
 import components.Component;
 import components.ComponentFactory;
 import exceptions.InvalidComponentException;
+import localisation.EditorStrings;
 import localisation.Languages;
 import myUtil.StringGenerator;
 import requirement.Requirements;
@@ -241,7 +243,7 @@ final class MyMenu extends JMenuBar {
 		final JMenuItem jmic = new JMenuItem();
 
 		// different text and accelerator depending on command type (build-in vs user-created)
-		if (c.toString().matches(String.format("^(?:%s|%s).*", CREATE_STR, DELETE_STR))) {
+		if (c.toString().matches(String.format("^(?:%s|%s).*", CREATE_STR, DELETE_STR))) { //$NON-NLS-1$
 			jmic.setText(c.toString().substring(7));
 			MyMenu.setAccel(jmic, builtin_command_gen.get());
 		} else {
@@ -286,10 +288,12 @@ final class MyMenu extends JMenuBar {
 	private void editMenuListeners() {
 		e_activate.addActionListener(e -> {
 			final Editor activeEditor = context.getActiveEditor();
+			
+			final String ACTIVE = Languages.getStrnig("MyMenu.0"); //$NON-NLS-1$
 
 			final Requirements<String> reqs = new Requirements<>();
 			reqs.add(ID, StringType.ANY);
-			reqs.add("active", StringType.ON_OFF); //$NON-NLS-1$ TODO: externalise
+			reqs.add(ACTIVE, StringType.ON_OFF);
 			reqs.fulfillWithDialog(context.getFrame(), Languages.getString("MyMenu.34")); //$NON-NLS-1$
 
 			if (reqs.fulfilled()) {
@@ -302,7 +306,7 @@ final class MyMenu extends JMenuBar {
 					return;
 				}
 
-				final boolean active = reqs.getV("active").equals("on"); //$NON-NLS-1$ //$NON-NLS-2$ TODO: externalise
+				final boolean active = reqs.getV(ACTIVE).equals(ON);
 				try {
 					ComponentFactory.setActive(comp, active);
 				} catch (final InvalidComponentException e1) {
