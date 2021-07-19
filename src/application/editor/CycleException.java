@@ -14,6 +14,10 @@ import components.Component;
 public class CycleException extends Exception {
 
 	public CycleException(Component comp1, Component comp2) {
-		super(String.format("Cycle formed between Components %s and %s.", comp1.getID(), comp2.getID()));
+		this(comp1.getID(), comp2.getID());
+	}
+
+	public CycleException(String first, String second) {
+		super(String.format("Cycle formed between Components %s and %s.", first, second));
 	}
 }
