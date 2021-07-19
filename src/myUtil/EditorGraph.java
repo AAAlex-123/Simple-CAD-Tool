@@ -7,7 +7,7 @@ import components.ComponentType;
 import exceptions.MalformedBranchException;
 
 /**
- * A graph wrapper translating components into graph nodes and edges.
+ * A {@link ComponentGraph} wrapper translating components into graph nodes and edges.
  * Enables uniform access to the graph for every component.
  * 
  * @author dimits, alexm
@@ -80,7 +80,6 @@ public class EditorGraph {
 	 * would create a cycle
 	 */
 	public void add(Component c) throws CycleException {
-		System.out.println("Adding component "+ c);
 		if (canAdd(c)) {
 			
 			if (isBranch(c)) {
@@ -101,7 +100,6 @@ public class EditorGraph {
 	 * @param c the component to be removed
 	 */
 	public void remove(Component c) {
-		System.out.println("Removing component "+ c);
 		if (isBranch(c)) {
 			PinGates<String> b = decomposeBranch(c);
 			g.connectionRemoved(b.inputID, b.outputID);
