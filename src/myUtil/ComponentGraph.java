@@ -15,7 +15,19 @@ import java.util.Objects;
  */
 public class ComponentGraph {
 	private Map<String, Node> nodes = new HashMap<String, Node>();
-
+	
+	public static void main(String[] args) {
+		ComponentGraph g = new ComponentGraph();
+		g.componentAdded("in0");
+		g.componentAdded("and0");
+		g.componentAdded("not0");
+		
+		g.connectionAdded("in0", "and0");
+		g.connectionAdded("and0", "not0");
+		System.out.println(g.componentCanBeConnected("not0", "and0")); //should be false
+		
+	}
+	
 	/**
 	 * Notify the graph that a component has been added to the UI.
 	 * @param name the name of the new component
@@ -45,9 +57,8 @@ public class ComponentGraph {
 	public void connectionRemoved(String connector, String target) throws IllegalArgumentException {
 		Node conNode = nodes.get(connector);
 		Node targetNode = nodes.get(target);
-
-		ComponentGraph.checkExists(conNode);
-		ComponentGraph.checkExists(targetNode);
+		
+		ComponentGraph.checkExists(conNode, targetNode);
 
 		conNode.neighbours.remove(targetNode);
 	}
@@ -66,8 +77,7 @@ public class ComponentGraph {
 		Node first = nodes.get(connector);
 		Node last = nodes.get(target);
 
-		ComponentGraph.checkExists(first);
-		ComponentGraph.checkExists(last);
+		ComponentGraph.checkExists(first, last);
 		
 		first.neighbours.add(last);
 		
@@ -118,10 +128,11 @@ public class ComponentGraph {
 		clock.tick();
 	}
 
-	private static void checkExists(Node node) {
-		if (Objects.isNull(node))
-			throw new IllegalArgumentException(
-			        String.format("There isn't any component named %s in the graph!", node));
+	private static void checkExists(Node ... nodes) {
+		for(Node n : nodes) 
+			if (Objects.isNull(n))
+				throw new IllegalArgumentException(
+						String.format("There isn't any component named %s in the graph!", n));
 	}
 
 	private class Node {
