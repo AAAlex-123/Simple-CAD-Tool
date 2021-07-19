@@ -50,7 +50,7 @@ public final class Editor extends JComponent {
 	private boolean           dirty;
 	private final StatusBar   statusBar;
 
-	public final ComponentGraph graph;
+	public final EditorGraph graph;
 	private final ItemManager<Component>   components;
 	private final UndoableHistory<Command> undoableHistory;
 
@@ -68,7 +68,7 @@ public final class Editor extends JComponent {
 		setFile(initialFile);
 		statusBar = new StatusBar();
 		
-		graph = new ComponentGraph();
+		graph = new EditorGraph();
 		components = new ItemManager<>();
 		undoableHistory = new UndoableHistory<>();
 
