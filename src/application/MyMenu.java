@@ -19,7 +19,6 @@ import javax.swing.KeyStroke;
 
 import application.editor.Actions;
 import application.editor.Editor;
-import application.editor.EditorStrings;
 import application.editor.MissingComponentException;
 import command.Command;
 import components.Component;
@@ -288,8 +287,8 @@ final class MyMenu extends JMenuBar {
 	private void editMenuListeners() {
 		e_activate.addActionListener(e -> {
 			final Editor activeEditor = context.getActiveEditor();
-			
-			final String ACTIVE = Languages.getStrnig("MyMenu.0"); //$NON-NLS-1$
+
+			final String ACTIVE = Languages.getString("MyMenu.0"); //$NON-NLS-1$
 
 			final Requirements<String> reqs = new Requirements<>();
 			reqs.add(ID, StringType.ANY);
