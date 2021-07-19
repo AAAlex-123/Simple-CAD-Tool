@@ -34,6 +34,21 @@ final class OutputPin extends Component {
 	public ComponentType type() {
 		return ComponentType.OUTPUT_PIN;
 	}
+	
+	@Override
+	public List<Component> getInputs() {
+		if (inputBranch == null)
+			return Collections.emptyList();
+
+		List<Component> ls = new ArrayList<>();
+		ls.add(inputBranch);
+		return Collections.unmodifiableList(ls);
+	}
+
+	@Override
+	public List<List<Component>> getOutputs() {
+		return Collections.emptyList();
+	}
 
 	@Override
 	protected void wake_up(boolean newActive, int index, boolean prevHidden) {
@@ -142,21 +157,6 @@ final class OutputPin extends Component {
 
 	@Override
 	protected void restoreSerialisedSelf() {}
-
-	@Override
-	protected List<Component> getInputs() {
-		if (inputBranch == null)
-			return Collections.emptyList();
-
-		List<Component> ls = new ArrayList<>();
-		ls.add(inputBranch);
-		return Collections.unmodifiableList(ls);
-	}
-
-	@Override
-	protected List<List<Component>> getOutputs() {
-		return Collections.emptyList();
-	}
 
 	@Override
 	public ComponentGraphic getGraphics() {

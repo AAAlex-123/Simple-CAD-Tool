@@ -99,6 +99,18 @@ class Gate extends Component {
 	public ComponentType type() {
 		return ComponentType.GATE;
 	}
+	
+	@Override
+	public List<Component> getInputs() {
+		return Collections.unmodifiableList(Arrays.asList(inputBranches));
+	}
+
+	@Override
+	public List<List<Component>> getOutputs() {
+		List<List<Component>> ls = new ArrayList<>();
+		foreach(outputBranches, v -> ls.add(Collections.unmodifiableList(v)));
+		return Collections.unmodifiableList(ls);
+	}
 
 	@Override
 	protected void wake_up(boolean newActive, int indexIn, boolean prevHidden) {
@@ -228,18 +240,6 @@ class Gate extends Component {
 	 */
 	boolean checkBranches() {
 		return all(inputBranches, b -> b != null);
-	}
-
-	@Override
-	protected List<Component> getInputs() {
-		return Collections.unmodifiableList(Arrays.asList(inputBranches));
-	}
-
-	@Override
-	protected List<List<Component>> getOutputs() {
-		List<List<Component>> ls = new ArrayList<>();
-		foreach(outputBranches, v -> ls.add(Collections.unmodifiableList(v)));
-		return Collections.unmodifiableList(ls);
 	}
 
 	@Override

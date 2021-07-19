@@ -59,10 +59,26 @@ final class Branch extends Component {
 
 		connect();
 	}
-
+	
 	@Override
 	public ComponentType type() {
 		return ComponentType.BRANCH;
+	}
+	
+	@Override
+	public List<Component> getInputs() {
+		List<Component> ls = new ArrayList<>();
+		ls.add(in);
+		return Collections.unmodifiableList(ls);
+	}
+
+	@Override
+	public List<List<Component>> getOutputs() {
+		List<List<Component>> ls  = new ArrayList<>();
+		List<Component>       ls1 = new ArrayList<>();
+		ls1.add(out);
+		ls.add(Collections.unmodifiableList(ls1));
+		return Collections.unmodifiableList(ls);
 	}
 
 	@Override
@@ -130,22 +146,6 @@ final class Branch extends Component {
 
 	@Override
 	protected void restoreSerialisedSelf() {}
-
-	@Override
-	protected List<Component> getInputs() {
-		List<Component> ls = new ArrayList<>();
-		ls.add(in);
-		return Collections.unmodifiableList(ls);
-	}
-
-	@Override
-	protected List<List<Component>> getOutputs() {
-		List<List<Component>> ls  = new ArrayList<>();
-		List<Component>       ls1 = new ArrayList<>();
-		ls1.add(out);
-		ls.add(Collections.unmodifiableList(ls1));
-		return Collections.unmodifiableList(ls);
-	}
 
 	@Override
 	public ComponentGraphic getGraphics() {

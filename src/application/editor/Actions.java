@@ -50,7 +50,7 @@ public enum Actions {
 				context.execute(cte);
 				context.status("%s successful", cte);
 				context.setDirty(true);
-			} catch (MissingComponentException | MalformedBranchException e) {
+			} catch (MissingComponentException | MalformedBranchException | CycleException e) {
 				context.error(e);
 			} catch (final Exception e) {
 				// Undoable.execute() declares 'throw Exception'

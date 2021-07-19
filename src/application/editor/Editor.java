@@ -23,6 +23,7 @@ import command.Command;
 import components.Component;
 import components.ComponentFactory;
 import components.ComponentType;
+import myUtil.ComponentGraph;
 import myUtil.Utility;
 
 /**
@@ -49,6 +50,7 @@ public final class Editor extends JComponent {
 	private boolean           dirty;
 	private final StatusBar   statusBar;
 
+	public final EditorGraph graph;
 	private final ItemManager<Component>   components;
 	private final UndoableHistory<Command> undoableHistory;
 
@@ -65,7 +67,8 @@ public final class Editor extends JComponent {
 		setDirty(false);
 		setFile(initialFile);
 		statusBar = new StatusBar();
-
+		
+		graph = new EditorGraph();
 		components = new ItemManager<>();
 		undoableHistory = new UndoableHistory<>();
 

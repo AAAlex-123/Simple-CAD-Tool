@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import application.editor.Editor;
+import application.editor.CycleException;
 import application.editor.MissingComponentException;
 import components.Component;
 import components.ComponentFactory;
@@ -84,8 +85,15 @@ class CreateCommand extends Command {
 		super.fillRequirements(parent, newContext);
 	}
 
+	 /**
+	  * Creates a component
+	  * 
+	  * @throws CycleException if the creation of a branch leads to a cyclical (feedback) circuit
+	  * @throws MissingComponentException if the ends of a branch aren't valid components
+	  * @throws MalformedBranchException if a branch could not be properly created
+	  */
 	@Override
-	public void execute() throws MissingComponentException, MalformedBranchException {
+	public void execute() throws CycleException, MissingComponentException, MalformedBranchException {
 		if (associatedComponent != null) {
 			// when re-executed, simply restore the already-created Component
 			context.addComponent(associatedComponent);
@@ -100,7 +108,8 @@ class CreateCommand extends Command {
 				break;
 			case BRANCH:
 				final Component in = context.getComponent_(requirements.getV("in id"));
-				final Component out = context.getComponent_(requirements.getV("out id"));
+				final Component out = context.getComponent_(requirements.getV("out id")); 
+				
 				final int inIndex = Integer.parseInt(requirements.getV("in index"));
 				final int outIndex = Integer.parseInt(requirements.getV("out index"));
 
@@ -124,6 +133,13 @@ class CreateCommand extends Command {
 			context.addComponent(associatedComponent);
 		}
 
+		if (!context.graph.canAdd(associatedComponent)) {
+			unexecute();
+			throw new CycleException(associatedComponent.getInputs().get(0),
+					associatedComponent.getOutputs().get(0).get(0));
+		} else
+			context.graph.add(associatedComponent);
+		
 		// delete the branch that may have been deleted when creating this branch
 		// there can't be more than two branches deleted when creating a branch
 		if (associatedComponent.type() == BRANCH) {

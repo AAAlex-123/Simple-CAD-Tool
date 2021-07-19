@@ -1,5 +1,7 @@
 package command;
 
+import static components.ComponentType.BRANCH;
+
 import java.util.List;
 import java.util.Vector;
 
@@ -47,17 +49,25 @@ class DeleteCommand extends Command {
 
 		ComponentFactory.destroyComponent(associatedComponent);
 		context.removeComponent(associatedComponent);
+		
+		if(associatedComponent.type() == BRANCH) {
+			String input = associatedComponent.getInputs().get(0).getID();
+			String output = associatedComponent.getOutputs().get(0).get(0).getID();
+			context.graph.connectionRemoved(input, output);
+		} else {
+			context.graph.componentDeleted(associatedComponent.getID());
+		}
 
-		Utility.foreach(context.getDeletedComponents(), command -> {
+		Utility.foreach(context.getDeletedComponents(), component -> {
 			final DeleteCommand deleteCommand = new DeleteCommand(context);
 			deleteCommands.add(deleteCommand);
 
 			// component is already deleted the command isn't executed
 			// instead it is just set up so it can be undone successfully
-			deleteCommand.requirements.fulfil("id", String.valueOf(command.getID()));
-			deleteCommand.associatedComponent = command;
+			deleteCommand.requirements.fulfil("id", String.valueOf(component.getID()));
+			deleteCommand.associatedComponent = component;
 
-			context.removeComponent(command);
+			context.removeComponent(component);
 		});
 	}
 
