@@ -27,7 +27,7 @@ public final class StringConstants {
 
 	public static final String SETTINGS = "program_data\\settings.properties"; //$NON-NLS-1$
 
-	private static final Map<String, String>  map  = new LinkedHashMap<>() {
+	private static final Map<String, String>  map  = new LinkedHashMap<String, String>() {
 														@Override
 														public String get(Object key) {
 															final String rv = super.get(key);
