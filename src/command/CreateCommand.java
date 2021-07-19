@@ -108,21 +108,7 @@ class CreateCommand extends Command {
 				break;
 			case BRANCH:
 				final Component in = context.getComponent_(requirements.getV("in id"));
-				final Component out = context.getComponent_(requirements.getV("out id"));
-				
-				/*
-				 * If connecting the Branch leads to a cycle being created, the connection is aborted.
-				 * This has the (unintended) consequence of not checking whether or not the connection
-				 * is valid in the first place (no MalformedBranchException is thrown).
-				 * As a result, the user is, in some cases, warned that a cycle is going to be created
-				 * but in reality such a connection is not valid, due to the nature of the Components
-				 * being connected.
-				 * This is a compromise we're willing to make since creating the Branch and then, if
-				 * a cycle is created, deleting it would require additional code to restore everything,
-				 * making this method needlessly complicated and hard to understand.
-				 */
-				if (!context.graph.componentCanBeConnected(in.getID(), out.getID()))
-					throw new CycleException(in,out); 
+				final Component out = context.getComponent_(requirements.getV("out id")); 
 				
 				final int inIndex = Integer.parseInt(requirements.getV("in index"));
 				final int outIndex = Integer.parseInt(requirements.getV("out index"));
@@ -145,11 +131,15 @@ class CreateCommand extends Command {
 
 			associatedComponent.setID(requirements.getV("name"));
 			context.addComponent(associatedComponent);
-			
-			if(componentType != BRANCH) //notify graph if not notified already
-				context.graph.componentAdded(associatedComponent.getID());
 		}
 
+		if (!context.graph.canAdd(associatedComponent)) {
+			unexecute();
+			throw new CycleException(associatedComponent.getInputs().get(0),
+					associatedComponent.getOutputs().get(0).get(0));
+		} else
+			context.graph.add(associatedComponent);
+		
 		// delete the branch that may have been deleted when creating this branch
 		// there can't be more than two branches deleted when creating a branch
 		if (associatedComponent.type() == BRANCH) {
