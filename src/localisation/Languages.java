@@ -142,7 +142,7 @@ public class Languages {
 		properties.setProperty(VARIANT_STR, chosen.getVariant());
 
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE))) {
-			properties.store(writer, "settings lmao"); //$NON-NLS-1$
+			properties.store(writer, null);
 		}
 		return true;
 	}
