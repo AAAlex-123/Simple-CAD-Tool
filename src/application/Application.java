@@ -159,14 +159,14 @@ public class Application {
 			}
 		},
 
-		/** Action for saving settings */
+		/** Action for editing settings */
 		EDIT_SETTINGS {
+			// same strings as EDIT_LANGUAGE
 			@Override
 			void execute() {
 				try {
-					final boolean settingsChanged = StringConstants.edit(context.getFrame());
+					final boolean settingsChanged = StringConstants.editAndWriteToFile(context.getFrame());
 					if (settingsChanged) {
-						StringConstants.writeToFile();
 						JOptionPane.showMessageDialog(context.getFrame(), String.format(
 						        Languages.getString("Application.3"), //$NON-NLS-1$
 						        StringConstants.SETTINGS), Languages.getString("Application.4"), //$NON-NLS-1$
@@ -177,6 +177,28 @@ public class Application {
 					        Languages.getString("Application.5"), //$NON-NLS-1$
 					        StringConstants.SETTINGS), Languages.getString("Application.6"), //$NON-NLS-1$
 							JOptionPane.ERROR_MESSAGE);
+				}
+			}
+		},
+
+		/** Action for changing language */
+		EDIT_LANGUAGE {
+			// same strings as EDIT_SETTINGS
+			@Override
+			void execute() {
+				try {
+					final boolean languageChanged = Languages.editAndWriteToFile(context.getFrame());
+					if (languageChanged) {
+						JOptionPane.showMessageDialog(context.getFrame(), String.format(
+						        Languages.getString("Application.3"), //$NON-NLS-1$
+						        Languages.LANGUAGES_FILE), Languages.getString("Application.4"), //$NON-NLS-1$
+						        JOptionPane.INFORMATION_MESSAGE);
+					}
+				} catch (IOException e) {
+					JOptionPane.showMessageDialog(context.getFrame(), String.format(
+					        Languages.getString("Application.5"), //$NON-NLS-1$
+					        Languages.LANGUAGES_FILE), Languages.getString("Application.6"), //$NON-NLS-1$
+					        JOptionPane.ERROR_MESSAGE);
 				}
 			}
 		};
