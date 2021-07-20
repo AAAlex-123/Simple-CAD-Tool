@@ -44,10 +44,10 @@ final class MyMenu extends JMenuBar {
 
 	private final JMenu     m_file, m_edit, m_create, m_delete, m_preferences, m_help;
 	private final JMenuItem f_new, f_close, f_save, f_save_as, f_open, f_clear, f_import, f_undo,
-	        f_redo, e_activate, e_focus, d_component, p_settings, h_help;
+	        f_redo, e_activate, e_focus, d_component, p_settings, p_language, h_help;
 
 	private final Action a_new, a_close, a_undo, a_redo, a_save, a_save_as, a_open, a_clear,
-	        a_import, a_delete, a_edit, a_help;
+	        a_import, a_delete, a_settings, a_language, a_help;
 
 	private final Supplier<String> builtin_command_gen, custom_command_gen;
 
@@ -82,10 +82,17 @@ final class MyMenu extends JMenuBar {
 				}
 			};
 
-			a_edit = new AbstractAction() {
+			a_settings = new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					Application.Actions.EDIT_SETTINGS.context(context).execute();
+				}
+			};
+
+			a_language = new AbstractAction() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					Application.Actions.EDIT_LANGUAGE.context(context).execute();
 				}
 			};
 
@@ -215,7 +222,9 @@ final class MyMenu extends JMenuBar {
 		// --- preferences ---
 		m_preferences = new JMenu(Languages.getString("MyMenu.26")); //$NON-NLS-1$
 		p_settings = new JMenuItem(Languages.getString("MyMenu.27")); //$NON-NLS-1$
+		p_language = new JMenuItem(Languages.getString("MyMenu.1")); //$NON-NLS-1$
 		m_preferences.add(p_settings);
+		m_preferences.add(p_language);
 		add(m_preferences);
 
 		// --- help ---
@@ -280,7 +289,8 @@ final class MyMenu extends JMenuBar {
 		f_undo.addActionListener(a_undo);
 		f_redo.addActionListener(a_redo);
 		d_component.addActionListener(a_delete);
-		p_settings.addActionListener(a_edit);
+		p_settings.addActionListener(a_settings);
+		p_language.addActionListener(a_language);
 		h_help.addActionListener(a_help);
 	}
 
@@ -357,6 +367,7 @@ final class MyMenu extends JMenuBar {
 		MyMenu.setAccel(e_focus, StringConstants.E_FOCUS_ACCEL);
 		MyMenu.setAccel(d_component, StringConstants.D_COMPONENT_ACCEL);
 		MyMenu.setAccel(p_settings, StringConstants.P_SETTINGS_ACCEL);
+		MyMenu.setAccel(p_language, StringConstants.P_LANGUAGE_ACCEL);
 		MyMenu.setAccel(h_help, StringConstants.H_HELP_ACCEL);
 	}
 
@@ -378,6 +389,7 @@ final class MyMenu extends JMenuBar {
 		MyMenu.setIcon(m_delete, "delete"); //$NON-NLS-1$
 		MyMenu.setIcon(m_preferences, "preferences"); //$NON-NLS-1$
 		MyMenu.setIcon(p_settings, "settings"); //$NON-NLS-1$
+		MyMenu.setIcon(p_language, "language"); //$NON-NLS-1$
 		MyMenu.setIcon(m_help, "help"); //$NON-NLS-1$
 	}
 
