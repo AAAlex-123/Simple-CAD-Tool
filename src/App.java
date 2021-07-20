@@ -18,8 +18,8 @@ public final class App {
 	 * @param args command line arguments (not used)
 	 */
 	public static void main(String[] args) {
-		StringConstants.init();
 		System.out.printf(Languages.getString("App.0"), StringConstants.SETTINGS); //$NON-NLS-1$
+		System.out.printf(Languages.getString("App.1"), Languages.LANGUAGES_FILE); //$NON-NLS-1$
 		Application app = new Application();
 		SwingUtilities.invokeLater(() -> app.run());
 	}
