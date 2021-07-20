@@ -7,11 +7,10 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Properties;
 
 import localisation.Languages;
+import myUtil.OrderedProperties;
 import myUtil.Utility;
 import requirement.Requirements;
 
@@ -20,91 +19,76 @@ import requirement.Requirements;
  *
  * @author alexm
  */
-@SuppressWarnings("javadoc")
 public final class StringConstants {
 
-	private StringConstants() {}
+	/** The file containing the application's settings */
+	public static final String FILE = "program_data\\settings.properties"; //$NON-NLS-1$
 
-	public static final String SETTINGS = "program_data\\settings.properties"; //$NON-NLS-1$
-
-	private static final Map<String, String> map = new LinkedHashMap<String, String>() {
-														@Override
-														public String get(Object key) {
-															final String rv = super.get(key);
-															if (rv == null)
-																System.err.printf(
-																        "No value found for key %s%n",              //$NON-NLS-1$
-																        key);
-															return rv;
-														}
-													};
+	private static final Properties properties = new OrderedProperties();
 
 	private static final Requirements<String> reqs = new Requirements<>();
 
-	public static final String COMPONENT_ICON_PATH, MENU_ICON_PATH, USER_DATA, F_NEW_ACCEL,
-	        F_CLOSE_ACCEL,
+	public static String COMPONENT_ICON_PATH, MENU_ICON_PATH, USER_DATA, F_NEW_ACCEL, F_CLOSE_ACCEL,
 	        F_SAVE_ACCEL, F_SAVE_AS_ACCEL, F_OPEN_ACCEL, F_CLEAR_ACCEL, F_IMPORT_ACCEL,
 	        F_UNDO_ACCEL, F_REDO_ACCEL, E_ACTIVATE_ACCEL, E_FOCUS_ACCEL, D_COMPONENT_ACCEL,
 	        P_SETTINGS_ACCEL, P_LANGUAGE_ACCEL, H_HELP_ACCEL, BUILTIN_COMMAND_ACCEL_PREFIX,
-	        USER_COMMAND_ACCEL_PREFIX,
-	        G_INPUT_PIN, G_OUTPUT_PIN, G_BRANCH, G_GATE, G_GATEAND, G_GATEOR, G_GATENOT, G_GATEXOR;
-	public static final char   M_FILE_MNEMONIC, M_EDIT_MNEMONIC, M_CREATE_MNEMONIC,
-	        M_DELETE_MNEMONIC,
+	        USER_COMMAND_ACCEL_PREFIX, G_INPUT_PIN, G_OUTPUT_PIN, G_BRANCH, G_GATE, G_GATEAND,
+	        G_GATEOR, G_GATENOT, G_GATEXOR;
+	public static char   M_FILE_MNEMONIC, M_EDIT_MNEMONIC, M_CREATE_MNEMONIC, M_DELETE_MNEMONIC,
 	        M_PREFERENCES_MNEMONIC, M_HELP_MNEMONIC;
 
 	static {
-		try {
-			StringConstants.loadFromFile();
-			for (final Entry<String, String> e : StringConstants.map.entrySet()) {
-				final String key = e.getKey(), value = e.getValue();
-				StringConstants.reqs.add(key);
-				StringConstants.reqs.offer(key, value);
-			}
+		try (BufferedReader reader = new BufferedReader(new FileReader(FILE))) {
+			properties.load(reader);
 		} catch (final FileNotFoundException e) {
-			System.err.printf(Languages.getString("StringConstants.2"), StringConstants.SETTINGS); //$NON-NLS-1$
+			System.err.printf(Languages.getString("StringConstants.2"), FILE); //$NON-NLS-1$
 			System.exit(0);
 		} catch (final IOException e) {
-			System.err.printf(
-			        Languages.getString("StringConstants.3"), //$NON-NLS-1$
-			        StringConstants.SETTINGS);
+			System.err.printf(Languages.getString("StringConstants.3"), FILE); //$NON-NLS-1$
 			System.exit(0);
-		} finally {
-			COMPONENT_ICON_PATH = StringConstants.map.get("Component_Icon_Directory"); //$NON-NLS-1$
-			MENU_ICON_PATH = StringConstants.map.get("Menu_Icon_Directory"); //$NON-NLS-1$
-			USER_DATA = StringConstants.map.get("User_Directory"); //$NON-NLS-1$
-			M_FILE_MNEMONIC = StringConstants.map.get("File_Mnemonic").charAt(0); //$NON-NLS-1$
-			M_EDIT_MNEMONIC = StringConstants.map.get("Edit_Mnemonic").charAt(0); //$NON-NLS-1$
-			M_CREATE_MNEMONIC = StringConstants.map.get("Create_Mnemonic").charAt(0); //$NON-NLS-1$
-			M_DELETE_MNEMONIC = StringConstants.map.get("Delete_Mnemonic").charAt(0); //$NON-NLS-1$
-			M_PREFERENCES_MNEMONIC = StringConstants.map.get("Preferences_Mnemonic").charAt(0); //$NON-NLS-1$
-			M_HELP_MNEMONIC = StringConstants.map.get("Help_Mnemonic").charAt(0); //$NON-NLS-1$
-			F_NEW_ACCEL = StringConstants.map.get("New_Editor"); //$NON-NLS-1$
-			F_CLOSE_ACCEL = StringConstants.map.get("Close_Editor"); //$NON-NLS-1$
-			F_SAVE_ACCEL = StringConstants.map.get("Save"); //$NON-NLS-1$
-			F_SAVE_AS_ACCEL = StringConstants.map.get("Save_As"); //$NON-NLS-1$
-			F_OPEN_ACCEL = StringConstants.map.get("Open_File"); //$NON-NLS-1$
-			F_CLEAR_ACCEL = StringConstants.map.get("Clear_Editor"); //$NON-NLS-1$
-			F_IMPORT_ACCEL = StringConstants.map.get("Import"); //$NON-NLS-1$
-			F_UNDO_ACCEL = StringConstants.map.get("Undo"); //$NON-NLS-1$
-			F_REDO_ACCEL = StringConstants.map.get("Redo"); //$NON-NLS-1$
-			E_ACTIVATE_ACCEL = StringConstants.map.get("Activate_Component"); //$NON-NLS-1$
-			E_FOCUS_ACCEL = StringConstants.map.get("Focus_Component"); //$NON-NLS-1$
-			D_COMPONENT_ACCEL = StringConstants.map.get("Delete_Component"); //$NON-NLS-1$
-			P_SETTINGS_ACCEL = StringConstants.map.get("Edit_Settings"); //$NON-NLS-1$
-			P_LANGUAGE_ACCEL = StringConstants.map.get("Change_Language"); //$NON-NLS-1$
-			H_HELP_ACCEL = StringConstants.map.get("Help"); //$NON-NLS-1$
-			BUILTIN_COMMAND_ACCEL_PREFIX = StringConstants.map
-			        .get("Built_in_create_component_prefix"); //$NON-NLS-1$
-			USER_COMMAND_ACCEL_PREFIX = StringConstants.map.get("User_create_component_prefix"); //$NON-NLS-1$
-			G_INPUT_PIN = StringConstants.map.get("Input_Pin_Sequence"); //$NON-NLS-1$
-			G_OUTPUT_PIN = StringConstants.map.get("Output_Pin_Sequence"); //$NON-NLS-1$
-			G_BRANCH = StringConstants.map.get("Branch_Sequence"); //$NON-NLS-1$
-			G_GATE = StringConstants.map.get("Gate_Sequence"); //$NON-NLS-1$
-			G_GATEAND = StringConstants.map.get("Gate_AND_Sequence"); //$NON-NLS-1$
-			G_GATEOR = StringConstants.map.get("Gate_OR_Sequence"); //$NON-NLS-1$
-			G_GATENOT = StringConstants.map.get("Gate_NOT_Sequence"); //$NON-NLS-1$
-			G_GATEXOR = StringConstants.map.get("Gate_XOR_Sequence"); //$NON-NLS-1$
 		}
+
+		Utility.foreach(properties.entrySet(), entry -> {
+			final String key   = (String) entry.getKey();
+			final String value = (String) entry.getValue();
+			reqs.add(key);
+			reqs.offer(key, value);
+		});
+
+		COMPONENT_ICON_PATH = properties.getProperty("Component_Icon_Directory"); //$NON-NLS-1$
+		MENU_ICON_PATH = properties.getProperty("Menu_Icon_Directory"); //$NON-NLS-1$
+		USER_DATA = properties.getProperty("User_Directory"); //$NON-NLS-1$
+		M_FILE_MNEMONIC = properties.getProperty("File_Mnemonic").charAt(0); //$NON-NLS-1$
+		M_EDIT_MNEMONIC = properties.getProperty("Edit_Mnemonic").charAt(0); //$NON-NLS-1$
+		M_CREATE_MNEMONIC = properties.getProperty("Create_Mnemonic").charAt(0); //$NON-NLS-1$
+		M_DELETE_MNEMONIC = properties.getProperty("Delete_Mnemonic").charAt(0); //$NON-NLS-1$
+		M_PREFERENCES_MNEMONIC = properties.getProperty("Preferences_Mnemonic").charAt(0); //$NON-NLS-1$
+		M_HELP_MNEMONIC = properties.getProperty("Help_Mnemonic").charAt(0); //$NON-NLS-1$
+		F_NEW_ACCEL = properties.getProperty("New_Editor"); //$NON-NLS-1$
+		F_CLOSE_ACCEL = properties.getProperty("Close_Editor"); //$NON-NLS-1$
+		F_SAVE_ACCEL = properties.getProperty("Save"); //$NON-NLS-1$
+		F_SAVE_AS_ACCEL = properties.getProperty("Save_As"); //$NON-NLS-1$
+		F_OPEN_ACCEL = properties.getProperty("Open_File"); //$NON-NLS-1$
+		F_CLEAR_ACCEL = properties.getProperty("Clear_Editor"); //$NON-NLS-1$
+		F_IMPORT_ACCEL = properties.getProperty("Import"); //$NON-NLS-1$
+		F_UNDO_ACCEL = properties.getProperty("Undo"); //$NON-NLS-1$
+		F_REDO_ACCEL = properties.getProperty("Redo"); //$NON-NLS-1$
+		E_ACTIVATE_ACCEL = properties.getProperty("Activate_Component"); //$NON-NLS-1$
+		E_FOCUS_ACCEL = properties.getProperty("Focus_Component"); //$NON-NLS-1$
+		D_COMPONENT_ACCEL = properties.getProperty("Delete_Component"); //$NON-NLS-1$
+		P_SETTINGS_ACCEL = properties.getProperty("Edit_Settings"); //$NON-NLS-1$
+		P_LANGUAGE_ACCEL = properties.getProperty("Change_Language"); //$NON-NLS-1$
+		H_HELP_ACCEL = properties.getProperty("Help"); //$NON-NLS-1$
+		BUILTIN_COMMAND_ACCEL_PREFIX = properties.getProperty("Built_in_create_component_prefix"); //$NON-NLS-1$
+		USER_COMMAND_ACCEL_PREFIX = properties.getProperty("User_create_component_prefix"); //$NON-NLS-1$
+		G_INPUT_PIN = properties.getProperty("Input_Pin_Sequence"); //$NON-NLS-1$
+		G_OUTPUT_PIN = properties.getProperty("Output_Pin_Sequence"); //$NON-NLS-1$
+		G_BRANCH = properties.getProperty("Branch_Sequence"); //$NON-NLS-1$
+		G_GATE = properties.getProperty("Gate_Sequence"); //$NON-NLS-1$
+		G_GATEAND = properties.getProperty("Gate_AND_Sequence"); //$NON-NLS-1$
+		G_GATEOR = properties.getProperty("Gate_OR_Sequence"); //$NON-NLS-1$
+		G_GATENOT = properties.getProperty("Gate_NOT_Sequence"); //$NON-NLS-1$
+		G_GATEXOR = properties.getProperty("Gate_XOR_Sequence"); //$NON-NLS-1$
 	}
 
 	/**
@@ -118,44 +102,23 @@ public final class StringConstants {
 	 * @throws IOException if an error occurred while writing to file
 	 */
 	public static boolean editAndWriteToFile(Frame frame) throws IOException {
-		StringConstants.reqs.clear();
-		StringConstants.reqs.fulfillWithDialog(frame, Languages.getString("StringConstants.4")); //$NON-NLS-1$
+		reqs.clear();
+		reqs.fulfillWithDialog(frame, Languages.getString("StringConstants.4")); //$NON-NLS-1$
 
-		final boolean committedChanges = StringConstants.reqs.fulfilled();
+		final boolean committedChanges = reqs.fulfilled();
+
 		if (committedChanges) {
-			Utility.foreach(StringConstants.reqs, r -> {
+			Utility.foreach(reqs, r -> {
 				final String k = r.key(), v = r.value();
-				if (!StringConstants.map.get(k).equals(v))
-					StringConstants.map.put(k, v);
+				if (!properties.getProperty(k).equals(v))
+					properties.setProperty(k, v);
 			});
-		} else {
-			return false;
-		}
 
-		writeToFile();
-		return true;
-	}
-
-	private static void writeToFile() throws IOException {
-		try (BufferedWriter writer = new BufferedWriter(
-		        new FileWriter(StringConstants.SETTINGS))) {
-			for (final Entry<String, String> e : StringConstants.map.entrySet())
-				writer.write(String.format("%s=%s%n", e.getKey(), e.getValue())); //$NON-NLS-1$
-		}
-	}
-
-	private static void loadFromFile() throws FileNotFoundException, IOException {
-
-		try (BufferedReader reader = new BufferedReader(
-		        new FileReader(StringConstants.SETTINGS))) {
-			String line;
-			while ((line = reader.readLine()) != null) {
-				// lines starting with '#' are comments
-				if (!line.equals("") && !line.startsWith("#")) { //$NON-NLS-1$ //$NON-NLS-2$
-					final String[] parts = line.split("="); //$NON-NLS-1$
-					StringConstants.map.put(parts[0], parts.length == 2 ? parts[1] : ""); //$NON-NLS-1$
-				}
+			try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE))) {
+				properties.store(writer, null);
 			}
 		}
+
+		return committedChanges;
 	}
 }

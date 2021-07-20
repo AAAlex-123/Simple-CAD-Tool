@@ -1,5 +1,6 @@
 package application.editor;
 
+import java.awt.Frame;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -263,12 +264,15 @@ public enum Actions {
 			// yes=0 no=1 cancel=2 x=-1 (+1)
 			final int[] res = { 0, 0, 0, 0 };
 
+			final Frame frame = context.context().getFrame();
+
 			for (int i = 0; i < messages.length; i++)
-				++res[1 + msg(messages[i], titles[i])];
+				++res[1 + msg(frame, messages[i], titles[i])];
 		}
 
-		private int msg(String msg, String title) {
-			return JOptionPane.showConfirmDialog(null, msg, title, JOptionPane.YES_NO_CANCEL_OPTION);
+		private int msg(Frame frame, String message, String title) {
+			return JOptionPane.showConfirmDialog(frame, message, title,
+			        JOptionPane.YES_NO_CANCEL_OPTION);
 		}
 	};
 
