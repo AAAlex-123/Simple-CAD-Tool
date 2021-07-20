@@ -19,6 +19,6 @@ public class MalformedGateException extends RuntimeException {
 	}
 
 	private static String formatMessage(Component c) {
-		return String.format("Component %s is hidden inside a Gate but was accessed by a non-hidden one", c);
+		return String.format("Component %s is hidden inside a Gate but was accessed by a non-hidden one", c); //$NON-NLS-1$
 	}
 }

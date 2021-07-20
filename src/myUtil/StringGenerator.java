@@ -66,7 +66,7 @@ public final class StringGenerator implements Supplier<String>, Iterator<String>
 
 	@Override
 	public String get() {
-		return canProduceMore() ? String.format(text, current++) : "";
+		return canProduceMore() ? String.format(text, current++) : ""; //$NON-NLS-1$
 	}
 
 	@Override

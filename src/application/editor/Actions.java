@@ -1,5 +1,6 @@
 package application.editor;
 
+import java.awt.Frame;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -19,36 +20,38 @@ import command.Command;
 import components.Component;
 import components.ComponentFactory;
 import exceptions.MalformedBranchException;
+import localisation.EditorStrings;
+import localisation.Languages;
 import myUtil.Utility;
 import requirement.Requirement;
 import requirement.Requirements;
 import requirement.StringType;
 
 /**
- * An enum-strategy for the different Actions the {@link Editor} may take
+ * An enum-strategy for the different Actions the {@link Editor} may take.
  *
  * @author alexm
  */
 public enum Actions {
 
 	/** Action for creating a {@code Component} */
-	CREATE("command") {
+	CREATE(EditorStrings.COMMAND) {
 		@Override
 		public void execute() {
 
 			if (!reqs.fulfilled())
-				throw new RuntimeException("Execute CREATE without requirements");
+				throw new RuntimeException("Execute CREATE without requirements"); //$NON-NLS-1$
 
-			final Command cte = (Command) reqs.getV("command");
+			final Command cte = (Command) reqs.getV(EditorStrings.COMMAND);
 
 			try {
 				if (!cte.canExecute()) {
-					context.status("%s cancelled", cte);
+					context.status(Languages.getString("Actions.1"), cte); //$NON-NLS-1$
 					return;
 				}
 
 				context.execute(cte);
-				context.status("%s successful", cte);
+				context.status(Languages.getString("Actions.2"), cte); //$NON-NLS-1$
 				context.setDirty(true);
 			} catch (MissingComponentException | MalformedBranchException e) {
 				context.error(e);
@@ -62,23 +65,23 @@ public enum Actions {
 	},
 
 	/** Action for deleting a {@code Component} */
-	DELETE("command") {
+	DELETE(EditorStrings.COMMAND) {
 		@Override
 		public void execute() {
 
 			if (!reqs.fulfilled())
-				throw new RuntimeException("Execute DELETE without requirements");
+				throw new RuntimeException("Execute DELETE without requirements"); //$NON-NLS-1$
 
-			final Command cte = (Command) reqs.getV("command");
+			final Command cte = (Command) reqs.getV(EditorStrings.COMMAND);
 
 			try {
 				if (!cte.canExecute()) {
-					context.status("Delete cancelled");
+					context.status(Languages.getString("Actions.4")); //$NON-NLS-1$
 					return;
 				}
 
 				context.execute(cte);
-				context.status("Component deleted");
+				context.status(Languages.getString("Actions.5")); //$NON-NLS-1$
 				context.setDirty(true);
 			} catch (final MissingComponentException e) {
 				context.error(e);
@@ -92,27 +95,27 @@ public enum Actions {
 	},
 
 	/** Action for saving the components of the {@code Editor} to a File */
-	SAVE("filename", StringType.FILENAME) {
+	SAVE(EditorStrings.FILENAME, StringType.FILENAME) {
 		@Override
 		public void execute() {
 
-			final String fname = (String) reqs.getV("filename");
+			final String fname = (String) reqs.getV(EditorStrings.FILENAME);
 
 			try {
 				if (!reqs.fulfilled()) {
-					context.status("File save cancelled");
+					context.status(Languages.getString("Actions.6")); //$NON-NLS-1$
 					return;
 				}
 
 				Actions.writeToFile(fname, context.getComponents_(), context.getPastCommands());
 
-				context.status("File %s saved successfully", fname);
+				context.status(Languages.getString("Actions.7"), fname); //$NON-NLS-1$
 				context.setFile(fname);
 				context.setDirty(false);
 
 			} catch (final IOException e) {
 				context.error(
-						"Error while writing to file %s. Inform the developer about 'Action-SAVE-IO'",
+						Languages.getString("Actions.8"), //$NON-NLS-1$
 						fname);
 				throw new RuntimeException(e);
 			} finally {
@@ -122,27 +125,28 @@ public enum Actions {
 	},
 
 	/** An Action that reads the contents of a File to the Editor */
-	OPEN(new String[] { "filename", "gatename", "filetype" },
+	OPEN(new String[] { EditorStrings.FILENAME, EditorStrings.GATENAME,
+	        EditorStrings.FILETYPE },
 			new StringType[] { StringType.FILENAME, StringType.ANY, StringType.FILETYPE }) {
 		@Override
 		public void execute() {
 
-			final String fname = (String) reqs.getV("filename");
-			final String ftype = (String) reqs.getV("filetype");
+			final String fname = (String) reqs.getV(EditorStrings.FILENAME);
+			final String ftype = (String) reqs.getV(EditorStrings.FILETYPE);
 
 			final List<Component> components = new ArrayList<>();
 			final List<Command> commands = new ArrayList<>();
 
 			try {
 				if (!reqs.fulfilled()) {
-					context.status("File %s cancelled",
-							ftype.equals(Actions._circuit) ? "open" : "import");
+					context.status(Languages.getString("Actions.9"), //$NON-NLS-1$
+					        ftype.equals(EditorStrings.CIRCUIT) ? Languages.getString("Actions.10") : Languages.getString("Actions.11")); //$NON-NLS-1$ //$NON-NLS-2$
 					return;
 				}
 
 				Actions.readFromFile(fname, components, commands);
 
-				if (ftype.equals(Actions._circuit)) {
+				if (ftype.equals(EditorStrings.CIRCUIT)) {
 
 					context.clear();
 
@@ -151,34 +155,32 @@ public enum Actions {
 						context.addComponent(component);
 					});
 					Utility.foreach(commands, command -> {
-						// System.out.println(command.getClass());
 						command.context(context);
 						context.addToHistory(command);
 					});
 
-					// System.out.println(context.getPastCommands());
-
 					context.setFile(fname);
-					context.status("File %s opened successfully", fname);
+					context.status(Languages.getString("Actions.12"), fname); //$NON-NLS-1$
 					context.setDirty(false);
 
-				} else if (ftype.equals(Actions._component)) {
+				} else if (ftype.equals(EditorStrings.COMPONENT)) {
 
-					final Command cgc = Command.create(commands, (String) reqs.getV("gatename"));
+					final Command cgc = Command.create(commands,
+					        (String) reqs.getV(EditorStrings.GATENAME));
 					context.context().addCreateCommand(cgc);
-					context.status("File %s imported successfully", fname);
+					context.status(Languages.getString("Actions.13"), fname); //$NON-NLS-1$
 
 				} else {
 					throw new RuntimeException(
-							"Inform the developer about 'Action-OPEN-Invalid-Filetype'");
+							Languages.getString("Actions.14")); //$NON-NLS-1$
 				}
 			} catch (Actions.IncompatibleFileException | Actions.FileCorruptedException e) {
 				context.error(e);
 			} catch (final FileNotFoundException e) {
-				context.error("File %s doesn't exist", fname);
+				context.error(Languages.getString("Actions.15"), fname); //$NON-NLS-1$
 			} catch (final IOException e) {
 				context.error(
-						"Error while reading from file %s. Inform the developer about 'Action-Open-IO'",
+						Languages.getString("Actions.16"), //$NON-NLS-1$
 						fname);
 				throw new RuntimeException(e);
 			} catch (final Exception e) {
@@ -194,7 +196,7 @@ public enum Actions {
 		@Override
 		public void execute() {
 			context.clear();
-			context.status("Editor cleared");
+			context.status(Languages.getString("Actions.17")); //$NON-NLS-1$
 			context.setDirty(true);
 		}
 	},
@@ -204,7 +206,7 @@ public enum Actions {
 		@Override
 		public void execute() {
 			context.undo();
-			context.status("Undo");
+			context.status(Languages.getString("Actions.18")); //$NON-NLS-1$
 			context.setDirty(true);
 		}
 	},
@@ -214,7 +216,7 @@ public enum Actions {
 		@Override
 		public void execute() {
 			context.redo();
-			context.status("Redo");
+			context.status(Languages.getString("Actions.19")); //$NON-NLS-1$
 			context.setDirty(true);
 		}
 	},
@@ -223,76 +225,59 @@ public enum Actions {
 	HELP {
 		@Override
 		public void execute() {
-			context.status("Someone doesn't know how to use a UI...");
-			final String[] messages = {
-					"Not-so-good help ahead, brace yourselves",
-					"Create new Editor / Close current Editor",
-					"Open a file in current Editor",
-					"Save the current file to disk / Save with a different name",
-					"Clear the Editor",
-					"Import a file as a custom Component",
-					"Undo/Redo last/previous action",
-					"Turn on/off InputPin / Focus Component",
-					"Creates a Component (by type and parameters)",
-					"Deletes a Component (by identifier)",
-					"Edit settings",
-					"Display these messages",
-					"Drag to move, click to turn on/off",
-					"Move with arrows (fast with shift), turn on/off with space",
+			final String[] titles = {
+			        Languages.getString("Actions.20"), //$NON-NLS-1$
+			        Languages.getString("Actions.21"), //$NON-NLS-1$
+			        Languages.getString("Actions.22"), //$NON-NLS-1$
+			        Languages.getString("Actions.23"), //$NON-NLS-1$
+			        Languages.getString("Actions.24"), //$NON-NLS-1$
+			        Languages.getString("Actions.25"), //$NON-NLS-1$
+			        Languages.getString("Actions.26"), //$NON-NLS-1$
+			        Languages.getString("Actions.27"), //$NON-NLS-1$
+			        Languages.getString("Actions.28"), //$NON-NLS-1$
+			        Languages.getString("Actions.29"), //$NON-NLS-1$
+			        Languages.getString("Actions.30"), //$NON-NLS-1$
+			        Languages.getString("Actions.31"), //$NON-NLS-1$
+			        Languages.getString("Actions.32"), //$NON-NLS-1$
 			};
 
-			final String[] titles = {
-					"Disclaimer",
-					"File: New / Close",
-					"File: Open",
-					"File: Save / Save as",
-					"File: Clear",
-					"File: Import",
-					"File: Undo / Redo",
-					"Edit: Turn on/off / Focus",
-					"Create",
-					"Delete",
-					"Preferences",
-					"Help",
-					"Mouse Actions",
-					"Keyboard Actions",
+			final String[] messages = {
+					Languages.getString("Actions.33"), //$NON-NLS-1$
+					Languages.getString("Actions.34"), //$NON-NLS-1$
+					Languages.getString("Actions.35"), //$NON-NLS-1$
+					Languages.getString("Actions.36"), //$NON-NLS-1$
+					Languages.getString("Actions.37"), //$NON-NLS-1$
+					Languages.getString("Actions.38"), //$NON-NLS-1$
+					Languages.getString("Actions.39"), //$NON-NLS-1$
+					Languages.getString("Actions.40"), //$NON-NLS-1$
+					Languages.getString("Actions.41"), //$NON-NLS-1$
+					Languages.getString("Actions.42"), //$NON-NLS-1$
+					Languages.getString("Actions.43"), //$NON-NLS-1$
+					Languages.getString("Actions.44"), //$NON-NLS-1$
+					Languages.getString("Actions.45"), //$NON-NLS-1$
 			};
+
+			if (titles.length != messages.length)
+				throw new RuntimeException(
+				        "Number of help titles doesn't match number of messages."); //$NON-NLS-1$
 
 			// yes=0 no=1 cancel=2 x=-1 (+1)
 			final int[] res = { 0, 0, 0, 0 };
 
+			final Frame frame = context.context().getFrame();
+
 			for (int i = 0; i < messages.length; i++)
-				++res[1 + msg(messages[i], titles[i])];
-
-			final int y = res[1], n = res[2], c = res[3], x = res[0];
-			final int res1 = msg(String.format("You clicked: %d yes, %d no, %d cancel, %d 'x'", y, n, c, x), "Fun Fact");
-
-			if (res1 == -1)
-				msg(String.format("(actually %d 'x')", x + 1), "Bonus Fun Fact");
-			else if (res1 == 0)
-				msg(String.format("(actually %d yes)", y + 1), "Bonus Fun Fact");
-			else if (res1 == 1)
-				msg(String.format("(actually %d no)", n + 1), "Bonus Fun Fact");
-			else if (res1 == 2)
-				msg(String.format("(actually %d cancel)", c + 1), "Bonus Fun Fact");
+				++res[1 + msg(frame, messages[i], titles[i])];
 		}
-		private int msg(String msg, String title) {
-			return JOptionPane.showConfirmDialog(null, msg, title, JOptionPane.YES_NO_CANCEL_OPTION);
+
+		private int msg(Frame frame, String message, String title) {
+			return JOptionPane.showConfirmDialog(frame, message, title,
+			        JOptionPane.YES_NO_CANCEL_OPTION);
 		}
 	};
 
 	// bytes at the start and end of file
-	private static final Integer start, eof;
-	// the strings should match Requirement.Type
-	private static final String _component, _circuit;
-
-	static {
-		_component = "component";
-		_circuit = "circuit";
-
-		start = 10;
-		eof = 42;
-	}
+	private static final Integer start = 10, eof = 42;
 
 	/** The Requirements of the Action */
 	protected final Requirements<Object> reqs;
@@ -323,7 +308,7 @@ public enum Actions {
 		reqs = new Requirements<>();
 
 		if (reqKeys.length != types.length)
-			throw new RuntimeException("Invalid arguments in enum constructor");
+			throw new RuntimeException("Invalid arguments in Actions enum constructor"); //$NON-NLS-1$
 
 		for (int i = 0; i < reqKeys.length; i++)
 			reqs.add(reqKeys[i], types[i]);
@@ -380,7 +365,7 @@ public enum Actions {
 		 * @param filename the name of the corrupted file
 		 */
 		public FileCorruptedException(String filename) {
-			super(String.format("Can't read file %s because its contents are corrupted",
+			super(String.format(Languages.getString("Actions.48"), //$NON-NLS-1$
 					filename));
 		}
 	}
@@ -401,17 +386,17 @@ public enum Actions {
 		private static String formatMessage(String filename, InvalidClassException e) {
 			// extract version information from exception message
 			final Pattern p = Pattern
-					.compile(".*? serialVersionUID = (\\d+), .*? serialVersionUID = (\\d+)");
+					.compile(".*? serialVersionUID = (\\d+), .*? serialVersionUID = (\\d+)"); //$NON-NLS-1$
 			final Matcher m = p.matcher(e.getMessage());
 
 			if (!m.matches())
-				throw new RuntimeException("Invalid regex in IncompatibleFileException");
+				throw new RuntimeException("Invalid regex in IncompatibleFileException"); //$NON-NLS-1$
 
 			final int idInFile = Integer.parseInt(m.group(1));
 			final int idInClass = Integer.parseInt(m.group(2));
 
-			return String.format("Data in file %s corresponds to %s version of the program",
-					filename, idInFile > idInClass ? "a later" : "a previous");
+			return String.format(Languages.getString("Actions.51"), //$NON-NLS-1$
+					filename, idInFile > idInClass ? Languages.getString("Actions.52") : Languages.getString("Actions.53")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 
@@ -425,7 +410,8 @@ public enum Actions {
 	protected static void writeToFile(String filename, List<Component> components, List<Undoable> commands)
 			throws IOException {
 
-		final String outputFile = String.format("%s\\%s", StringConstants.USER_DATA, filename);
+		final String outputFile = String.format("%s%s%s", StringConstants.USER_DATA, //$NON-NLS-1$
+		        System.getProperty("file.separator"), filename); //$NON-NLS-1$
 
 		try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(outputFile))) {
 			oos.writeByte(Actions.start);
@@ -457,7 +443,8 @@ public enum Actions {
 			throws FileNotFoundException, IOException, Actions.FileCorruptedException,
 			Actions.IncompatibleFileException {
 
-		final String inputFile = String.format("%s\\%s", StringConstants.USER_DATA, filename);
+		final String inputFile = String.format("%s%s%s", StringConstants.USER_DATA, //$NON-NLS-1$
+		        System.getProperty("file.separator"), filename); //$NON-NLS-1$
 
 		try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(inputFile))) {
 

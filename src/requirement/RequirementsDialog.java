@@ -28,6 +28,7 @@ import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 
 import application.editor.StatusBar;
+import localisation.Languages;
 
 /**
  * A dialog with which the user fulfils a {@link Requirements} object. After
@@ -93,12 +94,12 @@ final class RequirementsDialog extends JDialog {
 
 		// --- buttons panel (bottom) ---
 		buttonsPanel = new JPanel(new FlowLayout());
-		buttonsPanel.add(okButton = new JButton("OK"));
-		buttonsPanel.add(cancelButton = new JButton("Cancel"));
-		buttonsPanel.add(resetButton = new JButton("Reset"));
+		buttonsPanel.add(okButton = new JButton(Languages.getString("RequirementsDialog.0"))); //$NON-NLS-1$
+		buttonsPanel.add(cancelButton = new JButton(Languages.getString("RequirementsDialog.1"))); //$NON-NLS-1$
+		buttonsPanel.add(resetButton = new JButton(Languages.getString("RequirementsDialog.2"))); //$NON-NLS-1$
 
 		sb = new StatusBar();
-		sb.addLabel("message");
+		sb.addLabel("message"); //$NON-NLS-1$
 
 		final JScrollPane jsp = new JScrollPane(optionsPanel);
 		jsp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -141,7 +142,7 @@ final class RequirementsDialog extends JDialog {
 		}
 
 		if (!reqs.fulfilled())
-			sb.setLabelText("message", "Give correct values!");
+			sb.setLabelText("message", Languages.getString("RequirementsDialog.5")); //$NON-NLS-1$ //$NON-NLS-2$
 
 		return reqs.fulfilled();
 	}
@@ -180,16 +181,16 @@ final class RequirementsDialog extends JDialog {
 		resetButton.addActionListener(pressReset);
 
 		getRootPane().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
-		        .put(KeyStroke.getKeyStroke("ENTER"), "pressOK");
-		getRootPane().getActionMap().put("pressOK", pressOK);
+		        .put(KeyStroke.getKeyStroke("ENTER"), "pressOK"); //$NON-NLS-1$ //$NON-NLS-2$
+		getRootPane().getActionMap().put("pressOK", pressOK); //$NON-NLS-1$
 
 		getRootPane().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
-		        .put(KeyStroke.getKeyStroke("ESCAPE"), "pressCancel");
-		getRootPane().getActionMap().put("pressCancel", pressCancel);
+		        .put(KeyStroke.getKeyStroke("ESCAPE"), "pressCancel"); //$NON-NLS-1$ //$NON-NLS-2$
+		getRootPane().getActionMap().put("pressCancel", pressCancel); //$NON-NLS-1$
 
 		getRootPane().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
-		        .put(KeyStroke.getKeyStroke("control R"), "pressReset");
-		getRootPane().getActionMap().put("pressReset", pressReset);
+		        .put(KeyStroke.getKeyStroke("control R"), "pressReset"); //$NON-NLS-1$ //$NON-NLS-2$
+		getRootPane().getActionMap().put("pressReset", pressReset); //$NON-NLS-1$
 
 		for (int j = 0; j < textAreas.length; ++j) {
 			final int i = j;

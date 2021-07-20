@@ -23,6 +23,8 @@ import command.Command;
 import components.Component;
 import components.ComponentFactory;
 import components.ComponentType;
+import localisation.EditorStrings;
+import localisation.Languages;
 import myUtil.Utility;
 
 /**
@@ -70,8 +72,8 @@ public final class Editor extends JComponent {
 		undoableHistory = new UndoableHistory<>();
 
 		// configure the components of the editor
-		statusBar.addLabel("message");
-		statusBar.addLabel("count");
+		statusBar.addLabel(EditorStrings.MESSAGE);
+		statusBar.addLabel(EditorStrings.COUNT);
 
 		setLayout(new BorderLayout());
 		setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
@@ -95,12 +97,13 @@ public final class Editor extends JComponent {
 	public boolean close() {
 		int res = JOptionPane.YES_OPTION;
 		if (isDirty()) {
-			res = JOptionPane.showConfirmDialog(null, "Would you like keep unsaved changed?",
-					"Close " + filename, JOptionPane.YES_NO_CANCEL_OPTION,
-					JOptionPane.WARNING_MESSAGE);
+			res = JOptionPane.showConfirmDialog(null, Languages.getString("Editor.2"), //$NON-NLS-1$
+			        Languages.getString("Editor.3") + filename, JOptionPane.YES_NO_CANCEL_OPTION, //$NON-NLS-1$
+			        JOptionPane.WARNING_MESSAGE);
 
 			if (res == JOptionPane.YES_OPTION)
-				Actions.SAVE.specify("filename", filename).context(this).execute();
+				Actions.SAVE.specify(EditorStrings.FILENAME, filename).context(this)
+				        .execute();
 		}
 		return (res == JOptionPane.YES_OPTION) || (res == JOptionPane.NO_OPTION);
 	}
@@ -118,7 +121,8 @@ public final class Editor extends JComponent {
 	public void addComponent(Component component) {
 		components.add(component);
 		editorUI.addComponent(component);
-		statusBar.setLabelText("count", "Component count: %d", components.size());
+		statusBar.setLabelText(EditorStrings.COUNT, Languages.getString("Editor.6"), //$NON-NLS-1$
+		        components.size());
 	}
 
 	/**
@@ -129,7 +133,8 @@ public final class Editor extends JComponent {
 	public void removeComponent(Component component) {
 		components.remove(component);
 		editorUI.removeComponent(component);
-		statusBar.setLabelText("count", "Component count: %d", components.size());
+		statusBar.setLabelText(EditorStrings.COUNT, Languages.getString("Editor.8"), //$NON-NLS-1$
+		        components.size());
 	}
 
 	/**
@@ -292,7 +297,7 @@ public final class Editor extends JComponent {
 	 * @param args the format arguments
 	 */
 	public void status(String text, Object... args) {
-		statusBar.setLabelText("message", StatusBar.TextType.DEFAULT, text, args);
+		statusBar.setLabelText(EditorStrings.MESSAGE, StatusBar.TextType.DEFAULT, text, args);
 	}
 
 	/**
@@ -303,7 +308,7 @@ public final class Editor extends JComponent {
 	 * @param args the format arguments
 	 */
 	public void error(String text, Object... args) {
-		statusBar.setLabelText("message", StatusBar.TextType.FAILURE, text, args);
+		statusBar.setLabelText(EditorStrings.MESSAGE, StatusBar.TextType.FAILURE, text, args);
 	}
 
 	/**
@@ -312,6 +317,6 @@ public final class Editor extends JComponent {
 	 * @param exception the Exception
 	 */
 	public void error(Exception exception) {
-		error("%s", exception.getMessage());
+		error("%s", exception.getMessage()); //$NON-NLS-1$
 	}
 }

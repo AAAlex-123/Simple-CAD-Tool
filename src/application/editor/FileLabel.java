@@ -29,6 +29,6 @@ final class FileLabel extends JPanel {
 	 * @param dirty the dirtiness of the file
 	 */
 	void updateText(String fname, boolean dirty) {
-		label.setText((dirty ? "*" : "") + fname);
+		label.setText((dirty ? "*" : "") + fname); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 }

@@ -13,7 +13,7 @@ public class LockedRequirementException extends RuntimeException {
 	 * @param requirement the finalised Requirement
 	 */
 	public LockedRequirementException(Requirement<?> requirement) {
-		super(String.format("Can't alter the value of the finalised Requirement:%n%s",
+		super(String.format("Can't alter the value of the finalised Requirement:%n%s", //$NON-NLS-1$
 		        requirement));
 	}
 }

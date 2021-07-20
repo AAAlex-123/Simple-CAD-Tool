@@ -1,6 +1,11 @@
 package requirement;
 
+import static localisation.RequirementStrings.NO;
+import static localisation.RequirementStrings.YES;
+
 import java.io.Serializable;
+
+import localisation.Languages;
 
 /**
  * A class representing a key-value pair where the key is a string and the value
@@ -115,7 +120,7 @@ public final class Requirement<V> implements Serializable {
 		offer(v);
 		value = v;
 		fulfilled = !((v instanceof String) && (stringType != null)
-		        && !stringType.isValid((String) v));
+				&& !stringType.isValid((String) v));
 	}
 
 	/**
@@ -144,7 +149,7 @@ public final class Requirement<V> implements Serializable {
 	public void reset() {
 		clear();
 		if ((value instanceof String) && (defaultValue == null))
-			value = (V) "";
+			value = (V) ""; //$NON-NLS-1$
 		else
 			value = defaultValue;
 	}
@@ -162,11 +167,11 @@ public final class Requirement<V> implements Serializable {
 	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder(String.format(
-		        "Requirement: %s%n\tDefault:   %s%n\tValue:     %s%n\tFulfilled: %s%n\tFinalised: %s%n",
-		        key, defaultValue, value, fulfilled() ? "yes" : "no", finalised() ? "yes" : "no"));
+				Languages.getString("Requirement.1"), //$NON-NLS-1$
+				key, defaultValue, value, fulfilled() ? YES : NO, finalised() ? YES : NO));
 
 		if (stringType != null)
-			sb.append(String.format("\tType:      %s%n", stringType));
+			sb.append(String.format(Languages.getString("Requirement.2"), stringType)); //$NON-NLS-1$
 
 		return sb.toString();
 	}
