@@ -1,5 +1,7 @@
 package application;
+
 import java.awt.BorderLayout;
+import java.awt.Frame;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
@@ -31,8 +33,8 @@ public class Application {
 	private final JFrame window;
 	private final MyMenu menu;
 
-	private final JTabbedPane  editorPane;
-	private final List<Editor> editors;
+	private final JTabbedPane     editorPane;
+	private final List<Editor>    editors;
 	private final StringGenerator nameGenerator;
 
 	/** Constructs the Application */
@@ -62,7 +64,7 @@ public class Application {
 		addEditor();
 
 		editorPane.addChangeListener(l -> {
-			Editor e = (Editor) editorPane.getSelectedComponent();
+			final Editor e = (Editor) editorPane.getSelectedComponent();
 			if (e != null)
 				setActiveEditor(e);
 		});
@@ -116,11 +118,11 @@ public class Application {
 	}
 
 	private void addEditor() {
-		Editor newEditor = new Editor(this, nameGenerator.get());
+		final Editor newEditor = new Editor(this, nameGenerator.get());
 		editors.add(newEditor);
 		editorPane.addTab("", newEditor); //$NON-NLS-1$
 		editorPane.setTabComponentAt(editorPane.getTabCount() - 1,
-				newEditor.getFileLabel());
+		        newEditor.getFileLabel());
 		setActiveEditor(newEditor);
 	}
 
@@ -161,47 +163,60 @@ public class Application {
 
 		/** Action for editing settings */
 		EDIT_SETTINGS {
-			// same strings as EDIT_LANGUAGE
 			@Override
 			void execute() {
+				final String file  = StringConstants.FILE;
+				final Frame  frame = context.getFrame();
+
 				try {
-					final boolean settingsChanged = StringConstants.editAndWriteToFile(context.getFrame());
-					if (settingsChanged) {
-						JOptionPane.showMessageDialog(context.getFrame(), String.format(
-						        Languages.getString("Application.3"), //$NON-NLS-1$
-						        StringConstants.SETTINGS), Languages.getString("Application.4"), //$NON-NLS-1$
-								JOptionPane.INFORMATION_MESSAGE);
-					}
-				} catch (IOException e) {
-					JOptionPane.showMessageDialog(context.getFrame(), String.format(
-					        Languages.getString("Application.5"), //$NON-NLS-1$
-					        StringConstants.SETTINGS), Languages.getString("Application.6"), //$NON-NLS-1$
-							JOptionPane.ERROR_MESSAGE);
+					final boolean settingsChanged = StringConstants.editAndWriteToFile(frame);
+					if (settingsChanged)
+						message(frame, file, true);
+				} catch (final IOException e) {
+					message(frame, file, false);
 				}
 			}
 		},
 
-		/** Action for changing language */
+		/** Action for editing settings */
 		EDIT_LANGUAGE {
-			// same strings as EDIT_SETTINGS
 			@Override
 			void execute() {
+				final String file  = StringConstants.FILE;
+				final Frame  frame = context.getFrame();
+
 				try {
-					final boolean languageChanged = Languages.editAndWriteToFile(context.getFrame());
-					if (languageChanged) {
-						JOptionPane.showMessageDialog(context.getFrame(), String.format(
-						        Languages.getString("Application.3"), //$NON-NLS-1$
-						        Languages.LANGUAGES_FILE), Languages.getString("Application.4"), //$NON-NLS-1$
-						        JOptionPane.INFORMATION_MESSAGE);
-					}
-				} catch (IOException e) {
-					JOptionPane.showMessageDialog(context.getFrame(), String.format(
-					        Languages.getString("Application.5"), //$NON-NLS-1$
-					        Languages.LANGUAGES_FILE), Languages.getString("Application.6"), //$NON-NLS-1$
-					        JOptionPane.ERROR_MESSAGE);
+					final boolean languageChanged = Languages.editAndWriteToFile(frame);
+					if (languageChanged)
+						message(frame, file, true);
+				} catch (final IOException e) {
+					message(frame, file, false);
 				}
 			}
 		};
+
+		/**
+		 * Displays a pop-up window informing the user about the success or failure of a
+		 * save operation to a file.
+		 *
+		 * @param frame   the parent frame for the pop-up
+		 * @param file    the file where the settings were saved
+		 * @param success {@code true} if the operation was successful, {@code false}
+		 *                otherwise
+		 */
+		protected void message(Frame frame, String file, boolean success) {
+			if (success) {
+				JOptionPane.showMessageDialog(frame, String.format(
+				        Languages.getString("Application.3"), file), //$NON-NLS-1$
+				        Languages.getString("Application.4"), //$NON-NLS-1$
+				        JOptionPane.INFORMATION_MESSAGE);
+			} else {
+				JOptionPane.showMessageDialog(frame, String.format(
+				        Languages.getString("Application.5"), file), //$NON-NLS-1$
+				        Languages.getString("Application.6"), //$NON-NLS-1$
+				        JOptionPane.ERROR_MESSAGE);
+			}
+		}
 
 		/** The context of the Action */
 		Application context;
