@@ -10,8 +10,8 @@ import java.awt.Frame;
 import java.util.ArrayList;
 import java.util.List;
 
-import application.editor.Editor;
 import application.editor.CycleException;
+import application.editor.Editor;
 import application.editor.MissingComponentException;
 import components.Component;
 import components.ComponentFactory;
@@ -87,7 +87,7 @@ class CreateCommand extends Command {
 
 	 /**
 	  * Creates a component
-	  * 
+	  *
 	  * @throws CycleException if the creation of a branch leads to a cyclical (feedback) circuit
 	  * @throws MissingComponentException if the ends of a branch aren't valid components
 	  * @throws MalformedBranchException if a branch could not be properly created
@@ -108,8 +108,8 @@ class CreateCommand extends Command {
 				break;
 			case BRANCH:
 				final Component in = context.getComponent_(requirements.getV("in id"));
-				final Component out = context.getComponent_(requirements.getV("out id")); 
-				
+				final Component out = context.getComponent_(requirements.getV("out id"));
+
 				final int inIndex = Integer.parseInt(requirements.getV("in index"));
 				final int outIndex = Integer.parseInt(requirements.getV("out index"));
 
@@ -137,9 +137,9 @@ class CreateCommand extends Command {
 			unexecute();
 			throw new CycleException(associatedComponent.getInputs().get(0),
 					associatedComponent.getOutputs().get(0).get(0));
-		} else
-			context.graph.add(associatedComponent);
-		
+		}
+		context.graph.add(associatedComponent);
+
 		// delete the branch that may have been deleted when creating this branch
 		// there can't be more than two branches deleted when creating a branch
 		if (associatedComponent.type() == BRANCH) {
@@ -175,6 +175,7 @@ class CreateCommand extends Command {
 
 		ComponentFactory.destroyComponent(associatedComponent);
 		context.removeComponent(associatedComponent);
+		context.graph.remove(associatedComponent);
 	}
 
 	@Override
