@@ -2,6 +2,7 @@ package command;
 
 import static components.ComponentType.BRANCH;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Vector;
@@ -53,8 +54,9 @@ class DeleteCommand extends Command {
 		// first delete gracefully all of the component's branches
 		if (associatedComponent.type() != BRANCH) {
 			// get all branches
-			final Collection<Component> otherDeletedComponents = associatedComponent.getOutputs()
-			        .stream().flatMap(List::stream).toList();
+			final Collection<Component> otherDeletedComponents = new ArrayList<>();
+			Utility.foreach(associatedComponent.getOutputs(),
+			        ls -> otherDeletedComponents.addAll(ls));
 			otherDeletedComponents.addAll(associatedComponent.getInputs());
 
 			// create, store and execute a DeleteCommand for each of them
