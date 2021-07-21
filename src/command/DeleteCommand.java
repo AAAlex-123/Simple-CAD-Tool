@@ -1,11 +1,15 @@
 package command;
 
+import static components.ComponentType.BRANCH;
+
+import java.util.Collection;
 import java.util.List;
 import java.util.Vector;
 
 import application.editor.CycleException;
 import application.editor.Editor;
 import application.editor.MissingComponentException;
+import components.Component;
 import components.ComponentFactory;
 import myUtil.Utility;
 import requirement.Requirements;
@@ -46,22 +50,31 @@ class DeleteCommand extends Command {
 		deleteCommands.clear();
 		associatedComponent = context.getComponent_(requirements.getV("id"));
 
+		// first delete gracefully all of the component's branches
+		if (associatedComponent.type() != BRANCH) {
+			// get all branches
+			final Collection<Component> otherDeletedComponents = associatedComponent.getOutputs()
+			        .stream().flatMap(List::stream).toList();
+			otherDeletedComponents.addAll(associatedComponent.getInputs());
+
+			// create, store and execute a DeleteCommand for each of them
+			Utility.foreach(otherDeletedComponents, component -> {
+				final DeleteCommand deleteCommand = new DeleteCommand(context);
+				deleteCommands.add(deleteCommand);
+
+				deleteCommand.requirements.fulfil("id", component.getID());
+				try {
+					deleteCommand.execute();
+				} catch (MissingComponentException e) {
+					// the Component with that id for sure exists; this statement can't throw
+					e.printStackTrace();
+				}
+			});
+		}
+
 		ComponentFactory.destroyComponent(associatedComponent);
 		context.removeComponent(associatedComponent);
 		context.graph.remove(associatedComponent);
-
-		Utility.foreach(context.getDeletedComponents(), component -> {
-			final DeleteCommand deleteCommand = new DeleteCommand(context);
-			deleteCommands.add(deleteCommand);
-
-			// component is already deleted the command isn't executed
-			// instead it is just set up so it can be undone successfully
-			deleteCommand.requirements.fulfil("id", String.valueOf(component.getID()));
-			deleteCommand.associatedComponent = component;
-
-			context.removeComponent(component);
-			context.graph.remove(component);
-		});
 	}
 
 	@Override
@@ -71,7 +84,7 @@ class DeleteCommand extends Command {
 		try {
 			context.graph.add(associatedComponent);
 		} catch (CycleException e) {
-			// Component has been added before, this statement can't throw
+			// Component has been added before; this statement can't throw
 			throw new RuntimeException(e);
 		}
 		Utility.foreach(deleteCommands, Command::unexecute);
