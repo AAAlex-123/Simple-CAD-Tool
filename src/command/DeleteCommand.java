@@ -1,10 +1,9 @@
 package command;
 
-import static components.ComponentType.BRANCH;
-
 import java.util.List;
 import java.util.Vector;
 
+import application.editor.CycleException;
 import application.editor.Editor;
 import application.editor.MissingComponentException;
 import components.ComponentFactory;
@@ -49,14 +48,7 @@ class DeleteCommand extends Command {
 
 		ComponentFactory.destroyComponent(associatedComponent);
 		context.removeComponent(associatedComponent);
-		
-		if(associatedComponent.type() == BRANCH) {
-			String input = associatedComponent.getInputs().get(0).getID();
-			String output = associatedComponent.getOutputs().get(0).get(0).getID();
-			context.graph.connectionRemoved(input, output);
-		} else {
-			context.graph.componentDeleted(associatedComponent.getID());
-		}
+		context.graph.remove(associatedComponent);
 
 		Utility.foreach(context.getDeletedComponents(), component -> {
 			final DeleteCommand deleteCommand = new DeleteCommand(context);
@@ -68,6 +60,7 @@ class DeleteCommand extends Command {
 			deleteCommand.associatedComponent = component;
 
 			context.removeComponent(component);
+			context.graph.remove(component);
 		});
 	}
 
@@ -75,6 +68,12 @@ class DeleteCommand extends Command {
 	public void unexecute() {
 		ComponentFactory.restoreDeletedComponent(associatedComponent);
 		context.addComponent(associatedComponent);
+		try {
+			context.graph.add(associatedComponent);
+		} catch (CycleException e) {
+			// Component has been added before, this statement can't throw
+			throw new RuntimeException(e);
+		}
 		Utility.foreach(deleteCommands, Command::unexecute);
 	}
 
