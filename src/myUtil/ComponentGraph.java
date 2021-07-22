@@ -33,7 +33,7 @@ public class ComponentGraph {
 	 */
 	public void componentDeleted(String name) throws IllegalArgumentException {
 		final Node removed = nodes.remove(name);
-		ComponentGraph.checkExists(removed);
+		ComponentGraph.nodesExist(removed);
 	}
 
 	/**
@@ -47,7 +47,7 @@ public class ComponentGraph {
 		Node conNode = nodes.get(connector);
 		Node targetNode = nodes.get(target);
 
-		ComponentGraph.checkExists(conNode, targetNode);
+		ComponentGraph.nodesExist(conNode, targetNode);
 
 		conNode.neighbours.remove(targetNode);
 	}
@@ -56,7 +56,7 @@ public class ComponentGraph {
 		Node first = nodes.get(connector);
 		Node last  = nodes.get(target);
 
-		ComponentGraph.checkExists(first, last);
+		ComponentGraph.nodesExist(first, last);
 
 		first.neighbours.add(last);
 	}
@@ -72,7 +72,8 @@ public class ComponentGraph {
 	 * @throws IllegalArgumentException if either of the components' names aren't registered in the graph.
 	 */
 	public boolean componentCanBeConnected(String connector, String target) throws IllegalArgumentException {
-
+		ComponentGraph.nodesExist(nodes.get(connector), nodes.get(target));
+		
 		connectionAdded(connector, target);
 
 		//DFS on graph
@@ -95,22 +96,17 @@ public class ComponentGraph {
 		 */
 		for(String outer_key : nodes.keySet()) {
 			Node u = nodes.get(outer_key);
-
-			for(Node v : nodes.get(outer_key).neighbours) {
-				if(u.post < v.post) {
-					u.neighbours.remove(v); //remove faulty connection
+			for(Node v : nodes.get(outer_key).neighbours) 
+				if(u.post < v.post) 
 					return false;
-				}
-			}
-
 		}
-
+		
+		connectionRemoved(connector, target); //revert graph to previous state
 		return true;
 	}
 
 
 	private void explore(Node n, Clock clock) {
-		n.prev = clock.value();
 		clock.tick();
 		n.visited = true;
 
@@ -122,7 +118,7 @@ public class ComponentGraph {
 		clock.tick();
 	}
 
-	private static void checkExists(Node ... nodes) {
+	private static void nodesExist(Node ... nodes) {
 		for(Node n : nodes)
 			if (Objects.isNull(n))
 				throw new IllegalArgumentException(
@@ -133,10 +129,8 @@ public class ComponentGraph {
 		List<Node> neighbours = new LinkedList<>();
 
 		//used by the DFS algorithm above
-		int prev;
 		int post;
 		boolean visited;
-
 	}
 
 	private class Clock {
