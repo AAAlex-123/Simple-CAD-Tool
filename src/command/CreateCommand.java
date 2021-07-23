@@ -9,10 +9,10 @@ import static localisation.CommandStrings.IN_INDEX;
 import static localisation.CommandStrings.NAME;
 import static localisation.CommandStrings.OUT_ID;
 import static localisation.CommandStrings.OUT_INDEX;
-import static requirement.StringType.ANY;
-import static requirement.StringType.CUSTOM;
-import static requirement.StringType.NON_NEG_INTEGER;
-import static requirement.StringType.POS_INTEGER;
+import static requirement.requirements.StringType.ANY;
+import static requirement.requirements.StringType.CUSTOM;
+import static requirement.requirements.StringType.NON_NEG_INTEGER;
+import static requirement.requirements.StringType.POS_INTEGER;
 
 import java.awt.Frame;
 import java.util.ArrayList;
@@ -26,7 +26,7 @@ import components.ComponentType;
 import exceptions.MalformedBranchException;
 import localisation.Languages;
 import myUtil.Utility;
-import requirement.Requirements;
+import requirement.requirements.Requirements;
 
 /**
  * A Command that creates a basic {@code Component} and subsequently adds it to
@@ -77,7 +77,7 @@ class CreateCommand extends Command {
 	@Override
 	public Command clone() {
 		final CreateCommand newCommand = new CreateCommand(context, componentType);
-		newCommand.requirements = new Requirements<>(requirements);
+		newCommand.requirements = new Requirements(requirements);
 		return newCommand;
 	}
 
@@ -89,7 +89,7 @@ class CreateCommand extends Command {
 		CUSTOM.alter(constructRegex(), Languages.getString("CreateCommand.0")); //$NON-NLS-1$
 
 		// provide preset
-		requirements.get(NAME).offer(context.getNextID(componentType));
+		requirements.offer(NAME, context.getNextID(componentType));
 		super.fillRequirements(parent, newContext);
 	}
 
@@ -108,10 +108,10 @@ class CreateCommand extends Command {
 				associatedComponent = ComponentFactory.createOutputPin();
 				break;
 			case BRANCH:
-				final Component in = context.getComponent_(requirements.getV(IN_ID));
-				final Component out = context.getComponent_(requirements.getV(OUT_ID));
-				final int inIndex = Integer.parseInt(requirements.getV(IN_INDEX));
-				final int outIndex = Integer.parseInt(requirements.getV(OUT_INDEX));
+				final Component in = context.getComponent_((String) requirements.getValue(IN_ID));
+				final Component out = context.getComponent_((String) requirements.getValue(OUT_ID));
+				final int inIndex = Integer.parseInt((String) requirements.getValue(IN_INDEX));
+				final int outIndex = Integer.parseInt((String) requirements.getValue(OUT_INDEX));
 
 				associatedComponent = ComponentFactory.connectComponents(in, inIndex, out, outIndex);
 				break;
@@ -120,7 +120,7 @@ class CreateCommand extends Command {
 			case GATENOT:
 			case GATEXOR:
 				associatedComponent = ComponentFactory.createPrimitiveGate(componentType,
-						Integer.parseInt(requirements.getV(IN_COUNT)));
+				        Integer.parseInt((String) requirements.getValue(IN_COUNT)));
 				break;
 			case GATE:
 				throw new RuntimeException(String.format(Languages.getString("CreateCommand.1"), componentType)); //$NON-NLS-1$
@@ -128,7 +128,7 @@ class CreateCommand extends Command {
 				break;
 			}
 
-			associatedComponent.setID(requirements.getV(NAME));
+			associatedComponent.setID((String) requirements.getValue(NAME));
 			context.addComponent(associatedComponent);
 		}
 
