@@ -23,9 +23,9 @@ import exceptions.MalformedBranchException;
 import localisation.EditorStrings;
 import localisation.Languages;
 import myUtil.Utility;
-import requirement.Requirement;
-import requirement.Requirements;
-import requirement.StringType;
+import requirement.requirements.AbstractRequirement;
+import requirement.requirements.Requirements;
+import requirement.requirements.StringType;
 
 /**
  * An enum-strategy for the different Actions the {@link Editor} may take.
@@ -42,7 +42,7 @@ public enum Actions {
 			if (!reqs.fulfilled())
 				throw new RuntimeException("Execute CREATE without requirements"); //$NON-NLS-1$
 
-			final Command cte = (Command) reqs.getV(EditorStrings.COMMAND);
+			final Command cte = (Command) reqs.getValue(EditorStrings.COMMAND);
 
 			try {
 				if (!cte.canExecute()) {
@@ -72,7 +72,7 @@ public enum Actions {
 			if (!reqs.fulfilled())
 				throw new RuntimeException("Execute DELETE without requirements"); //$NON-NLS-1$
 
-			final Command cte = (Command) reqs.getV(EditorStrings.COMMAND);
+			final Command cte = (Command) reqs.getValue(EditorStrings.COMMAND);
 
 			try {
 				if (!cte.canExecute()) {
@@ -99,7 +99,7 @@ public enum Actions {
 		@Override
 		public void execute() {
 
-			final String fname = (String) reqs.getV(EditorStrings.FILENAME);
+			final String fname = (String) reqs.getValue(EditorStrings.FILENAME);
 
 			try {
 				if (!reqs.fulfilled()) {
@@ -131,8 +131,8 @@ public enum Actions {
 		@Override
 		public void execute() {
 
-			final String fname = (String) reqs.getV(EditorStrings.FILENAME);
-			final String ftype = (String) reqs.getV(EditorStrings.FILETYPE);
+			final String fname = (String) reqs.getValue(EditorStrings.FILENAME);
+			final String ftype = (String) reqs.getValue(EditorStrings.FILETYPE);
 
 			final List<Component> components = new ArrayList<>();
 			final List<Command> commands = new ArrayList<>();
@@ -166,7 +166,7 @@ public enum Actions {
 				} else if (ftype.equals(EditorStrings.COMPONENT)) {
 
 					final Command cgc = Command.create(commands,
-					        (String) reqs.getV(EditorStrings.GATENAME));
+					        (String) reqs.getValue(EditorStrings.GATENAME));
 					context.context().addCreateCommand(cgc);
 					context.status(Languages.getString("Actions.13"), fname); //$NON-NLS-1$
 
@@ -280,7 +280,7 @@ public enum Actions {
 	private static final Integer start = 10, eof = 42;
 
 	/** The Requirements of the Action */
-	protected final Requirements<Object> reqs;
+	protected final Requirements reqs;
 
 	/** The context of the Action */
 	Editor context;
@@ -290,22 +290,22 @@ public enum Actions {
 	}
 
 	Actions(String reqKey) {
-		reqs = new Requirements<>();
+		reqs = new Requirements();
 		reqs.add(reqKey);
 	}
 
 	Actions(String reqKey, StringType stringType) {
-		reqs = new Requirements<>();
+		reqs = new Requirements();
 		reqs.add(reqKey, stringType);
 	}
 
 	Actions(String[] reqKeys) {
-		reqs = new Requirements<>();
+		reqs = new Requirements();
 		Utility.foreach(reqKeys, reqs::add);
 	}
 
 	Actions(String[] reqKeys, StringType[] types) {
-		reqs = new Requirements<>();
+		reqs = new Requirements();
 
 		if (reqKeys.length != types.length)
 			throw new RuntimeException("Invalid arguments in Actions enum constructor"); //$NON-NLS-1$
@@ -349,7 +349,7 @@ public enum Actions {
 	 *
 	 * @return this (used for chaining)
 	 *
-	 * @see Requirement#finalise
+	 * @see AbstractRequirement#finalise
 	 */
 	public final Actions specify(String req, Object c) {
 		reqs.finalise(req, c);

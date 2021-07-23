@@ -11,12 +11,12 @@ import application.editor.Undoable;
 import components.Component;
 import components.ComponentFactory;
 import components.ComponentType;
-import requirement.Requirements;
+import requirement.requirements.Requirements;
 
 /**
  * An implementation of the {@code Undoable} interface, specific to this
  * Application. {@link command.Command Commands} have certain
- * {@link requirement.Requirement requirements}, act on a
+ * {@link requirement.requirements.AbstractRequirement requirements}, act on a
  * {@link application.editor.Editor context} and manipulate
  * {@link components.Component Components} by creating or deleting them.
  * <p>
@@ -73,7 +73,7 @@ public abstract class Command implements Undoable, Serializable, Cloneable {
 	protected Component associatedComponent;
 
 	/** What this Command needs to execute */
-	protected Requirements<String> requirements;
+	protected Requirements requirements;
 
 	/** Where this Command will act */
 	protected transient Editor context;
@@ -85,7 +85,7 @@ public abstract class Command implements Undoable, Serializable, Cloneable {
 	 */
 	public Command(Editor editor) {
 		context = editor;
-		requirements = new Requirements<>();
+		requirements = new Requirements();
 	}
 
 	/**

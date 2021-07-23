@@ -27,8 +27,8 @@ import exceptions.InvalidComponentException;
 import localisation.EditorStrings;
 import localisation.Languages;
 import myUtil.StringGenerator;
-import requirement.Requirements;
-import requirement.StringType;
+import requirement.requirements.Requirements;
+import requirement.requirements.StringType;
 
 /**
  * Menu bar for the Application. This class also handles the mnemonics and
@@ -300,13 +300,13 @@ final class MyMenu extends JMenuBar {
 
 			final String ACTIVE = Languages.getString("MyMenu.0"); //$NON-NLS-1$
 
-			final Requirements<String> reqs = new Requirements<>();
+			final Requirements reqs = new Requirements();
 			reqs.add(ID, StringType.ANY);
 			reqs.add(ACTIVE, StringType.ON_OFF);
 			reqs.fulfillWithDialog(context.getFrame(), Languages.getString("MyMenu.34")); //$NON-NLS-1$
 
 			if (reqs.fulfilled()) {
-				final String id = reqs.getV(ID);
+				final String    id = (String) reqs.getValue(ID);
 				final Component comp;
 				try {
 					comp = context.getActiveEditor().getComponent_(id);
@@ -315,7 +315,7 @@ final class MyMenu extends JMenuBar {
 					return;
 				}
 
-				final boolean active = reqs.getV(ACTIVE).equals(ON);
+				final boolean active = reqs.getValue(ACTIVE).equals(ON);
 				try {
 					ComponentFactory.setActive(comp, active);
 				} catch (final InvalidComponentException e1) {
@@ -331,12 +331,12 @@ final class MyMenu extends JMenuBar {
 		e_focus.addActionListener(e -> {
 			final Editor activeEditor = context.getActiveEditor();
 
-			final Requirements<String> reqs = new Requirements<>();
+			final Requirements reqs = new Requirements();
 			reqs.add(ID, StringType.ANY);
 			reqs.fulfillWithDialog(context.getFrame(), Languages.getString("MyMenu.41")); //$NON-NLS-1$
 
 			if (reqs.fulfilled()) {
-				final String id = reqs.getV(ID);
+				final String id = (String) reqs.getValue(ID);
 				Component    comp;
 				try {
 					comp = activeEditor.getComponent_(id);

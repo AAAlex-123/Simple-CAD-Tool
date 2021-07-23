@@ -10,8 +10,8 @@ import application.editor.Editor;
 import application.editor.MissingComponentException;
 import components.ComponentFactory;
 import myUtil.Utility;
-import requirement.Requirements;
-import requirement.StringType;
+import requirement.requirements.Requirements;
+import requirement.requirements.StringType;
 
 /**
  * A Command that deletes a {@code Component} and subsequently removes it from
@@ -39,14 +39,14 @@ class DeleteCommand extends Command {
 	@Override
 	public Command clone() {
 		final Command newCommand = new DeleteCommand(context);
-		newCommand.requirements = new Requirements<>(requirements);
+		newCommand.requirements = new Requirements(requirements);
 		return newCommand;
 	}
 
 	@Override
 	public void execute() throws MissingComponentException {
 		deleteCommands.clear();
-		associatedComponent = context.getComponent_(requirements.getV(ID));
+		associatedComponent = context.getComponent_((String) requirements.getValue(ID));
 
 		ComponentFactory.destroyComponent(associatedComponent);
 		context.removeComponent(associatedComponent);
