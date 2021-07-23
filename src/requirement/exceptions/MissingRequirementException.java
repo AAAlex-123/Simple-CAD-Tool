@@ -1,4 +1,4 @@
-package requirement;
+package requirement.exceptions;
 
 /**
  * Thrown when no Requirement with the {@code key} exists.
