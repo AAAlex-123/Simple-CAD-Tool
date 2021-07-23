@@ -1,19 +1,20 @@
 package requirement.exceptions;
 
+import requirement.requirements.AbstractRequirement;
+
 /**
- * Thrown when a finalised Requirement attempts to alter its value.
+ * Thrown when a finalised {@code Requirement} attempts to alter its value.
  *
  * @author alexm
  */
 public class LockedRequirementException extends RuntimeException {
 
 	/**
-	 * Constructs the Exception with information about the {@code requirement}.
+	 * Constructs the Exception with information about the {@code Requirement}.
 	 *
-	 * @param requirement the finalised Requirement
+	 * @param req the finalised Requirement
 	 */
-	public LockedRequirementException(Requirement<?> requirement) {
-		super(String.format("Can't alter the value of the finalised Requirement:%n%s", //$NON-NLS-1$
-		        requirement));
+	public LockedRequirementException(AbstractRequirement req) {
+		super(String.format("Can't alter the value of the finalised Requirement:%n%s", req)); //$NON-NLS-1$
 	}
 }
