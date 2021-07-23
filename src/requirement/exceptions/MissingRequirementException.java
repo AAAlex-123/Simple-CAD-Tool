@@ -1,7 +1,8 @@
 package requirement.exceptions;
 
 /**
- * Thrown when no Requirement with the {@code key} exists.
+ * Thrown when no {@code Requirement} with the {@code key} can be found within a
+ * collection of Requirements.
  *
  * @author alexm
  */
