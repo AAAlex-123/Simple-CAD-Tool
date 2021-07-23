@@ -1,4 +1,4 @@
-package requirement;
+package requirement.requirements;
 import static localisation.RequirementStrings.NO;
 import static localisation.RequirementStrings.YES;
 
