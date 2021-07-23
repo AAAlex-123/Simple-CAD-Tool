@@ -8,7 +8,7 @@ import requirement.requirements.AbstractRequirement;
  *
  * @author alexm
  */
-public final class UnsupportedGraphicException extends RuntimeException {
+public class UnsupportedGraphicException extends RuntimeException {
 
 	/**
 	 * Constructs the Exception with information about the {@code Requirement}.
