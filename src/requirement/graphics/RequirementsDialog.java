@@ -6,8 +6,6 @@ import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -18,23 +16,27 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 
 import application.editor.StatusBar;
 import localisation.Languages;
+import myUtil.Utility;
+import requirement.requirements.AbstractRequirement;
+import requirement.requirements.Requirements;
 
 /**
  * A dialog with which the user fulfils a {@link Requirements} object. After
  * construction, the call {@code setVisible(true)} shows the dialog and the user
- * can provide a value for every {@code Requirement} using the text areas. The
- * dialog has a few buttons that are also associated with keyboard shortcuts:
+ * can use it in order to fulfil the individual Requirements. The dialog uses
+ * {@link requirement.graphics.AbstractRequirementGraphic Graphics} in order to
+ * display every Requirement in the Requirements object and to uniformly call
+ * the necessary methods on them.
+ * <p>
+ * The dialog has a few buttons that can be used with keyboard shortcuts:
  * <ul>
  * <li><b>OK {@code (ENTER)}:</b> Attempts to fulfil the {@code Requirements}
  * with the values provided. If a {@code Requirement} cannot be fulfilled (the
@@ -48,15 +50,13 @@ import localisation.Languages;
  *
  * @author alexm
  */
-final class RequirementsDialog extends JDialog {
+public final class RequirementsDialog extends JDialog {
 
-	private final JPanel       mainPanel, lowerPanel, optionsPanel, buttonsPanel;
-	private final JButton      okButton, cancelButton, resetButton;
-	private final JLabel[]     labels;
-	private final JTextField[] textAreas;
-	private final StatusBar    sb;
+	private final JPanel    mainPanel, lowerPanel, optionsPanel, buttonsPanel;
+	private final JButton   okButton, cancelButton, resetButton;
+	private final StatusBar sb;
 
-	private final Requirements<String> reqs;
+	private final Requirements reqs;
 
 	/**
 	 * Constructs the dialog.
@@ -65,7 +65,7 @@ final class RequirementsDialog extends JDialog {
 	 * @param dialogsReqs the Requirements that the dialog will fulfil
 	 * @param parent      the parent frame of the dialog
 	 */
-	RequirementsDialog(String title, Requirements<String> dialogsReqs, Frame parent) {
+	public RequirementsDialog(String title, Requirements dialogsReqs, Frame parent) {
 		super(parent, title, true);
 		reqs = dialogsReqs;
 
@@ -73,24 +73,8 @@ final class RequirementsDialog extends JDialog {
 		setResizable(false);
 
 		// --- options panel (middle) ---
-		final int numReq = reqs.size();
-		optionsPanel = new JPanel(new GridLayout(numReq, 2, 15, 15));
-		labels = new JLabel[numReq];
-		textAreas = new JTextField[numReq];
-
-		int i = 0;
-		for (final Requirement<String> r : reqs) {
-			labels[i] = new JLabel(r.key());
-			textAreas[i] = new JTextField(r.defaultValue(), 10);
-			if (r.finalised())
-				textAreas[i].setEnabled(false);
-
-			labels[i].setHorizontalAlignment(SwingConstants.RIGHT);
-			textAreas[i].setMaximumSize(textAreas[i].getPreferredSize());
-			optionsPanel.add(labels[i]);
-			optionsPanel.add(textAreas[i]);
-			++i;
-		}
+		optionsPanel = new JPanel(new GridLayout(reqs.size(), 1, 0, 15));
+		Utility.foreach(reqs, r -> optionsPanel.add(r.getGraphicsAndUpdate()));
 
 		// --- buttons panel (bottom) ---
 		buttonsPanel = new JPanel(new FlowLayout());
@@ -101,12 +85,14 @@ final class RequirementsDialog extends JDialog {
 		sb = new StatusBar();
 		sb.addLabel("message"); //$NON-NLS-1$
 
+		// --- scroll pane (for options panel) ---
 		final JScrollPane jsp = new JScrollPane(optionsPanel);
 		jsp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		jsp.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
 		jsp.setBorder(BorderFactory.createEmptyBorder());
 		jsp.setWheelScrollingEnabled(true);
 
+		// --- main panel ---
 		mainPanel = new JPanel();
 		mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.X_AXIS));
 		mainPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
@@ -128,23 +114,39 @@ final class RequirementsDialog extends JDialog {
 		setLocationRelativeTo(parent);
 	}
 
+	/**
+	 * Attempts to fulfil the Requirements in this collection with the values the
+	 * user provided. Returns whether or not every Requirement is fulfilled.
+	 *
+	 * @return {@code true} if every Requirement is fulfilled, {@code false}
+	 *         otherwise
+	 */
 	private boolean validateInput() {
-		// backwards so that the last (first) wrong text area has focus
-		for (int i = reqs.size() - 1; i >= 0; --i) {
-			final Requirement<String> r = reqs.get(labels[i].getText());
-			if (!r.finalised())
-				r.fulfil(textAreas[i].getText());
+		Utility.foreach(reqs, r -> {
+			final AbstractRequirementGraphic g = r.getGraphics();
 
-			if (!r.fulfilled()) {
-				textAreas[i].setText(r.stringType.desc);
-				textAreas[i].requestFocus();
+			if (!r.finalised())
+				g.fulfilRequirement();
+
+			if (!r.fulfilled())
+				g.onNotFulfilled();
+		});
+
+		final boolean fulfilled = reqs.fulfilled();
+
+		if (!fulfilled) {
+			sb.setLabelText("message", Languages.getString("RequirementsDialog.5")); //$NON-NLS-1$ //$NON-NLS-2$
+
+			// give focus to the first non-fulfilled Requirement
+			for (final AbstractRequirement req : reqs) {
+				if (!req.fulfilled()) {
+					req.getGraphics().requestFocus();
+					break;
+				}
 			}
 		}
 
-		if (!reqs.fulfilled())
-			sb.setLabelText("message", Languages.getString("RequirementsDialog.5")); //$NON-NLS-1$ //$NON-NLS-2$
-
-		return reqs.fulfilled();
+		return fulfilled;
 	}
 
 	private void addListeners() {
@@ -167,12 +169,7 @@ final class RequirementsDialog extends JDialog {
 		final Action pressReset = new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				int i = 0;
-				for (final Requirement<String> r : reqs) {
-					r.reset();
-					textAreas[i].setText(r.defaultValue());
-					++i;
-				}
+				Utility.foreach(reqs, AbstractRequirement::reset);
 			}
 		};
 
@@ -192,17 +189,6 @@ final class RequirementsDialog extends JDialog {
 		        .put(KeyStroke.getKeyStroke("control R"), "pressReset"); //$NON-NLS-1$ //$NON-NLS-2$
 		getRootPane().getActionMap().put("pressReset", pressReset); //$NON-NLS-1$
 
-		for (int j = 0; j < textAreas.length; ++j) {
-			final int i = j;
-			textAreas[i].setFocusTraversalKeysEnabled(true);
-			textAreas[i].addFocusListener(new FocusAdapter() {
-				@Override
-				public void focusGained(FocusEvent e) {
-					textAreas[i].setSelectionStart(0);
-					textAreas[i].setSelectionEnd(textAreas[i].getText().length());
-				}
-			});
-		}
 
 		addWindowListener(new WindowAdapter() {
 			@Override
@@ -214,14 +200,12 @@ final class RequirementsDialog extends JDialog {
 		addWindowFocusListener(new WindowAdapter() {
 			@Override
 			public void windowGainedFocus(WindowEvent e) {
-				// give focus to the first non-fulfilled field...
-				int i = 0;
-				for (final Requirement<String> r : reqs) {
+				// give focus to the first non-fulfilled Requirement...
+				for (final AbstractRequirement r : reqs) {
 					if (!r.fulfilled()) {
-						textAreas[i].requestFocus();
+						r.getGraphics().requestFocus();
 						return;
 					}
-					++i;
 				}
 
 				// ... or the ok button if none exist
