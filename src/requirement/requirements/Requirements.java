@@ -1,6 +1,4 @@
 package requirement.requirements;
-import static localisation.RequirementStrings.NO;
-import static localisation.RequirementStrings.YES;
 
 import java.awt.Frame;
 import java.io.Serializable;
@@ -9,21 +7,26 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import localisation.Languages;
+import localisation.RequirementStrings;
 import myUtil.Utility;
+import requirement.exceptions.MissingRequirementException;
+import requirement.graphics.RequirementsDialog;
 
 /**
- * A wrapper for a collection of {@code Requirements}. For details refer to the
- * {@link Requirement} class.
- *
- * @param <V> the type of the Requirement objects
+ * A wrapper for a collection of {@code Requirements} providing additional
+ * functionality for fulfilling all Requirement simultaneously using a
+ * {@link RequirementsDialog Dialog}.
+ * <p>
+ * For method details refer to the {@link AbstractRequirement} class or use the
+ * {@literal @see} links provided.
  *
  * @author alexm
  */
-public final class Requirements<V> implements Iterable<Requirement<V>>, Serializable {
+public final class Requirements implements Iterable<AbstractRequirement>, Serializable {
 
 	private static final long serialVersionUID = 6L;
 
-	private final Map<String, Requirement<V>> requirements;
+	private final Map<String, AbstractRequirement> requirements;
 
 	/** Constructs the collection of Requirements */
 	public Requirements() {
@@ -36,37 +39,41 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 	 *
 	 * @param other the object to be copied
 	 */
-	public Requirements(Requirements<V> other) {
+	public Requirements(Requirements other) {
 		this();
-		Utility.foreach(other, r -> add(new Requirement<>(r)));
+		Utility.foreach(other, req -> add(req.clone()));
 	}
 
 	/**
-	 * Adds a Requirement with a {@code key}.
+	 * Adds a general-purpose Requirement with a {@code key}.
 	 *
 	 * @param key the key
+	 *
+	 * @see ObjectRequirement
 	 */
 	public void add(String key) {
-		requirements.put(key, new Requirement<V>(key));
+		requirements.put(key, new ObjectRequirement(key));
 	}
 
 	/**
-	 * Adds a Requirement with a {@code key} and a {@code type}.
+	 * Adds a String-specific Requirement with a {@code key} and a {@code type}.
 	 *
 	 * @param key  the key
 	 * @param type the type
+	 *
+	 * @see StringRequirement
 	 */
 	public void add(String key, StringType type) {
-		requirements.put(key, new Requirement<V>(key, type));
+		requirements.put(key, new StringRequirement(key, type));
 	}
 
 	/**
-	 * Adds the Requirement
+	 * Adds a Requirement of any type.
 	 *
-	 * @param r the Requirement
+	 * @param requirement the Requirement
 	 */
-	public void add(Requirement<V> r) {
-		requirements.put(r.key(), r);
+	public void add(AbstractRequirement requirement) {
+		requirements.put(requirement.key(), requirement);
 	}
 
 	/**
@@ -76,12 +83,12 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 	 *
 	 * @return the Requirement with that key
 	 */
-	public Requirement<V> get(String key) {
-		final Requirement<V> r = requirements.get(key);
-		if (r == null)
+	public AbstractRequirement get(String key) {
+		final AbstractRequirement req = requirements.get(key);
+		if (req == null)
 			throw new MissingRequirementException(key);
 
-		return r;
+		return req;
 	}
 
 	/**
@@ -90,8 +97,10 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 	 * @param key the key
 	 *
 	 * @return the value of the
+	 *
+	 * @see AbstractRequirement#value
 	 */
-	public V getV(String key) {
+	public Object getValue(String key) {
 		return get(key).value();
 	}
 
@@ -101,9 +110,9 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 	 * @param key   the key
 	 * @param value the value
 	 *
-	 * @see Requirement#offer(Object)
+	 * @see AbstractRequirement#offer(Object)
 	 */
-	public void offer(String key, V value) {
+	public void offer(String key, Object value) {
 		get(key).offer(value);
 	}
 
@@ -113,9 +122,9 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 	 * @param key   the key
 	 * @param value the value
 	 *
-	 * @see Requirement#fulfil(Object)
+	 * @see AbstractRequirement#fulfil(Object)
 	 */
-	public void fulfil(String key, V value) {
+	public void fulfil(String key, Object value) {
 		get(key).fulfil(value);
 	}
 
@@ -125,30 +134,27 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 	 * @param key   the key
 	 * @param value the value
 	 *
-	 * @see Requirement#finalise(Object)
+	 * @see AbstractRequirement#finalise(Object)
 	 */
-	public void finalise(String key, V value) {
+	public void finalise(String key, Object value) {
 		get(key).finalise(value);
 	}
 
 	/**
 	 * Attempts to fulfil the Requirements (if they aren't already fulfilled) in
 	 * this collection using a pop-up dialog.
-	 * <p>
-	 * <b>Note:</b> only Requirements of type {@code String} should use this method.
 	 *
 	 * @param frame       the parent of the dialog
 	 * @param description the text that will be displayed
+	 *
+	 * @see RequirementsDialog
 	 */
-	@SuppressWarnings("unchecked")
 	public void fulfillWithDialog(Frame frame, String description) {
 		if (fulfilled())
 			return;
 
-		final RequirementsDialog rd = new RequirementsDialog(description,
-				(Requirements<String>) this,
-				frame);
-		rd.setVisible(true);
+		final RequirementsDialog dialog = new RequirementsDialog(description, this, frame);
+		dialog.setVisible(true);
 	}
 
 	/**
@@ -160,28 +166,50 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 		return requirements.size();
 	}
 
-	/** Clears all the Requirements in this collection */
+	/**
+	 * Clears all the Requirements in this collection.
+	 *
+	 * @see AbstractRequirement#clear()
+	 */
 	public void clear() {
-		Utility.foreach(this, Requirement::clear);
+		Utility.foreach(this, AbstractRequirement::clear);
 	}
 
-	/** Resets all the Requirements in this collection */
+	/**
+	 * Resets all the Requirements in this collection
+	 *
+	 * @see AbstractRequirement#reset()
+	 */
 	public void reset() {
-		Utility.foreach(this, Requirement::reset);
+		Utility.foreach(this, AbstractRequirement::reset);
 	}
 
-	/** @return {@code true} if all Requirements are fulfilled */
+	/**
+	 * Returns whether or not all the Requirements in this collection are fulfilled.
+	 *
+	 * @return {@code true} if all Requirements are fulfilled, {@code false}
+	 *         otherwise
+	 *
+	 * @see AbstractRequirement#fulfilled
+	 */
 	public boolean fulfilled() {
-		return Utility.all(this, Requirement::fulfilled);
+		return Utility.all(this, AbstractRequirement::fulfilled);
 	}
 
-	/** @return {@code true} if all Requirements are finalised */
+	/**
+	 * Returns whether or not all the Requirements in this collection are finalised.
+	 *
+	 * @return {@code true} if all Requirements are finalised, {@code false}
+	 *         otherwise
+	 *
+	 * @see AbstractRequirement#fulfilled
+	 */
 	public boolean finalised() {
-		return Utility.all(this, Requirement::finalised);
+		return Utility.all(this, AbstractRequirement::finalised);
 	}
 
 	@Override
-	public Iterator<Requirement<V>> iterator() {
+	public Iterator<AbstractRequirement> iterator() {
 		return new RequirementsIterator();
 	}
 
@@ -189,15 +217,21 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
 		sb.append(String.format(Languages.getString("Requirements.0"), //$NON-NLS-1$
-				fulfilled() ? YES : NO, finalised() ? YES : NO));
-		Utility.foreach(this, r -> sb.append(r));
+		        fulfilled() ? RequirementStrings.YES : RequirementStrings.NO,
+		        finalised() ? RequirementStrings.YES : RequirementStrings.NO));
+		Utility.foreach(this, req -> sb.append(req));
 		return sb.toString();
 	}
 
-	// Fancy iterator stuff. Totally didn't just use the iterator of the underlying map.
-	private class RequirementsIterator implements Iterator<Requirement<V>> {
+	/**
+	 * Iterator for the AbstractRequirements present in this collection. Makes heavy
+	 * use of the underlying map's iterator.
+	 *
+	 * @author alexm
+	 */
+	private class RequirementsIterator implements Iterator<AbstractRequirement> {
 
-		private final Iterator<Requirement<V>> iter;
+		private final Iterator<AbstractRequirement> iter;
 
 		RequirementsIterator() {
 			iter = requirements.values().iterator();
@@ -209,7 +243,7 @@ public final class Requirements<V> implements Iterable<Requirement<V>>, Serializ
 		}
 
 		@Override
-		public Requirement<V> next() {
+		public AbstractRequirement next() {
 			return iter.next();
 		}
 	}
