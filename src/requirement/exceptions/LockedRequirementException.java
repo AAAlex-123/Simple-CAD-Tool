@@ -1,4 +1,4 @@
-package requirement;
+package requirement.exceptions;
 
 /**
  * Thrown when a finalised Requirement attempts to alter its value.
