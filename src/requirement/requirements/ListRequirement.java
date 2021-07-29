@@ -7,21 +7,21 @@ import requirement.graphics.AbstractRequirementGraphic;
 import requirement.graphics.ListRequirementGraphic;
 
 /**
- * A Requirement demanding that its value belongs to a provided list of options
+ * A Requirement demanding that its value belongs to a provided list of options.
  * .
  * @author dimits
  */
 public class ListRequirement extends AbstractRequirement {
 	
-	private List<String> options;
+	private List<Object> options;
 	private transient AbstractRequirementGraphic g;
 	
-	public ListRequirement(String key, List<String> options) {
+	public ListRequirement(String key, List<Object> options) {
 		super(key);
 		this.options = options;
 	}
 	
-	public List<String> getOptions(){
+	public List<Object> getOptions(){
 		return this.options;
 	}
 
