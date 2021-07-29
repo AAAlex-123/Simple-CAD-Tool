@@ -15,7 +15,7 @@ import requirement.requirements.ListRequirement;
 
 /**
  * A "default" implementation of a graphic for lists. 
- * Opens a window containing a GUI list with the values provided by the Requirement.
+ * Opens a window containing a GUI list with the values provided by the {@link ListRequirement}.
  *
  * @author dimits
  */
@@ -25,7 +25,7 @@ public class ListRequirementGraphic extends AbstractRequirementGraphic {
 	
 	public static void main(String[] args) {
 		JFrame uwuFrame = new JFrame("uwu test uwu");
-		List<String> list = new LinkedList<String>();
+		List<Object> list = new LinkedList<Object>();
 		list.add("1");
 		list.add("2");
 		list.add("3");
@@ -38,7 +38,14 @@ public class ListRequirementGraphic extends AbstractRequirementGraphic {
 	public ListRequirementGraphic(ListRequirement requirement) {
 		super(requirement);
 		
-		this.options = new JList<String>((String[])requirement.getOptions().toArray(new String[0])); //cast to String array
+		String[] optionStrings = new String[requirement.getOptions().size()]; //build string list from objects
+		int index = 0;
+		for(Object obj : requirement.getOptions()) {
+			optionStrings[index] = obj.toString();
+			index++;
+		}
+		
+		this.options = new JList<String>(optionStrings); 
 		this.options.setBorder(BorderFactory.createLineBorder(Color.BLUE, 3, true));
 		
 		this.errorLabel = new JLabel("No option chosen.");			//idk how to write loc lolololol
@@ -46,7 +53,7 @@ public class ListRequirementGraphic extends AbstractRequirementGraphic {
 		this.errorLabel.setVisible(false);
 		
 		this.setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
-		add(new JLabel("Please choose one of the options below:")); //idk how to write loc lolololol
+		add(new JLabel("Choose an option for " + req.key() +":")); //idk how to write loc lolololol
 		add(this.options);
 		add(this.errorLabel);
 	}
@@ -65,7 +72,8 @@ public class ListRequirementGraphic extends AbstractRequirementGraphic {
 
 	@Override
 	public void fulfilRequirement() {
-		req.fulfil(options.getSelectedValue());
+		ListRequirement lsreq = (ListRequirement) req;
+		req.fulfil(lsreq.getOptions().get(options.getSelectedIndex())); //get selected object
 		errorLabel.setVisible(false);
 	}
 
