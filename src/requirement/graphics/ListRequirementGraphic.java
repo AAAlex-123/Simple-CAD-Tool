@@ -4,13 +4,16 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Vector;
 
-import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JList;
 
+import myUtil.MutableColorBorder;
 import requirement.requirements.ListRequirement;
 
 /**
@@ -19,9 +22,9 @@ import requirement.requirements.ListRequirement;
  *
  * @author dimits
  */
-public class ListRequirementGraphic extends AbstractRequirementGraphic {
-	private final JList<String> options;
-	private final JLabel errorLabel;
+public class ListRequirementGraphic<T> extends AbstractRequirementGraphic {
+	private final JComboBox<T> optionBox;
+	private final MutableColorBorder border;
 	
 	public static void main(String[] args) {
 		JFrame uwuFrame = new JFrame("uwu test uwu");
@@ -35,27 +38,23 @@ public class ListRequirementGraphic extends AbstractRequirementGraphic {
 		uwuFrame.setVisible(true);
 	}
 
-	public ListRequirementGraphic(ListRequirement requirement) {
+	public ListRequirementGraphic<T>(ListRequirement<T> requirement) {
 		super(requirement);
 		
-		String[] optionStrings = new String[requirement.getOptions().size()]; //build string list from objects
-		int index = 0;
-		for(Object obj : requirement.getOptions()) {
-			optionStrings[index] = obj.toString();
-			index++;
-		}
+		Vector<T> list = new Vector<T>();
+		for(T option : requirement.getOptions())
+			list.add(option);
 		
-		this.options = new JList<String>(optionStrings); 
-		this.options.setBorder(BorderFactory.createLineBorder(Color.BLUE, 3, true));
-		
-		this.errorLabel = new JLabel("No option chosen.");			//idk how to write loc lolololol
-		this.errorLabel.setForeground(java.awt.Color.RED);
-		this.errorLabel.setVisible(false);
-		
-		this.setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
+		border = new MutableColorBorder(Color.BLUE);
+		this.optionBox = new JComboBox<T>(new DefaultComboBoxModel<T>(list)); 
+		//this.optionBox.setEditable(true);
+		this.optionBox.setBorder(border);
+	
+		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		add(new JLabel("Choose an option for " + req.key() +":")); //idk how to write loc lolololol
-		add(this.options);
-		add(this.errorLabel);
+		add(Box.createRigidArea(new Dimension(10, 1)));
+		add(this.optionBox);
+		optionBox.setMaximumSize(new Dimension(200,30));
 	}
 
 	@Override
@@ -72,14 +71,14 @@ public class ListRequirementGraphic extends AbstractRequirementGraphic {
 
 	@Override
 	public void fulfilRequirement() {
-		ListRequirement lsreq = (ListRequirement) req;
-		req.fulfil(lsreq.getOptions().get(options.getSelectedIndex())); //get selected object
-		errorLabel.setVisible(false);
+		req.fulfil(optionBox.getSelectedItem());
+		border.setColor(Color.BLUE);
 	}
 
 	@Override
 	public void onNotFulfilled() {
-		errorLabel.setVisible(true);
+		optionBox.setSelectedIndex(-1);
+		border.setColor(Color.BLUE);
 	}
 
 	@Override
