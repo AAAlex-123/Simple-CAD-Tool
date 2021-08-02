@@ -17,7 +17,7 @@ import myUtil.MutableColorBorder;
 import requirement.requirements.ListRequirement;
 
 /**
- * A "default" implementation of a graphic for lists. 
+ * A graphic component utilizing a drop-down menu to let the user choose options from a list. 
  * Opens a window containing a GUI list with the values provided by the {@link ListRequirement}.
  *
  * @author dimits
@@ -38,7 +38,7 @@ public class ListRequirementGraphic<T> extends AbstractRequirementGraphic {
 		uwuFrame.setVisible(true);
 	}
 
-	public ListRequirementGraphic<T>(ListRequirement<T> requirement) {
+	public ListRequirementGraphic(ListRequirement<T> requirement) {
 		super(requirement);
 		
 		Vector<T> list = new Vector<T>();
@@ -47,8 +47,8 @@ public class ListRequirementGraphic<T> extends AbstractRequirementGraphic {
 		
 		border = new MutableColorBorder(Color.BLUE);
 		this.optionBox = new JComboBox<T>(new DefaultComboBoxModel<T>(list)); 
-		//this.optionBox.setEditable(true);
 		this.optionBox.setBorder(border);
+		AutoCompletion.enable(optionBox);
 	
 		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		add(new JLabel("Choose an option for " + req.key() +":")); //idk how to write loc lolololol
@@ -65,8 +65,8 @@ public class ListRequirementGraphic<T> extends AbstractRequirementGraphic {
 
 	@Override
 	public void reset() {
-		options.clearSelection();
-		errorLabel.setVisible(false);
+		optionBox.setSelectedIndex(-1);
+		border.setColor(Color.BLUE);
 	}
 
 	@Override
@@ -83,7 +83,7 @@ public class ListRequirementGraphic<T> extends AbstractRequirementGraphic {
 
 	@Override
 	protected void onFocusGained() {
-		options.requestFocusInWindow();
+		optionBox.requestFocusInWindow();
 	}
 
 }
