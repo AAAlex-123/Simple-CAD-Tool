@@ -8,33 +8,33 @@ import requirement.graphics.ListRequirementGraphic;
 
 /**
  * A Requirement demanding that its value belongs to a provided list of options.
- * .
+ * 
  * @author dimits
  */
-public class ListRequirement extends AbstractRequirement {
+public class ListRequirement<T> extends AbstractRequirement {
 	
-	private List<Object> options;
+	private List<T> options;
 	private transient AbstractRequirementGraphic g;
 	
-	public ListRequirement(String key, List<Object> options) {
+	public ListRequirement(String key, List<T> options) {
 		super(key);
 		this.options = options;
 	}
 	
-	public List<Object> getOptions(){
+	public List<T> getOptions(){
 		return this.options;
 	}
 
 	@Override
 	public AbstractRequirementGraphic getGraphics() throws UnsupportedGraphicException {
 		if (g == null)
-			g = new ListRequirementGraphic(this);
+			g = new ListRequirementGraphic<T>(this);
 		return g;
 	}
 
 	@Override
 	protected boolean isValidValue(Object v) {
-		return options.contains((String)v);
+		return options.contains((T)v);
 	}
 
 	@Override
