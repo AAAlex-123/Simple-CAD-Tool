@@ -54,6 +54,18 @@ public final class Requirements implements Iterable<AbstractRequirement>, Serial
 	public void add(String key) {
 		requirements.put(key, new ObjectRequirement(key));
 	}
+	
+`	/**
+	 * Adds a String-specific Requirement with a {@code key} and a {@code type}.
+	 *
+	 * @param key  the key
+	 * @param type the type
+	 *
+	 * @see StringRequirement
+	 */
+	public void add(String key, StringType type) {
+		requirements.put(key, new StringRequirement(key, type));
+	}
 
 	/**
 	 * Adds a String-specific Requirement with a {@code key} and a {@code type}.
