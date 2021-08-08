@@ -88,6 +88,17 @@ public final class Requirements implements Iterable<AbstractRequirement>, Serial
 	public void add(AbstractRequirement requirement) {
 		requirements.put(requirement.key(), requirement);
 	}
+	
+	/**
+	 * Adds a {@link ComponentRequirement} with a {@code key} and {@code components}.
+	 *
+	 * @param key  the key
+	 * @param components the suitable components
+	 *
+	 */
+	public void addComponentReq(String key, List<components.Component> components) {
+		requirements.put(key, new ComponentRequirement(key, components));
+	}
 
 	/**
 	 * Returns the Requirement with the {@code key}.
