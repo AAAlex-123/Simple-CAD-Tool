@@ -128,9 +128,11 @@ public class Languages {
 			return false;
 		}
 
-		Locale chosen  = (Locale) JOptionPane.showInputDialog(frame,
-		        Languages.getString("Languages.3"), Languages.getString("Languages.4"),                            //$NON-NLS-1$ //$NON-NLS-2$
-		        JOptionPane.PLAIN_MESSAGE, null, locales.toArray(), locales.get(0));
+		Requirements reqWrapper = new Requirements();
+		reqWrapper.add("languages", locales);
+		reqWrapper.fulfillWithDialog(frame, "languages");
+		Locale chosen = (Locale) reqWrapper.getValue("languages");
+
 		Locale current = new Locale(properties.getProperty(LANGUAGE_STR),
 		        properties.getProperty(COUNTRY_STR), properties.getProperty(VARIANT_STR));
 
