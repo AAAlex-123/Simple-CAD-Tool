@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.List;
 
 import localisation.Languages;
 import localisation.RequirementStrings;
@@ -65,7 +66,7 @@ public final class Requirements implements Iterable<AbstractRequirement>, Serial
 	 * @see ListRequirement
 	 */
 	public <T> void add(String key, List<T> values) {
-	    requirements.put(key, new ListRequirement<T>(values));
+	    requirements.put(key, new ListRequirement<T>(key, values));
 	}
 
 	/**
