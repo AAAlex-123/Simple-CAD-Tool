@@ -1,4 +1,4 @@
-package editor;
+package myUtil;
 
 import java.awt.Color;
 import java.awt.Component;
