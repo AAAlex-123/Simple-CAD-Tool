@@ -301,7 +301,7 @@ final class MyMenu extends JMenuBar {
 			final String ACTIVE = Languages.getString("MyMenu.0"); //$NON-NLS-1$
 
 			final Requirements reqs = new Requirements();
-			reqs.add(ID, StringType.ANY);
+			reqs.addComponentReq(ID, activeEditor.getComponents_());
 			reqs.add(ACTIVE, StringType.ON_OFF);
 			reqs.fulfillWithDialog(context.getFrame(), Languages.getString("MyMenu.34")); //$NON-NLS-1$
 
@@ -332,7 +332,7 @@ final class MyMenu extends JMenuBar {
 			final Editor activeEditor = context.getActiveEditor();
 
 			final Requirements reqs = new Requirements();
-			reqs.add(ID, StringType.ANY);
+			reqs.addComponentReq(ID, activeEditor.getComponents_());
 			reqs.fulfillWithDialog(context.getFrame(), Languages.getString("MyMenu.41")); //$NON-NLS-1$
 
 			if (reqs.fulfilled()) {
