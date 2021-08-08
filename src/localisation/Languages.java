@@ -22,6 +22,8 @@ import javax.swing.JOptionPane;
 import myUtil.OrderedProperties;
 import myUtil.Utility;
 
+import requirement.requirements.Requirements;
+
 /**
  * The language settings used to load the appropriate Strings according to the
  * chosen locale.
