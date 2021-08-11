@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import components.Component;
+import components.ComponentType;
 
 /**
  * A {@link ListRequirement} that handles components. It holds their IDs and
