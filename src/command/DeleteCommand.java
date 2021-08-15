@@ -3,6 +3,7 @@ package command;
 import static localisation.CommandStrings.DELETE_STR;
 import static localisation.CommandStrings.ID;
 
+import java.awt.Frame;
 import java.util.List;
 import java.util.Vector;
 
@@ -10,8 +11,8 @@ import application.editor.Editor;
 import application.editor.MissingComponentException;
 import components.ComponentFactory;
 import myUtil.Utility;
+import requirement.requirements.ComponentRequirement;
 import requirement.requirements.Requirements;
-import requirement.requirements.StringType;
 
 /**
  * A Command that deletes a {@code Component} and subsequently removes it from
@@ -33,7 +34,7 @@ class DeleteCommand extends Command {
 	DeleteCommand(Editor editor) {
 		super(editor);
 		deleteCommands = new Vector<>();
-		requirements.add(ID, StringType.ANY);
+		requirements.addComponentRequirement(ID, ComponentRequirement.Policy.ANY);
 	}
 
 	@Override
@@ -41,6 +42,13 @@ class DeleteCommand extends Command {
 		final Command newCommand = new DeleteCommand(context);
 		newCommand.requirements = new Requirements(requirements);
 		return newCommand;
+	}
+	
+	@Override
+	public void fillRequirements(Frame parentFrame, Editor newContext) {
+		context(newContext);
+		((ComponentRequirement)requirements.get(ID)).setComponentOptions(context.getComponents_());
+		super.fillRequirements(parentFrame, newContext);
 	}
 
 	@Override
