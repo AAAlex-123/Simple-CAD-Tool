@@ -56,20 +56,7 @@ public final class Requirements implements Iterable<AbstractRequirement>, Serial
 		requirements.put(key, new ObjectRequirement(key));
 	}
 	
-`	/**
-	 * Adds a List-specific Requirement with a {@code key} and {@code values}.
-	 *
-	 * @param <T>  the type of the values
-	 * @param key  the key
-	 * @param type the values
-	 *
-	 * @see ListRequirement
-	 */
-	public <T> void add(String key, List<T> values) {
-	    requirements.put(key, new ListRequirement<T>(key, values));
-	}
-
-	/**
+		/**
 	 * Adds a String-specific Requirement with a {@code key} and a {@code type}.
 	 *
 	 * @param key  the key
@@ -89,7 +76,46 @@ public final class Requirements implements Iterable<AbstractRequirement>, Serial
 	public void add(AbstractRequirement requirement) {
 		requirements.put(requirement.key(), requirement);
 	}
+`	/**
+	 * Adds a List-specific Requirement with a {@code key} and {@code values}.
+	 *
+	 * @param <T>  the type of the values
+	 * @param key  the key
+	 * @param type the values
+	 *
+	 * @see ListRequirement
+	 */
+	public <T> void addListRequirement(String key, List<T> values) {
+	    requirements.put(key, new ListRequirement<T>(key, values));
+	}
 	
+	/**
+	 * Adds a List-specific Requirement with a {@code key} and values
+	 * lazily determined later.
+	 *
+	 * @param <T>  the type of the values
+	 * @param key  the key
+	 *
+	 * @see ListRequirement
+	 */
+	public <T> void addListRequirement(String key) {
+		 requirements.put(key, new ListRequirement<T>(key));
+	}
+
+
+	/**
+	 * Adds a filtered {@link ComponentRequirement} with a {@code key} and {@code components}
+	 * that will be determined later.
+	 *
+	 * @param key  the key
+	 * @param policy the way components will be filtered
+	 *
+	 * @see ListRequirement
+	 */
+	public void addComponentRequirement(String key, ComponentRequirement.Policy policy) {
+		requirements.put(key, new ComponentRequirement(key, policy));
+	}
+
 	/**
 	 * Adds a {@link ComponentRequirement} with a {@code key} and {@code components}.
 	 *
@@ -97,8 +123,21 @@ public final class Requirements implements Iterable<AbstractRequirement>, Serial
 	 * @param components the suitable components
 	 *
 	 */
-	public void addComponentReq(String key, List<components.Component> components) {
-		requirements.put(key, new ComponentRequirement(key, components));
+	public void addComponentRequirement(String key, List<components.Component> components, ComponentRequirement.Policy policy) {
+		requirements.put(key, new ComponentRequirement(key, components, policy));
+	}
+
+
+	/**
+	 * Adds a {@link ComponentRequirement} with a {@code key} and {@code components}
+	 * that will be determined later.
+	 *
+	 * @param key  the key
+	 *
+	 * @see ListRequirement
+	 */
+	public void addComponentRequirement(String key) {
+		requirements.put(key, new ComponentRequirement(key, ComponentRequirement.Policy.ANY));
 	}
 
 	/**
