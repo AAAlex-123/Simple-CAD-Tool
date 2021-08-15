@@ -1,6 +1,7 @@
 package application.editor;
 
 import java.awt.Frame;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -8,10 +9,15 @@ import java.io.IOException;
 import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 import javax.swing.JOptionPane;
 
@@ -125,9 +131,27 @@ public enum Actions {
 	},
 
 	/** An Action that reads the contents of a File to the Editor */
-	OPEN(new String[] { EditorStrings.FILENAME, EditorStrings.GATENAME,
+	OPEN(new String[] {EditorStrings.GATENAME,
 	        EditorStrings.FILETYPE },
-			new StringType[] { StringType.FILENAME, StringType.ANY, StringType.FILETYPE }) {
+			new StringType[] { StringType.ANY, StringType.FILETYPE }) {
+		
+		@Override
+		public void constructAdditionalRequirements() {
+			Path dir = Paths.get(System.getProperty("user.dir") + File.separator + "user_data");
+			List<String> files;
+			try (Stream<Path> paths = Files.walk(dir)) {
+			    	files = paths
+			    			.filter(file -> file.toString().contains(".scad"))
+			    			.map(file -> file.toString().substring(file.toString().lastIndexOf(File.separator)+1)) //get file name
+			    			.collect(Collectors.toList());
+			} catch (IOException e) {
+				System.err.println("Can't open user file directory");
+				return;
+			} 
+
+			reqs.addListRequirement(EditorStrings.FILENAME, files);
+		}
+		
 		@Override
 		public void execute() {
 
@@ -286,26 +310,27 @@ public enum Actions {
 	Editor context;
 
 	Actions() {
-		reqs = null;
+		reqs = new Requirements();
+		constructAdditionalRequirements();
 	}
 
 	Actions(String reqKey) {
-		reqs = new Requirements();
+		this();
 		reqs.add(reqKey);
 	}
 
 	Actions(String reqKey, StringType stringType) {
-		reqs = new Requirements();
+		this();
 		reqs.add(reqKey, stringType);
 	}
 
 	Actions(String[] reqKeys) {
-		reqs = new Requirements();
+		this();
 		Utility.foreach(reqKeys, reqs::add);
 	}
 
 	Actions(String[] reqKeys, StringType[] types) {
-		reqs = new Requirements();
+		this();
 
 		if (reqKeys.length != types.length)
 			throw new RuntimeException("Invalid arguments in Actions enum constructor"); //$NON-NLS-1$
@@ -313,6 +338,12 @@ public enum Actions {
 		for (int i = 0; i < reqKeys.length; i++)
 			reqs.add(reqKeys[i], types[i]);
 	}
+	
+	/**
+	 * Extra code to be invoked by the constructor. By default does nothing, override
+	 * for specialized requirements.
+	 */
+	public void constructAdditionalRequirements() {}
 
 	/** Executes the Action */
 	public abstract void execute();
