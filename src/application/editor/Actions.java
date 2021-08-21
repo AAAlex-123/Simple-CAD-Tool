@@ -9,15 +9,17 @@ import java.io.IOException;
 import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.stream.Collectors;
+import java.util.NoSuchElementException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JOptionPane;
 
@@ -31,6 +33,8 @@ import localisation.Languages;
 import myUtil.Utility;
 import requirement.requirements.AbstractRequirement;
 import requirement.requirements.Requirements;
+import requirement.requirements.ListRequirement;
+import requirement.requirements.ComponentRequirement;
 import requirement.requirements.StringType;
 
 /**
@@ -72,6 +76,13 @@ public enum Actions {
 
 	/** Action for deleting a {@code Component} */
 	DELETE(EditorStrings.COMMAND) {
+		
+		@Override
+		public Actions specifyWithDialog(Editor editor) {
+			((ComponentRequirement) reqs.get(EditorStrings.COMMAND)).setComponentOptions(editor.getComponents_());
+			return super.specifyWithDialog(editor);
+		}
+		
 		@Override
 		public void execute() {
 
@@ -131,12 +142,18 @@ public enum Actions {
 	},
 
 	/** An Action that reads the contents of a File to the Editor */
-	OPEN(new String[] {EditorStrings.GATENAME,
-	        EditorStrings.FILETYPE },
-			new StringType[] { StringType.ANY, StringType.FILETYPE }) {
+	OPEN() {
 		
 		@Override
 		public void constructAdditionalRequirements() {
+			reqs.add(EditorStrings.GATENAME, StringType.ANY);
+			reqs.add(EditorStrings.FILETYPE,  StringType.FILETYPE);
+			reqs.addListRequirement(EditorStrings.FILENAME);
+		}
+		
+		@SuppressWarnings("unchecked") //yes this is safe
+		@Override 
+		public Actions specifyWithDialog(Editor editor) {
 			Path dir = Paths.get(System.getProperty("user.dir") + File.separator + "user_data");
 			List<String> files;
 			try (Stream<Path> paths = Files.walk(dir)) {
@@ -145,11 +162,11 @@ public enum Actions {
 			    			.map(file -> file.toString().substring(file.toString().lastIndexOf(File.separator)+1)) //get file name
 			    			.collect(Collectors.toList());
 			} catch (IOException e) {
-				System.err.println("Can't open user file directory");
-				return;
+				throw new UncheckedIOException(e);
 			} 
-
-			reqs.addListRequirement(EditorStrings.FILENAME, files);
+			
+			((ListRequirement<String>) reqs.get(EditorStrings.FILENAME)).setOptions(files);
+			return super.specifyWithDialog(editor);
 		}
 		
 		@Override
@@ -367,7 +384,7 @@ public enum Actions {
 	 *
 	 * @return this (used for chaining)
 	 */
-	public final Actions specifyWithDialog(Editor editor) {
+	public Actions specifyWithDialog(Editor editor) {
 		reqs.fulfillWithDialog(editor.context().getFrame(), toString());
 		return this;
 	}
