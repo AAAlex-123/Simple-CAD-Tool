@@ -25,18 +25,6 @@ import requirement.requirements.ListRequirement;
 public class ListRequirementGraphic<T> extends AbstractRequirementGraphic {
 	private final JComboBox<T> optionBox;
 	private final MutableColorBorder border;
-	
-	public static void main(String[] args) {
-		JFrame uwuFrame = new JFrame("uwu test uwu");
-		List<Object> list = new LinkedList<Object>();
-		list.add("1");
-		list.add("2");
-		list.add("3");
-		
-		uwuFrame.add(new ListRequirementGraphic(new ListRequirement("keylol",list)));
-		uwuFrame.setSize(new Dimension(500, 500));
-		uwuFrame.setVisible(true);
-	}
 
 	public ListRequirementGraphic(ListRequirement<T> requirement) {
 		super(requirement);
@@ -60,7 +48,7 @@ public class ListRequirementGraphic<T> extends AbstractRequirementGraphic {
 	@Override
 	public void update() {
 		if (req.finalised())
-			options.setEnabled(false);
+			optionBox.setEnabled(false);
 	}
 
 	@Override
