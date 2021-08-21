@@ -11,7 +11,7 @@ import javax.swing.border.LineBorder;
  * @author dimits
  *
  */
-class MutableColorBorder extends LineBorder {
+public class MutableColorBorder extends LineBorder {
 	private static final long serialVersionUID = 1649237099464980877L;
 	
 	private Color currentColor;
