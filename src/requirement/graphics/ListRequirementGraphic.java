@@ -2,15 +2,13 @@ package requirement.graphics;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Vector;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 
 import myUtil.MutableColorBorder;
@@ -29,13 +27,10 @@ public class ListRequirementGraphic<T> extends AbstractRequirementGraphic {
 	public ListRequirementGraphic(ListRequirement<T> requirement) {
 		super(requirement);
 		
-		Vector<T> list = new Vector<T>();
-		for(T option : requirement.getOptions())
-			list.add(option);
-		
 		border = new MutableColorBorder(Color.BLUE);
-		this.optionBox = new JComboBox<T>(new DefaultComboBoxModel<T>(list)); 
-		this.optionBox.setBorder(border);
+		optionBox = new JComboBox<T>();
+		updateOptionBox();
+		optionBox.setBorder(border);
 		AutoCompletion.enable(optionBox);
 	
 		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -47,6 +42,11 @@ public class ListRequirementGraphic<T> extends AbstractRequirementGraphic {
 
 	@Override
 	public void update() {
+		updateOptionBox();
+		
+		if(optionBox.getItemCount() == 0)
+			throw new NoSuchElementException("There are no available options for the field `" + req.key() +"`");
+		
 		if (req.finalised())
 			optionBox.setEnabled(false);
 	}
@@ -73,5 +73,16 @@ public class ListRequirementGraphic<T> extends AbstractRequirementGraphic {
 	protected void onFocusGained() {
 		optionBox.requestFocusInWindow();
 	}
+	
+	private void updateOptionBox() {
+		@SuppressWarnings("unchecked")
+		ListRequirement<T> requirement = ((ListRequirement<T>) req);
+		Vector<T> list = new Vector<T>();
+		for(T option : requirement.getOptions())
+			list.add(option);
+
+		this.optionBox.setModel(new DefaultComboBoxModel<T>(list));
+	}
+
 
 }
