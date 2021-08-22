@@ -78,12 +78,6 @@ public enum Actions {
 	DELETE(EditorStrings.COMMAND) {
 		
 		@Override
-		public Actions specifyWithDialog(Editor editor) {
-			((ComponentRequirement) reqs.get(EditorStrings.COMMAND)).setComponentOptions(editor.getComponents_());
-			return super.specifyWithDialog(editor);
-		}
-		
-		@Override
 		public void execute() {
 
 			if (!reqs.fulfilled())
