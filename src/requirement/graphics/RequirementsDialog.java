@@ -9,6 +9,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+import java.util.NoSuchElementException;
+
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
@@ -23,6 +25,7 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.WindowConstants;
 
 import application.editor.StatusBar;
+import application.editor.StatusBar.TextType;
 import localisation.Languages;
 import myUtil.Utility;
 import requirement.requirements.AbstractRequirement;
