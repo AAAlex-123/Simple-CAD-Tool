@@ -15,7 +15,6 @@ public class ListRequirement<T> extends AbstractRequirement {
 	
 	private List<T> options;
 	private transient AbstractRequirementGraphic g;
-	private boolean listUpdated;
 	
 	/**
 	 * Construct a list requirement with a provided list of options.
@@ -26,7 +25,6 @@ public class ListRequirement<T> extends AbstractRequirement {
 	public ListRequirement(String key, List<T> options) {
 		super(key);
 		this.options = options;
-		listUpdated = true;
 	}
 	
 	/**
@@ -37,7 +35,6 @@ public class ListRequirement<T> extends AbstractRequirement {
 	 */
 	public ListRequirement(String key) {
 		super(key);
-		listUpdated = false;
 	}
 	
 	/**
@@ -46,23 +43,15 @@ public class ListRequirement<T> extends AbstractRequirement {
 	 * @param newOptions the list with the options
 	 */
 	public void setOptions(List<T> newOptions) {
-		//could also throw exception if the list was provided in the constructor but is being overridden
 		this.options = newOptions;
-		listUpdated = true;
 	}
 	
 	/**
 	 * Get the list with the options from the requirement.
 	 * 
 	 * @return the list with options
-	 * @throws IllegalStateException if a list wasn't provided during construction and {@link #setOptions(List)} 
-	 * wasn't called before a new call to this method.
 	 */
-	public List<T> getOptions() throws IllegalStateException { 
-		if(!listUpdated)
-			throw new IllegalStateException("Provide a new list with setOptions() before calling this method again.");
-		
-		listUpdated = false;
+	public List<T> getOptions() { 
 		return this.options;
 	}
 
