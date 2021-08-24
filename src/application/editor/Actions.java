@@ -148,6 +148,14 @@ public enum Actions {
 		@Override 
 		public Actions specifyWithDialog(Editor editor) {
 			Path dir = Paths.get(System.getProperty("user.dir") + File.separator + "user_data");
+			if(!Files.exists(dir)) { //create directory if it doesn't exist
+				try {
+					Files.createDirectory(dir);
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+			}	
+			
 			List<String> files;
 			try (Stream<Path> paths = Files.walk(dir)) {
 			    	files = paths
