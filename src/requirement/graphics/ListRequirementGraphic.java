@@ -23,7 +23,16 @@ import requirement.requirements.ListRequirement;
 public class ListRequirementGraphic<T> extends AbstractRequirementGraphic {
 	private final JComboBox<T> optionBox;
 	private final MutableColorBorder border;
-
+	
+	/**
+	 * Constructs a graphics panel containing a drop-down menu
+	 * of all the available options for a given 
+	 * {@link requirement.requirements.ListRequirement ListRequirement}.
+	 * The selected option will fulfill that requirement.
+	 * 
+	 * @param requirement the {@link requirement.requirements.ListRequirement ListRequirement} 
+	 * whose options will be displayed.
+	 */
 	public ListRequirementGraphic(ListRequirement<T> requirement) {
 		super(requirement);
 		
