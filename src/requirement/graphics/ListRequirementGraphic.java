@@ -2,11 +2,10 @@ package requirement.graphics;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -15,54 +14,61 @@ import myUtil.MutableColorBorder;
 import requirement.requirements.ListRequirement;
 
 /**
- * A graphic component utilizing a drop-down menu to let the user choose options from a list. 
- * Opens a window containing a GUI list with the values provided by the {@link ListRequirement}.
+ * Graphic for a {@link ListRequirement}. It consists of a drop-down list to let
+ * the user choose an option from a list. The available options are obtained
+ * from its associated {@code ListRequirement}. The selected option will fulfil
+ * it.
+ *
+ * @param <T> the type of items the list contains
  *
  * @author dimits
  */
-public class ListRequirementGraphic<T> extends AbstractRequirementGraphic {
-	private final JComboBox<T> optionBox;
+public class ListRequirementGraphic<T> extends AbstractRequirementGraphic<ListRequirement<T>> {
+
+	private final JComboBox<T>       optionBox;
+	private Vector<T>                currentOptions;
 	private final MutableColorBorder border;
-	
+
 	/**
-	 * Constructs a graphics panel containing a drop-down menu
-	 * of all the available options for a given 
-	 * {@link requirement.requirements.ListRequirement ListRequirement}.
-	 * The selected option will fulfill that requirement.
-	 * 
-	 * @param requirement the {@link requirement.requirements.ListRequirement ListRequirement} 
-	 * whose options will be displayed.
+	 * Constructs the Graphic using the {@code ListRequirement} associated with it.
+	 *
+	 * @param requirement the Requirement
 	 */
 	public ListRequirementGraphic(ListRequirement<T> requirement) {
 		super(requirement);
-		
+		setLayout(new GridLayout(2, 1, 10, 0));
+
+		optionBox = new JComboBox<>();
+		currentOptions = new Vector<>();
 		border = new MutableColorBorder(Color.BLUE);
-		optionBox = new JComboBox<T>();
-		updateOptionBox();
+
 		optionBox.setBorder(border);
+		optionBox.setMaximumSize(new Dimension(200, 30));
 		AutoCompletion.enable(optionBox);
-	
-		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-		add(new JLabel("Choose an option for " + req.key() +":")); //idk how to write loc lolololol
-		add(Box.createRigidArea(new Dimension(10, 1)));
-		add(this.optionBox);
-		optionBox.setMaximumSize(new Dimension(200,30));
+
+		add(new JLabel(String.format("Choose an option for %s:", req.key())));
+		add(optionBox);
 	}
 
 	@Override
 	public void update() {
-		updateOptionBox();
-		
-		if(optionBox.getItemCount() == 0)
-			throw new NoSuchElementException("There are no available options for the field `" + req.key() +"`");
-		
+		final Vector<T> newOptions = new Vector<>(req.getOptions());
+
+		if (!newOptions.equals(currentOptions)) {
+			currentOptions = newOptions;
+			if (currentOptions.isEmpty())
+				throw new NoSuchElementException(req.key());
+
+			optionBox.setModel(new DefaultComboBoxModel<>(currentOptions));
+		}
+
 		if (req.finalised())
 			optionBox.setEnabled(false);
 	}
 
 	@Override
 	public void reset() {
-		optionBox.setSelectedIndex(-1);
+		optionBox.setSelectedItem(req.defaultValue());
 		border.setColor(Color.BLUE);
 	}
 
@@ -75,23 +81,11 @@ public class ListRequirementGraphic<T> extends AbstractRequirementGraphic {
 	@Override
 	public void onNotFulfilled() {
 		optionBox.setSelectedIndex(-1);
-		border.setColor(Color.BLUE);
+		border.setColor(Color.RED);
 	}
 
 	@Override
 	protected void onFocusGained() {
-		optionBox.requestFocusInWindow();
+		optionBox.requestFocus();
 	}
-	
-	private void updateOptionBox() {
-		@SuppressWarnings("unchecked")
-		ListRequirement<T> requirement = ((ListRequirement<T>) req);
-		Vector<T> list = new Vector<T>();
-		for(T option : requirement.getOptions())
-			list.add(option);
-
-		this.optionBox.setModel(new DefaultComboBoxModel<T>(list));
-	}
-
-
 }
