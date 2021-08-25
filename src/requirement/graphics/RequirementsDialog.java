@@ -9,6 +9,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+import java.util.NoSuchElementException;
+
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
@@ -23,6 +25,7 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.WindowConstants;
 
 import application.editor.StatusBar;
+import application.editor.StatusBar.TextType;
 import localisation.Languages;
 import myUtil.Utility;
 import requirement.requirements.AbstractRequirement;
@@ -72,10 +75,6 @@ public final class RequirementsDialog extends JDialog {
 		setLayout(new BorderLayout());
 		setResizable(false);
 
-		// --- options panel (middle) ---
-		optionsPanel = new JPanel(new GridLayout(reqs.size(), 1, 0, 15));
-		Utility.foreach(reqs, r -> optionsPanel.add(r.getGraphicsAndUpdate()));
-
 		// --- buttons panel (bottom) ---
 		buttonsPanel = new JPanel(new FlowLayout());
 		buttonsPanel.add(okButton = new JButton(Languages.getString("RequirementsDialog.0"))); //$NON-NLS-1$
@@ -84,7 +83,17 @@ public final class RequirementsDialog extends JDialog {
 
 		sb = new StatusBar();
 		sb.addLabel("message"); //$NON-NLS-1$
-
+		
+		// --- options panel (middle) ---
+		optionsPanel = new JPanel(new GridLayout(reqs.size(), 1, 0, 15));
+		try {
+			Utility.foreach(reqs, r -> optionsPanel.add(r.getGraphicsAndUpdate()));
+		} catch (NoSuchElementException e) {
+			sb.setLabelText("message", TextType.FAILURE, e.getMessage());
+			okButton.setEnabled(false);
+			resetButton.setEnabled(false);
+		}
+		
 		// --- scroll pane (for options panel) ---
 		final JScrollPane jsp = new JScrollPane(optionsPanel);
 		jsp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);

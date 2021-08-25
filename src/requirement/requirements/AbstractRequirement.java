@@ -59,7 +59,7 @@ public abstract class AbstractRequirement implements Serializable, Cloneable {
 	protected Object defaultValue;
 
 	/**
-	 * Indicates whether or a valid value for this Requirement has been provided. If
+	 * Indicates whether or not a valid value for this Requirement has been provided. If
 	 * the Requirement is fulfilled, the object that created the Requirement may
 	 * retrieve its value and use it.
 	 */

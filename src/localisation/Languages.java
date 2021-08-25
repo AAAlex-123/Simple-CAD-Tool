@@ -22,6 +22,8 @@ import javax.swing.JOptionPane;
 import myUtil.OrderedProperties;
 import myUtil.Utility;
 
+import requirement.requirements.Requirements;
+
 /**
  * The language settings used to load the appropriate Strings according to the
  * chosen locale.
@@ -128,9 +130,11 @@ public class Languages {
 			return false;
 		}
 
-		Locale chosen  = (Locale) JOptionPane.showInputDialog(frame,
-		        Languages.getString("Languages.3"), Languages.getString("Languages.4"),                            //$NON-NLS-1$ //$NON-NLS-2$
-		        JOptionPane.PLAIN_MESSAGE, null, locales.toArray(), locales.get(0));
+		Requirements reqWrapper = new Requirements();
+		reqWrapper.addListRequirement(Languages.getString(LANGUAGE), locales); 		//$NON-NLS-1$
+		reqWrapper.fulfillWithDialog(frame, Languages.getString(LANGUAGE));		//$NON-NLS-1$
+		Locale chosen = (Locale) reqWrapper.getValue(Languages.getString(LANGUAGE));	//$NON-NLS-1$
+
 		Locale current = new Locale(properties.getProperty(LANGUAGE_STR),
 		        properties.getProperty(COUNTRY_STR), properties.getProperty(VARIANT_STR));
 
