@@ -3,7 +3,8 @@ package requirement.exceptions;
 import requirement.requirements.AbstractRequirement;
 
 /**
- * Thrown when a finalised {@code Requirement} attempts to alter its value.
+ * Thrown when a finalised {@code Requirement} attempts to alter its
+ * {@code value}.
  *
  * @author alexm
  */
