@@ -3,6 +3,7 @@ package requirement.graphics;
 import java.awt.GridLayout;
 
 import javax.swing.JLabel;
+import javax.swing.SwingConstants;
 
 import requirement.requirements.AbstractRequirement;
 
@@ -17,6 +18,8 @@ import requirement.requirements.AbstractRequirement;
 public class NullRequirementGraphic
         extends AbstractRequirementGraphic<AbstractRequirement> {
 
+	private final JLabel key, explanation;
+
 	/**
 	 * Constructs the NullGraphic.
 	 *
@@ -27,8 +30,14 @@ public class NullRequirementGraphic
 		super(requirement);
 		setLayout(new GridLayout(2, 1, 10, 0));
 
-		add(new JLabel(String.format("No Graphic for Requirement: %s", requirement.key())));
-		add(new JLabel(String.format("Reason: %s", reason)));
+		key = new JLabel(String.format("No Graphic for Requirement: %s", requirement.key()));
+		explanation = new JLabel(String.format("Reason: %s", reason));
+
+		key.setHorizontalAlignment(SwingConstants.CENTER);
+		explanation.setHorizontalAlignment(SwingConstants.CENTER);
+
+		add(key);
+		add(explanation);
 	}
 
 	@Override
