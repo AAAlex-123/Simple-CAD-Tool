@@ -63,7 +63,6 @@ class DeleteCommand extends Command {
 		context.removeComponent(associatedComponent);
 
 		List<Component> deletedComps = context.getDeletedComponents();
-		System.out.println(context.getDeletedComponents());
 
 		Utility.foreach(deletedComps, command -> {
 			final DeleteCommand deleteCommand = new DeleteCommand(context);
