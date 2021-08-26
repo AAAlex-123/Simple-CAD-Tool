@@ -57,7 +57,8 @@ public class ListRequirementGraphic<T> extends AbstractRequirementGraphic<ListRe
 		if (!newOptions.equals(currentOptions)) {
 			currentOptions = newOptions;
 			if (currentOptions.isEmpty())
-				throw new NoSuchElementException(req.key());
+				throw new NoSuchElementException(
+				        String.format("No options for ListRequirement with key '%s'", req.key()));
 
 			optionBox.setModel(new DefaultComboBoxModel<>(currentOptions));
 		}
