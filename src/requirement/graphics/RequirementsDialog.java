@@ -8,8 +8,8 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-
-import java.util.NoSuchElementException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -32,12 +32,15 @@ import requirement.requirements.AbstractRequirement;
 import requirement.requirements.Requirements;
 
 /**
- * A dialog with which the user fulfils a {@link Requirements} object. After
- * construction, the call {@code setVisible(true)} shows the dialog and the user
- * can use it in order to fulfil the individual Requirements. The dialog uses
- * {@link requirement.graphics.AbstractRequirementGraphic Graphics} in order to
- * display every Requirement in the Requirements object and to uniformly call
- * the necessary methods on them.
+ * A dialog with which the user fulfils a {@link Requirements collection} of
+ * {@code Requirements}. After construction, the call {@code setVisible(true)}
+ * shows the dialog and the user can use it in order to fulfil the individual
+ * Requirements. {@link requirement.graphics.AbstractRequirementGraphic
+ * Graphics} are used in order to display every Requirement in the collection of
+ * Requirements and to uniformly call the necessary methods on them. If a
+ * Requirement doesn't support a Graphic, the user cannot use the Dialog to
+ * fulfil the Requirements and may only press {@code CANCEL} or {@code X} to
+ * close it.
  * <p>
  * The dialog has a few buttons that can be used with keyboard shortcuts:
  * <ul>
@@ -60,17 +63,26 @@ public final class RequirementsDialog extends JDialog {
 	private final StatusBar sb;
 
 	private final Requirements reqs;
+	private final Map<AbstractRequirement, AbstractRequirementGraphic<?>> map;
 
 	/**
 	 * Constructs the dialog.
 	 *
 	 * @param title       the window's title
 	 * @param dialogsReqs the Requirements that the dialog will fulfil
-	 * @param parent      the parent frame of the dialog
+	 * @param parent      the parent frame of the dialog, that is used to position
+	 *                    and resize it
+	 *
+	 * @throws NullPointerException if {@code parent == null}
 	 */
 	public RequirementsDialog(String title, Requirements dialogsReqs, Frame parent) {
 		super(parent, title, true);
+
+		if (parent == null)
+			throw new NullPointerException("The parent frame of the dialog cannot be null");
+
 		reqs = dialogsReqs;
+		map = new HashMap<>();
 
 		setLayout(new BorderLayout());
 		setResizable(false);
@@ -83,17 +95,23 @@ public final class RequirementsDialog extends JDialog {
 
 		sb = new StatusBar();
 		sb.addLabel("message"); //$NON-NLS-1$
-		
+
 		// --- options panel (middle) ---
 		optionsPanel = new JPanel(new GridLayout(reqs.size(), 1, 0, 15));
-		try {
-			Utility.foreach(reqs, r -> optionsPanel.add(r.getGraphicsAndUpdate()));
-		} catch (NoSuchElementException e) {
-			sb.setLabelText("message", TextType.FAILURE, e.getMessage());
+		boolean allGraphics = true;
+		for (AbstractRequirement req : reqs) {
+			AbstractRequirementGraphic<?> graphic = req.constructAndGetGraphic();
+			map.put(req, graphic);
+			optionsPanel.add(graphic);
+			allGraphics &= req.hasGraphic();
+		}
+
+		if (!allGraphics) {
+			sb.setLabelText("message", TextType.FAILURE, "Not all Requirements support Graphics");
 			okButton.setEnabled(false);
 			resetButton.setEnabled(false);
 		}
-		
+
 		// --- scroll pane (for options panel) ---
 		final JScrollPane jsp = new JScrollPane(optionsPanel);
 		jsp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -124,15 +142,18 @@ public final class RequirementsDialog extends JDialog {
 	}
 
 	/**
-	 * Attempts to fulfil the Requirements in this collection with the values the
-	 * user provided. Returns whether or not every Requirement is fulfilled.
+	 * Attempts to fulfil the {@code Requirements} in this collection with the
+	 * values the user provided. Returns whether or not every {@code Requirement} is
+	 * fulfilled.
 	 *
 	 * @return {@code true} if every Requirement is fulfilled, {@code false}
 	 *         otherwise
+	 *
+	 * @see AbstractRequirement#fulfilled()
 	 */
 	private boolean validateInput() {
 		Utility.foreach(reqs, r -> {
-			final AbstractRequirementGraphic g = r.getGraphics();
+			final AbstractRequirementGraphic<?> g = map.get(r);
 
 			if (!r.finalised())
 				g.fulfilRequirement();
@@ -149,7 +170,7 @@ public final class RequirementsDialog extends JDialog {
 			// give focus to the first non-fulfilled Requirement
 			for (final AbstractRequirement req : reqs) {
 				if (!req.fulfilled()) {
-					req.getGraphics().requestFocus();
+					map.get(req).requestFocus();
 					break;
 				}
 			}
@@ -212,7 +233,7 @@ public final class RequirementsDialog extends JDialog {
 				// give focus to the first non-fulfilled Requirement...
 				for (final AbstractRequirement r : reqs) {
 					if (!r.fulfilled()) {
-						r.getGraphics().requestFocus();
+						r.getCachedGraphic().requestFocus();
 						return;
 					}
 				}
