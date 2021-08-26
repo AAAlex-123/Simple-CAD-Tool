@@ -4,8 +4,8 @@ import java.awt.Frame;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 
 import localisation.Languages;
 import localisation.RequirementStrings;
@@ -55,8 +55,8 @@ public final class Requirements implements Iterable<AbstractRequirement>, Serial
 	public void add(String key) {
 		requirements.put(key, new ObjectRequirement(key));
 	}
-	
-		/**
+
+	/**
 	 * Adds a String-specific Requirement with a {@code key} and a {@code type}.
 	 *
 	 * @param key  the key
@@ -69,76 +69,38 @@ public final class Requirements implements Iterable<AbstractRequirement>, Serial
 	}
 
 	/**
+	 * Adds a List-specific Requirement with a {@code key} and {@code values}.
+	 *
+	 * @param <T>    the type of the values
+	 * @param key    the key
+	 * @param values the values
+	 *
+	 * @see ListRequirement
+	 */
+	public <T> void add(String key, List<T> values) {
+		requirements.put(key, new ListRequirement<>(key, values));
+	}
+
+	/**
+	 * Adds a Component-specific Requirement with a {@code key}, {@code components}
+	 * and {@code policy}.
+	 *
+	 * @param key        the key
+	 * @param components the suitable components
+	 * @param policy     the Policy for filtering the Components
+	 */
+	public void add(String key, List<components.Component> components,
+	        ComponentRequirement.Policy policy) {
+		requirements.put(key, new ComponentRequirement(key, components, policy));
+	}
+
+	/**
 	 * Adds a Requirement of any type.
 	 *
 	 * @param requirement the Requirement
 	 */
 	public void add(AbstractRequirement requirement) {
 		requirements.put(requirement.key(), requirement);
-	}
-	
-	/**
-	 * Adds a List-specific Requirement with a {@code key} and {@code values}.
-	 *
-	 * @param <T>  the type of the values
-	 * @param key  the key
-	 * @param type the values
-	 *
-	 * @see ListRequirement
-	 */
-	public <T> void addListRequirement(String key, List<T> values) {
-	    requirements.put(key, new ListRequirement<T>(key, values));
-	}
-	
-	/**
-	 * Adds a List-specific Requirement with a {@code key} and values
-	 * lazily determined later.
-	 *
-	 * @param <T>  the type of the values
-	 * @param key  the key
-	 *
-	 * @see ListRequirement
-	 */
-	public <T> void addListRequirement(String key) {
-		 requirements.put(key, new ListRequirement<T>(key));
-	}
-
-
-	/**
-	 * Adds a filtered {@link ComponentRequirement} with a {@code key} and {@code components}
-	 * that will be determined later.
-	 *
-	 * @param key  the key
-	 * @param policy the way components will be filtered
-	 *
-	 * @see ListRequirement
-	 */
-	public void addComponentRequirement(String key, ComponentRequirement.Policy policy) {
-		requirements.put(key, new ComponentRequirement(key, policy));
-	}
-
-	/**
-	 * Adds a {@link ComponentRequirement} with a {@code key} and {@code components}.
-	 *
-	 * @param key  the key
-	 * @param components the suitable components
-	 *
-	 */
-	public void addComponentRequirement(String key, List<components.Component> components, ComponentRequirement.Policy policy) {
-		requirements.put(key, new ComponentRequirement(key, components, policy));
-	}
-
-
-	/**
-	 * Adds a {@link ComponentRequirement} with a {@code key} and {@code components}
-	 * that will be determined later.
-	 *
-	 * @param key  the key
-	 *
-	 * @see ListRequirement
-	 */
-	public void addComponentRequirement(String key) {
-		requirements.put(key, new ComponentRequirement(key, ComponentRequirement.Policy.ANY));
 	}
 
 	/**
