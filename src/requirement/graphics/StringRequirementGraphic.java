@@ -41,8 +41,6 @@ public final class StringRequirementGraphic extends AbstractRequirementGraphic<S
 
 	@Override
 	public void update() {
-		textArea.setText((String) req.defaultValue());
-
 		if (req.finalised())
 			textArea.setEnabled(false);
 	}
