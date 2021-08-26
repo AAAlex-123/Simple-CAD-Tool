@@ -1,12 +1,10 @@
 package requirement.requirements;
 
-import static localisation.RequirementStrings.OFF;
-import static localisation.RequirementStrings.ON;
-
 import java.util.regex.Pattern;
 
 import localisation.EditorStrings;
 import localisation.Languages;
+import localisation.RequirementStrings;
 
 /**
  * A wrapper for a regular expression that a String must match. Used by
@@ -31,10 +29,11 @@ public enum StringType {
 	                EditorStrings.CIRCUIT)),
 
 	/** Type for 'on' or 'off' */
-	ON_OFF(String.format("%s|%s", ON, OFF), //$NON-NLS-1$
-	        String.format(Languages.getString("StringType.9"), ON, OFF)), //$NON-NLS-1$
+	ON_OFF(String.format("%s|%s", RequirementStrings.ON, RequirementStrings.OFF), //$NON-NLS-1$
+	        String.format(Languages.getString("StringType.9"), RequirementStrings.ON, //$NON-NLS-1$
+	                RequirementStrings.OFF)),
 
-	/** Type for any string */
+	/** Type for any non-empty string */
 	ANY(".+", Languages.getString("StringType.11")), //$NON-NLS-1$ //$NON-NLS-2$
 
 	/** Type for custom regex. Defaults to any string (including the empty one). */
@@ -53,7 +52,7 @@ public enum StringType {
 	/** A human-readable description for the regex of this Type */
 	protected String description;
 
-	private StringType(String regex, String description) {
+	StringType(String regex, String description) {
 		p = Pattern.compile(regex);
 		this.description = description;
 	}
