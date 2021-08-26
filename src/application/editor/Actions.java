@@ -139,9 +139,9 @@ public enum Actions {
 		
 		@Override
 		public void constructAdditionalRequirements() {
+			reqs.add(EditorStrings.FILENAME, new ArrayList<String>());
+			reqs.add(EditorStrings.FILETYPE, StringType.FILETYPE);
 			reqs.add(EditorStrings.GATENAME, StringType.ANY);
-			reqs.add(EditorStrings.FILETYPE,  StringType.FILETYPE);
-			reqs.addListRequirement(EditorStrings.FILENAME);
 		}
 		
 		@SuppressWarnings("unchecked") //yes this is safe
