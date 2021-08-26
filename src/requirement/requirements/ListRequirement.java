@@ -1,76 +1,82 @@
 package requirement.requirements;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import requirement.exceptions.UnsupportedGraphicException;
 import requirement.graphics.AbstractRequirementGraphic;
 import requirement.graphics.ListRequirementGraphic;
 
 /**
  * A Requirement demanding that its value belongs to a provided list of options.
- * 
+ *
+ * @param <T> the type of the list's options
+ *
  * @author dimits
  */
 public class ListRequirement<T> extends AbstractRequirement {
-	
+
 	private List<T> options;
-	private transient AbstractRequirementGraphic g;
-	
+
 	/**
-	 * Construct a list requirement with a provided list of options.
-	 * 
+	 * Construct an empty ListRequirement, whose options will be given later, after
+	 * construction
+	 *
 	 * @param key the Requirement's key
+	 */
+	public ListRequirement(String key) {
+		this(key, new ArrayList<>());
+	}
+
+	/**
+	 * Construct a ListRequirement with a provided list of options.
+	 *
+	 * @param key     the Requirement's key
 	 * @param options a list with all available options
 	 */
 	public ListRequirement(String key, List<T> options) {
 		super(key);
 		this.options = options;
 	}
-	
-	/**
-	 * Construct an empty list requirement, whose options will be given later,
-	 * after construction
-	 * 
-	 * @param key the Requirement's key
-	 */
-	public ListRequirement(String key) {
-		super(key);
-	}
-	
-	/**
-	 * Provide an empty list requirement with the promised options list.
-	 * 
-	 * @param newOptions the list with the options
-	 */
-	public void setOptions(List<T> newOptions) {
-		this.options = newOptions;
-	}
-	
-	/**
-	 * Get the list with the options from the requirement.
-	 * 
-	 * @return the list with options
-	 */
-	public List<T> getOptions() { 
-		return this.options;
-	}
 
 	@Override
-	public AbstractRequirementGraphic getGraphics() throws UnsupportedGraphicException {
-		if (g == null)
-			g = new ListRequirementGraphic<T>(this);
-		return g;
+	protected AbstractRequirementGraphic<?> constructGraphicOfSubclass() {
+		if (options.size() == 0) {
+			hasGraphic = false;
+			return constructNullGraphic("No options");
+		}
+
+		return new ListRequirementGraphic<>(this);
 	}
 
-	@SuppressWarnings("unchecked") //no way this ever becomes anything other than T
+	@SuppressWarnings("unlikely-arg-type")
 	@Override
 	protected boolean isValidValue(Object v) {
-		return options.contains((T)v);
+		return options.contains(v);
 	}
 
 	@Override
 	protected void resetValue() {
-		;//there's nothing to reset
+		value = defaultValue;
 	}
 
+	/**
+	 * Provide an empty ListRequirement with a copy of the promised options list.
+	 * Changes to the list passed as an argument will not be reflected in this
+	 * Requirement.
+	 *
+	 * @param newOptions the list with the options
+	 */
+	public void setOptions(List<T> newOptions) {
+		this.options = new ArrayList<>(newOptions);
+	}
+
+	/**
+	 * Get a copy of the list with the options from the Requirement. Changes to the
+	 * list returned from this method will not be reflected in this Requirement.
+	 *
+	 * @return the list with options
+	 */
+	public List<T> getOptions() {
+		return new ArrayList<>(this.options);
+	}
 }
