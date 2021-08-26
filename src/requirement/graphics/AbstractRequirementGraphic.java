@@ -57,15 +57,17 @@ public abstract class AbstractRequirementGraphic<T extends AbstractRequirement> 
 	/**
 	 * Fetches information from the {@code Requirement} to update this Graphic.
 	 * After calling this method, the Graphic should fully reflect the state of its
-	 * associated {@code Requirement}. For example, this method may update the list
-	 * of available options of the Requirement or enable or disable input for this
-	 * Graphic if the {@code Requirement} is finalised.
+	 * associated {@code Requirement}.
+	 * <p>
+	 * <b>Warning:</b> the state of a Requirement must always align with its
+	 * Graphic. Failing to call this method after any changes to the underlying
+	 * Requirement may result in undefined behaviour.
 	 */
 	public abstract void update();
 
 	/**
-	 * Resets this Graphic to its initial state displaying to the user the default
-	 * value of the {@code Requirement}, if any.
+	 * Using the available information, resets this Graphic to its initial state
+	 * displaying to the user the default value of the {@code Requirement}, if any.
 	 *
 	 * @see AbstractRequirement#defaultValue
 	 */
