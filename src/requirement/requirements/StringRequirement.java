@@ -4,17 +4,15 @@ import requirement.graphics.AbstractRequirementGraphic;
 import requirement.graphics.StringRequirementGraphic;
 
 /**
- * A Requirement specifically for Strings. This Requirement may impose
- * restrictions by only accepting strings of a specific
+ * A {@code Requirement} specifically for {@code Strings}. This Requirement may
+ * impose restrictions by only accepting strings of a specific
  * {@link requirement.requirements.StringType Type}.
  *
  * @author alexm
  */
 public final class StringRequirement extends AbstractRequirement {
 
-	private transient AbstractRequirementGraphic g;
-
-	/** The {@code Type} of strings that will be accepted by this Requirement */
+	/** The {@code Type} of Strings that will be accepted by this Requirement */
 	public final StringType stringType;
 
 	/**
@@ -38,21 +36,15 @@ public final class StringRequirement extends AbstractRequirement {
 	}
 
 	@Override
-	public StringRequirement clone() {
-		final StringRequirement cloned = (StringRequirement) super.clone();
-		cloned.g = g;
-		return cloned;
-	}
-
-	@Override
-	public AbstractRequirementGraphic getGraphics() {
-		if (g == null)
-			g = new StringRequirementGraphic(this);
-		return g;
+	protected AbstractRequirementGraphic<?> constructGraphicOfSubclass() {
+		return new StringRequirementGraphic(this);
 	}
 
 	@Override
 	protected boolean isValidValue(Object s) {
+		if (!(s instanceof String))
+			return false;
+
 		return stringType.isValid((String) s);
 	}
 

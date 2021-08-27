@@ -6,26 +6,26 @@ import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
-import requirement.requirements.AbstractRequirement;
 import requirement.requirements.StringRequirement;
 
 /**
- * Graphic for a {@link StringRequirement}. It consists of a JLabel (the key)
- * and a JTextField where the user types the value.
+ * Graphic for a {@link StringRequirement}. It consists of a JLabel to display
+ * the key and a JTextField where the user types the value.
  *
  * @author alexm
  */
-public final class StringRequirementGraphic extends AbstractRequirementGraphic {
+public final class StringRequirementGraphic extends AbstractRequirementGraphic<StringRequirement> {
 
 	private final JLabel     label;
 	private final JTextField textArea;
 
 	/**
-	 * Constructs the Graphic using the Requirement associated with it.
+	 * Constructs the Graphic using the {@code StringRequirement} associated with
+	 * it.
 	 *
 	 * @param requirement the Requirement
 	 */
-	public StringRequirementGraphic(AbstractRequirement requirement) {
+	public StringRequirementGraphic(StringRequirement requirement) {
 		super(requirement);
 		setLayout(new GridLayout(1, 2, 15, 0));
 
@@ -41,8 +41,6 @@ public final class StringRequirementGraphic extends AbstractRequirementGraphic {
 
 	@Override
 	public void update() {
-		textArea.setText((String) req.defaultValue());
-
 		if (req.finalised())
 			textArea.setEnabled(false);
 	}
@@ -59,7 +57,7 @@ public final class StringRequirementGraphic extends AbstractRequirementGraphic {
 
 	@Override
 	public void onNotFulfilled() {
-		textArea.setText(((StringRequirement) req).stringType.getDescription());
+		textArea.setText(req.stringType.getDescription());
 	}
 
 	@Override

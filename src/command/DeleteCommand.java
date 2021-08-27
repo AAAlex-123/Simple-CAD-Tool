@@ -4,11 +4,13 @@ import static localisation.CommandStrings.DELETE_STR;
 import static localisation.CommandStrings.ID;
 
 import java.awt.Frame;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
 import application.editor.Editor;
 import application.editor.MissingComponentException;
+import components.Component;
 import components.ComponentFactory;
 import myUtil.Utility;
 import requirement.requirements.ComponentRequirement;
@@ -34,7 +36,8 @@ class DeleteCommand extends Command {
 	DeleteCommand(Editor editor) {
 		super(editor);
 		deleteCommands = new Vector<>();
-		requirements.addComponentRequirement(ID, ComponentRequirement.Policy.ANY);
+		requirements.add(ID, new ArrayList<>(),
+		        ComponentRequirement.Policy.ANY);
 	}
 
 	@Override
@@ -43,7 +46,7 @@ class DeleteCommand extends Command {
 		newCommand.requirements = new Requirements(requirements);
 		return newCommand;
 	}
-	
+
 	@Override
 	public void fillRequirements(Frame parentFrame, Editor newContext) {
 		context(newContext);
@@ -59,12 +62,16 @@ class DeleteCommand extends Command {
 		ComponentFactory.destroyComponent(associatedComponent);
 		context.removeComponent(associatedComponent);
 
-		Utility.foreach(context.getDeletedComponents(), command -> {
+		List<Component> deletedComps = context.getDeletedComponents();
+
+		Utility.foreach(deletedComps, command -> {
 			final DeleteCommand deleteCommand = new DeleteCommand(context);
 			deleteCommands.add(deleteCommand);
 
 			// component is already deleted the command isn't executed
 			// instead it is just set up so it can be undone successfully
+			((ComponentRequirement) deleteCommand.requirements.get(ID))
+			        .setComponentOptions(deletedComps);
 			deleteCommand.requirements.fulfil(ID, String.valueOf(command.getID()));
 			deleteCommand.associatedComponent = command;
 

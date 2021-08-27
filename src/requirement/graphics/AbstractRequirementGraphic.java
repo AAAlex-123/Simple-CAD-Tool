@@ -8,29 +8,45 @@ import javax.swing.JPanel;
 import requirement.requirements.AbstractRequirement;
 
 /**
- * A class providing a GUI that can be used to fulfil an
+ * A class that provides a GUI that can be used to fulfil an
  * {@link requirement.requirements.AbstractRequirement AbstractRequirement}. The
- * Graphic can use information from its components (the text of a text area, the
- * selected item of a drop-down list, etc.) to fulfil the Requirement and can
- * also fetch information from it in order to set its default value.
+ * Graphic can use information from its JComponents (the text of a text area,
+ * the selected item of a drop-down list etc.) to fulfil the {@code Requirement}
+ * associated with it and can fetch information from it in order to reset itself
+ * and update its display.
+ * <p>
+ * While Graphics can be used as-is by adding them to another swing component,
+ * this would require providing additional functionality to the component for
+ * calling the Graphic's public methods in order to interact with it and use it
+ * to fulfil its {@code Requirement}. A complete implementation of this
+ * functionality can be found in the {@link RequirementsDialog Dialog}.
+ *
+ * @param <T> the concrete subclass of
+ *            {@link requirement.requirements.AbstractRequirement
+ *            AbstractRequirement} this Graphic is associated with
  *
  * @author alexm
  */
-public abstract class AbstractRequirementGraphic extends JPanel {
-
-	/** The {@code AbstractRequirement} associated with this Graphic */
-	protected final AbstractRequirement req;
+public abstract class AbstractRequirementGraphic<T extends AbstractRequirement> extends JPanel {
 
 	/**
-	 * Constructs the Graphic using the Requirement associated with it.
+	 * The {@code AbstractRequirement} associated with this Graphic. The Graphic
+	 * fulfils this {@code Requirement} and requests information from it in order to
+	 * update its state and display.
+	 */
+	protected final T req;
+
+	/**
+	 * Constructs the Graphic using the {@code Requirement} that will be associated
+	 * with it.
 	 *
 	 * @param requirement the Requirement
 	 */
-	public AbstractRequirementGraphic(AbstractRequirement requirement) {
-		this.req = requirement;
+	public AbstractRequirementGraphic(T requirement) {
+		req = requirement;
 
-		this.setFocusTraversalKeysEnabled(true);
-		this.addFocusListener(new FocusAdapter() {
+		setFocusTraversalKeysEnabled(true);
+		addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusGained(FocusEvent e) {
 				onFocusGained();
@@ -38,12 +54,20 @@ public abstract class AbstractRequirementGraphic extends JPanel {
 		});
 	}
 
-	/** Fetches information from the {@code Requirement} to update this Graphic */
+	/**
+	 * Fetches information from the {@code Requirement} to update this Graphic.
+	 * After calling this method, the Graphic should fully reflect the state of its
+	 * associated {@code Requirement}.
+	 * <p>
+	 * <b>Warning:</b> the state of a Requirement must always align with its
+	 * Graphic. Failing to call this method after any changes to the underlying
+	 * Requirement may result in undefined behaviour.
+	 */
 	public abstract void update();
 
 	/**
-	 * Resets this Graphic to its initial state optionally displaying to the user
-	 * the default value of the {@code Requirement}, if any.
+	 * Using the available information, resets this Graphic to its initial state
+	 * displaying to the user the default value of the {@code Requirement}, if any.
 	 *
 	 * @see AbstractRequirement#defaultValue
 	 */
@@ -51,7 +75,7 @@ public abstract class AbstractRequirementGraphic extends JPanel {
 
 	/**
 	 * Uses the information of this Graphic to fulfil the {@code Requirement}
-	 * associated with this Graphics object.
+	 * associated with it.
 	 *
 	 * @see AbstractRequirement#fulfil(Object)
 	 */

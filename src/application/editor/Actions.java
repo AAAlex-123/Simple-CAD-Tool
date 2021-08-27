@@ -13,12 +13,12 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Stream;
-import java.util.stream.Collectors;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.swing.JOptionPane;
 
@@ -31,9 +31,8 @@ import localisation.EditorStrings;
 import localisation.Languages;
 import myUtil.Utility;
 import requirement.requirements.AbstractRequirement;
-import requirement.requirements.Requirements;
 import requirement.requirements.ListRequirement;
-import requirement.requirements.ComponentRequirement;
+import requirement.requirements.Requirements;
 import requirement.requirements.StringType;
 
 /**
@@ -139,9 +138,9 @@ public enum Actions {
 		
 		@Override
 		public void constructAdditionalRequirements() {
+			reqs.add(EditorStrings.FILENAME, new ArrayList<String>());
+			reqs.add(EditorStrings.FILETYPE, StringType.FILETYPE);
 			reqs.add(EditorStrings.GATENAME, StringType.ANY);
-			reqs.add(EditorStrings.FILETYPE,  StringType.FILETYPE);
-			reqs.addListRequirement(EditorStrings.FILENAME);
 		}
 		
 		@SuppressWarnings("unchecked") //yes this is safe

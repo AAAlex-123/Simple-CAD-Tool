@@ -1,18 +1,19 @@
 package requirement.requirements;
 
-import requirement.exceptions.UnsupportedGraphicException;
 import requirement.graphics.AbstractRequirementGraphic;
 
 /**
- * A general-purpose Requirement for objects of any type. This Requirement
- * doesn't impose any restrictions on the objects that fulfil it.
+ * A {@code general}-purpose {@code Requirement} for objects of any type. This
+ * Requirement doesn't impose any restrictions on the objects that fulfil it and
+ * does not have a Graphic associated with it. Instead it uses a
+ * {@link requirement.graphics.NullRequirementGraphic NullGraphic}.
  *
  * @author alexm
  */
 public final class ObjectRequirement extends AbstractRequirement {
 
 	/**
-	 * Constructs this Requirement with a {@code key}.
+	 * Constructs this ObjectRequirement with a {@code key}.
 	 *
 	 * @param key the key
 	 */
@@ -21,8 +22,9 @@ public final class ObjectRequirement extends AbstractRequirement {
 	}
 
 	@Override
-	public AbstractRequirementGraphic getGraphics() {
-		throw new UnsupportedGraphicException(this);
+	protected AbstractRequirementGraphic<?> constructGraphicOfSubclass() {
+		hasGraphic = false;
+		return constructNullGraphic("Graphic Not Supported");
 	}
 
 	@Override

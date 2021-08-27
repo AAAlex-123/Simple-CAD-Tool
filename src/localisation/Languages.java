@@ -131,7 +131,7 @@ public class Languages {
 		}
 
 		Requirements reqWrapper = new Requirements();
-		reqWrapper.addListRequirement(Languages.getString(LANGUAGE), locales); 		//$NON-NLS-1$
+		reqWrapper.add(Languages.getString(LANGUAGE), locales); 		//$NON-NLS-1$
 		reqWrapper.fulfillWithDialog(frame, Languages.getString(LANGUAGE));		//$NON-NLS-1$
 		Locale chosen = (Locale) reqWrapper.getValue(Languages.getString(LANGUAGE));	//$NON-NLS-1$
 
