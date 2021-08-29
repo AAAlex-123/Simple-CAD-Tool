@@ -14,7 +14,6 @@ import static requirement.requirements.StringType.CUSTOM;
 import static requirement.requirements.StringType.NON_NEG_INTEGER;
 import static requirement.requirements.StringType.POS_INTEGER;
 
-import java.awt.Frame;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -82,15 +81,12 @@ class CreateCommand extends Command {
 	}
 
 	@Override
-	public void fillRequirements(Frame parent, Editor newContext) {
-		context(newContext);
-
+	public void adjustRequirements() {
 		// alter the `CUSTOM` type for this specific use
 		CUSTOM.alter(constructRegex(), Languages.getString("CreateCommand.0")); //$NON-NLS-1$
 
 		// provide preset
 		requirements.offer(NAME, context.getNextID(componentType));
-		super.fillRequirements(parent, newContext);
 	}
 
 	@Override
