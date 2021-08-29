@@ -47,11 +47,22 @@ class CreateCommand extends Command {
 	 * @param editor the {@code context} of this Command
 	 * @param type   the type of Components this Command creates
 	 */
-	CreateCommand(Editor editor, ComponentType type) {
+	protected CreateCommand(Editor editor, ComponentType type) {
 		super(editor);
 		componentType = type;
 		deleteCommands = new ArrayList<>();
+		constructRequirements();
+	}
 
+	@Override
+	public Command clone() {
+		final CreateCommand newCommand = new CreateCommand(context, componentType);
+		newCommand.requirements = new Requirements(requirements);
+		return newCommand;
+	}
+
+	@Override
+	public void constructRequirements() {
 		switch (componentType) {
 		case BRANCH:
 			requirements.add(IN_ID, ANY);
@@ -71,13 +82,6 @@ class CreateCommand extends Command {
 			break;
 		}
 		requirements.add(NAME, CUSTOM);
-	}
-
-	@Override
-	public Command clone() {
-		final CreateCommand newCommand = new CreateCommand(context, componentType);
-		newCommand.requirements = new Requirements(requirements);
-		return newCommand;
 	}
 
 	@Override

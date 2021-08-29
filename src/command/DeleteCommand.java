@@ -32,11 +32,10 @@ class DeleteCommand extends Command {
 	 *
 	 * @param editor the {@code context} of this Command.
 	 */
-	DeleteCommand(Editor editor) {
+	protected DeleteCommand(Editor editor) {
 		super(editor);
 		deleteCommands = new Vector<>();
-		requirements.add(ID, new ArrayList<>(),
-		        ComponentRequirement.Policy.ANY);
+		constructRequirements();
 	}
 
 	@Override
@@ -44,6 +43,11 @@ class DeleteCommand extends Command {
 		final Command newCommand = new DeleteCommand(context);
 		newCommand.requirements = new Requirements(requirements);
 		return newCommand;
+	}
+
+	@Override
+	public void constructRequirements() {
+		requirements.add(ID, new ArrayList<>(), ComponentRequirement.Policy.ANY);
 	}
 
 	@Override

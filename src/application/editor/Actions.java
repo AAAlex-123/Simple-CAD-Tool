@@ -73,7 +73,7 @@ public enum Actions implements HasRequirements {
 		}
 
 		@Override
-		protected void constructRequirements() {
+		public void constructRequirements() {
 			reqs.add(EditorStrings.COMMAND);
 		}
 	},
@@ -108,7 +108,7 @@ public enum Actions implements HasRequirements {
 		}
 
 		@Override
-		protected void constructRequirements() {
+		public void constructRequirements() {
 			reqs.add(EditorStrings.COMMAND);
 		}
 	},
@@ -143,7 +143,7 @@ public enum Actions implements HasRequirements {
 		}
 
 		@Override
-		protected void constructRequirements() {
+		public void constructRequirements() {
 			reqs.add(EditorStrings.FILENAME, StringType.FILENAME);
 		}
 	},
@@ -349,11 +349,8 @@ public enum Actions implements HasRequirements {
 	/** Executes the Action */
 	public abstract void execute();
 
-	/**
-	 * Extra code to be invoked by the constructor. By default does nothing, override
-	 * for specialized requirements.
-	 */
-	protected void constructRequirements() {}
+	@Override
+	public void constructRequirements() {}
 
 	@Override
 	public void adjustRequirements() {}
