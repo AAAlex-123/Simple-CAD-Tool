@@ -83,11 +83,15 @@ public abstract class Command implements HasRequirements, Undoable, Serializable
 	 * Constructs the Command with the given {@code context}.
 	 *
 	 * @param editor the context
+	 *
+	 * @implSpec subclasses are responsible for calling the
+	 *           {@link #constructRequirements()} method
 	 */
 	protected Command(Editor editor) {
 		context = editor;
 		requirements = new Requirements();
-		constructRequirements();
+		// constructRequirements is NOT called here
+		// each subclass is responsible for calling it
 	}
 
 	/**
