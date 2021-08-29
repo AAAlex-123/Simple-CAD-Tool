@@ -4,12 +4,11 @@ package requirement.requirements;
  * An Interface for classes that use {@link AbstractRequirement Requirements}.
  * Since {@code Requirements} are by design extremely loosely coupled with the
  * classes that use them, finding where exactly they are created, adjusted and
- * fulfilled is often rather difficult. To ease design and maintenance of said
- * classes, this interface defines two methods that construct and adjust these
- * {@code Requirements}. Classes that use them should implement and call these
- * methods to enhance code readability, extensibility and ease of maintenance,
- * since the code regarding the {@code Requirements} is contained within these
- * methods and nowhere else.
+ * fulfilled can be rather difficult. To ease design, maintenance and allow to
+ * more easily extend the functionality of the class, it should implement this
+ * interface so that as much of the code regarding the {@code Requirements} is
+ * contained in the methods defined in this interface. The code in the methods
+ * can then be read and changed easily, as well as extended in subclasses.
  * <p>
  * Because each class fulfils its {@code Requirements} in its own, unique way,
  * it is hard and limiting to define a method with a specific signature to fit
@@ -18,7 +17,7 @@ package requirement.requirements;
  * to fulfil them, so that adding new {@code Requirements} to the class can be
  * done as easily as possible.
  * <p>
- * <b>Note:</b> the methods in this Interface simply aid code organisation and
+ * <b>Note:</b> the methods in this interface simply aid code organisation and
  * readability. They act as template methods and should under no circumstances
  * be called from outside of the class implements them.
  *
