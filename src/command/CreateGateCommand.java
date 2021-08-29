@@ -34,7 +34,7 @@ class CreateGateCommand extends CreateCommand {
 	 * @param cmds   the sequence of Commands that will be executed
 	 * @param desc   the description of this Command
 	 */
-	CreateGateCommand(Editor editor, List<Command> cmds, String desc) {
+	protected CreateGateCommand(Editor editor, List<Command> cmds, String desc) {
 		super(editor, ComponentType.GATE);
 		commands = cmds;
 		description = desc;
