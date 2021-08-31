@@ -1,15 +1,14 @@
-package requirement;
-
-import static localisation.RequirementStrings.OFF;
-import static localisation.RequirementStrings.ON;
+package requirement.requirements;
 
 import java.util.regex.Pattern;
 
 import localisation.EditorStrings;
 import localisation.Languages;
+import localisation.RequirementStrings;
 
 /**
- * A wrapper for a regular expression that a String must match.
+ * A wrapper for a regular expression that a String must match. Used by
+ * {@link StringRequirement}.
  *
  * @author alexm
  */
@@ -26,47 +25,51 @@ public enum StringType {
 
 	/** Type for valid file types */
 	FILETYPE(String.format("%s|%s", EditorStrings.COMPONENT, EditorStrings.CIRCUIT), //$NON-NLS-1$
-			String.format(Languages.getString("StringType.0"), EditorStrings.COMPONENT, EditorStrings.CIRCUIT)), //$NON-NLS-1$
+	        String.format(Languages.getString("StringType.0"), EditorStrings.COMPONENT, //$NON-NLS-1$
+	                EditorStrings.CIRCUIT)),
 
 	/** Type for 'on' or 'off' */
-	ON_OFF(String.format("%s|%s", ON, OFF), String.format(Languages.getString("StringType.9"), ON, OFF)), //$NON-NLS-1$ //$NON-NLS-2$
+	ON_OFF(String.format("%s|%s", RequirementStrings.ON, RequirementStrings.OFF), //$NON-NLS-1$
+	        String.format(Languages.getString("StringType.9"), RequirementStrings.ON, //$NON-NLS-1$
+	                RequirementStrings.OFF)),
 
-	/** Type for any string */
+	/** Type for any non-empty string */
 	ANY(".+", Languages.getString("StringType.11")), //$NON-NLS-1$ //$NON-NLS-2$
 
 	/** Type for custom regex. Defaults to any string (including the empty one). */
 	CUSTOM(".*", Languages.getString("StringType.13")) { //$NON-NLS-1$ //$NON-NLS-2$
 		@Override
-		public StringType alter(String regex, String description) {
+		public StringType alter(String regex, String desc) {
 			p = Pattern.compile(regex);
-			desc = description;
+			description = desc;
 			return this;
 		}
 	};
 
-	/** The regex of this Type */
+	/** A Pattern for the regex of this Type */
 	Pattern p;
 
 	/** A human-readable description for the regex of this Type */
-	String  desc;
+	protected String description;
 
-	private StringType(String regex, String description) {
+	StringType(String regex, String description) {
 		p = Pattern.compile(regex);
-		desc = description;
+		this.description = description;
 	}
 
 	/**
-	 * Allows some Types to define a custom regex and description at runtime.
+	 * Allows some Types to define a custom {@code regex} and {@code description} at
+	 * runtime.
 	 *
-	 * @param regex       the new regex for this Type
-	 * @param description the new description for this Type
+	 * @param regex the new regex for this Type
+	 * @param desc  the new description for this Type
 	 *
 	 * @return this (used for chaining)
 	 */
 	@SuppressWarnings("unused")
-	public StringType alter(String regex, String description) {
+	public StringType alter(String regex, String desc) {
 		throw new UnsupportedOperationException(
-				String.format("Type %s does not support custom regex and description", this)); //$NON-NLS-1$
+		        String.format("Type %s does not support custom regex and description", this)); //$NON-NLS-1$
 	}
 
 	/**
@@ -78,5 +81,14 @@ public enum StringType {
 	 */
 	public final boolean isValid(String s) {
 		return p.matcher(s).matches();
+	}
+
+	/**
+	 * Returns the {@link StringType#description description}.
+	 *
+	 * @return the description
+	 */
+	public String getDescription() {
+		return description;
 	}
 }

@@ -12,7 +12,7 @@ import components.Component;
 import components.ComponentFactory;
 import components.ComponentType;
 import myUtil.Utility;
-import requirement.Requirements;
+import requirement.requirements.Requirements;
 
 /**
  * A Command that creates a composite {@code Component} (a {@code Gate}) and
@@ -34,7 +34,7 @@ class CreateGateCommand extends CreateCommand {
 	 * @param cmds   the sequence of Commands that will be executed
 	 * @param desc   the description of this Command
 	 */
-	CreateGateCommand(Editor editor, List<Command> cmds, String desc) {
+	protected CreateGateCommand(Editor editor, List<Command> cmds, String desc) {
 		super(editor, ComponentType.GATE);
 		commands = cmds;
 		description = desc;
@@ -43,7 +43,7 @@ class CreateGateCommand extends CreateCommand {
 	@Override
 	public Command clone() {
 		final CreateGateCommand newCommand = new CreateGateCommand(context, commands, description);
-		newCommand.requirements = new Requirements<>(requirements);
+		newCommand.requirements = new Requirements(requirements);
 		return newCommand;
 	}
 
@@ -87,7 +87,7 @@ class CreateGateCommand extends CreateCommand {
 
 			// create the composite Gate and add it to the real context
 			associatedComponent = ComponentFactory.createGate(in, out, description);
-			associatedComponent.setID(requirements.getV(NAME));
+			associatedComponent.setID((String) requirements.getValue(NAME));
 			context.addComponent(associatedComponent);
 		}
 	}

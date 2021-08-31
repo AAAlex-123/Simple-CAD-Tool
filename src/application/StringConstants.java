@@ -12,7 +12,8 @@ import java.util.Properties;
 import localisation.Languages;
 import myUtil.OrderedProperties;
 import myUtil.Utility;
-import requirement.Requirements;
+import requirement.requirements.Requirements;
+import requirement.requirements.StringType;
 
 /**
  * A bunch of String and char constants used throughout the project.
@@ -26,7 +27,7 @@ public final class StringConstants {
 
 	private static final Properties properties = new OrderedProperties();
 
-	private static final Requirements<String> reqs = new Requirements<>();
+	private static final Requirements reqs = new Requirements();
 
 	public static String COMPONENT_ICON_PATH, MENU_ICON_PATH, USER_DATA, F_NEW_ACCEL, F_CLOSE_ACCEL,
 	        F_SAVE_ACCEL, F_SAVE_AS_ACCEL, F_OPEN_ACCEL, F_CLEAR_ACCEL, F_IMPORT_ACCEL,
@@ -51,7 +52,7 @@ public final class StringConstants {
 		Utility.foreach(properties.entrySet(), entry -> {
 			final String key   = (String) entry.getKey();
 			final String value = (String) entry.getValue();
-			reqs.add(key);
+			reqs.add(key, StringType.ANY);
 			reqs.offer(key, value);
 		});
 
@@ -109,7 +110,7 @@ public final class StringConstants {
 
 		if (committedChanges) {
 			Utility.foreach(reqs, r -> {
-				final String k = r.key(), v = r.value();
+				final String k = r.key(), v = (String) r.value();
 				if (!properties.getProperty(k).equals(v))
 					properties.setProperty(k, v);
 			});

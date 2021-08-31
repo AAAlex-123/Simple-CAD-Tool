@@ -1,6 +1,7 @@
 package application.editor;
 
 import java.awt.Frame;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -8,10 +9,16 @@ import java.io.IOException;
 import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.swing.JOptionPane;
 
@@ -23,26 +30,28 @@ import exceptions.MalformedBranchException;
 import localisation.EditorStrings;
 import localisation.Languages;
 import myUtil.Utility;
-import requirement.Requirement;
-import requirement.Requirements;
-import requirement.StringType;
+import requirement.requirements.AbstractRequirement;
+import requirement.requirements.HasRequirements;
+import requirement.requirements.ListRequirement;
+import requirement.requirements.Requirements;
+import requirement.requirements.StringType;
 
 /**
  * An enum-strategy for the different Actions the {@link Editor} may take.
  *
  * @author alexm
  */
-public enum Actions {
+public enum Actions implements HasRequirements {
 
 	/** Action for creating a {@code Component} */
-	CREATE(EditorStrings.COMMAND) {
+	CREATE {
 		@Override
 		public void execute() {
 
 			if (!reqs.fulfilled())
 				throw new RuntimeException("Execute CREATE without requirements"); //$NON-NLS-1$
 
-			final Command cte = (Command) reqs.getV(EditorStrings.COMMAND);
+			final Command cte = (Command) reqs.getValue(EditorStrings.COMMAND);
 
 			try {
 				if (!cte.canExecute()) {
@@ -62,17 +71,22 @@ public enum Actions {
 				reqs.clear();
 			}
 		}
+
+		@Override
+		public void constructRequirements() {
+			reqs.add(EditorStrings.COMMAND);
+		}
 	},
 
 	/** Action for deleting a {@code Component} */
-	DELETE(EditorStrings.COMMAND) {
+	DELETE {
 		@Override
 		public void execute() {
 
 			if (!reqs.fulfilled())
 				throw new RuntimeException("Execute DELETE without requirements"); //$NON-NLS-1$
 
-			final Command cte = (Command) reqs.getV(EditorStrings.COMMAND);
+			final Command cte = (Command) reqs.getValue(EditorStrings.COMMAND);
 
 			try {
 				if (!cte.canExecute()) {
@@ -92,14 +106,19 @@ public enum Actions {
 				reqs.clear();
 			}
 		}
+
+		@Override
+		public void constructRequirements() {
+			reqs.add(EditorStrings.COMMAND);
+		}
 	},
 
-	/** Action for saving the components of the {@code Editor} to a File */
-	SAVE(EditorStrings.FILENAME, StringType.FILENAME) {
+	/** Action for saving the state of an {@code Editor} to a File */
+	SAVE {
 		@Override
 		public void execute() {
 
-			final String fname = (String) reqs.getV(EditorStrings.FILENAME);
+			final String fname = (String) reqs.getValue(EditorStrings.FILENAME);
 
 			try {
 				if (!reqs.fulfilled()) {
@@ -122,17 +141,20 @@ public enum Actions {
 				reqs.clear();
 			}
 		}
+
+		@Override
+		public void constructRequirements() {
+			reqs.add(EditorStrings.FILENAME, StringType.FILENAME);
+		}
 	},
 
-	/** An Action that reads the contents of a File to the Editor */
-	OPEN(new String[] { EditorStrings.FILENAME, EditorStrings.GATENAME,
-	        EditorStrings.FILETYPE },
-			new StringType[] { StringType.FILENAME, StringType.ANY, StringType.FILETYPE }) {
+	/** An Action that reads the contents of a File to an {@code Editor} */
+	OPEN {
 		@Override
 		public void execute() {
 
-			final String fname = (String) reqs.getV(EditorStrings.FILENAME);
-			final String ftype = (String) reqs.getV(EditorStrings.FILETYPE);
+			final String fname = (String) reqs.getValue(EditorStrings.FILENAME);
+			final String ftype = (String) reqs.getValue(EditorStrings.FILETYPE);
 
 			final List<Component> components = new ArrayList<>();
 			final List<Command> commands = new ArrayList<>();
@@ -166,7 +188,7 @@ public enum Actions {
 				} else if (ftype.equals(EditorStrings.COMPONENT)) {
 
 					final Command cgc = Command.create(commands,
-					        (String) reqs.getV(EditorStrings.GATENAME));
+					        (String) reqs.getValue(EditorStrings.GATENAME));
 					context.context().addCreateCommand(cgc);
 					context.status(Languages.getString("Actions.13"), fname); //$NON-NLS-1$
 
@@ -189,9 +211,43 @@ public enum Actions {
 				reqs.clear();
 			}
 		}
+
+		@Override
+		public void constructRequirements() {
+			reqs.add(EditorStrings.FILENAME, new ArrayList<String>());
+			reqs.add(EditorStrings.FILETYPE, StringType.FILETYPE);
+			reqs.add(EditorStrings.GATENAME, StringType.ANY);
+		}
+
+		@SuppressWarnings("unchecked") //yes this is safe
+		@Override
+		public void adjustRequirements() {
+			Path dir = Paths.get(
+			        System.getProperty("user.dir") + File.separator + StringConstants.USER_DATA);
+			if (!Files.exists(dir)) { //create directory if it doesn't exist
+				try {
+					Files.createDirectory(dir);
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+			}
+
+			List<String> files;
+			try (Stream<Path> paths = Files.walk(dir)) {
+				files = paths
+				        .filter(file -> file.toString().contains(".scad"))
+				        .map(file -> file.toString()
+				                .substring(file.toString().lastIndexOf(File.separator) + 1)) //get file name
+				        .collect(Collectors.toList());
+			} catch (IOException e) {
+				throw new UncheckedIOException(e);
+			}
+
+			((ListRequirement<String>) reqs.get(EditorStrings.FILENAME)).setOptions(files);
+		}
 	},
 
-	/** An action for resetting the Editor */
+	/** An action for resetting an {@code Editor} */
 	CLEAR {
 		@Override
 		public void execute() {
@@ -201,7 +257,7 @@ public enum Actions {
 		}
 	},
 
-	/** An Action for undoing a Command */
+	/** An Action for undoing a {@code Command} */
 	UNDO {
 		@Override
 		public void execute() {
@@ -211,7 +267,7 @@ public enum Actions {
 		}
 	},
 
-	/** An Action for redoing a Command */
+	/** An Action for redoing a {@code Command} */
 	REDO {
 		@Override
 		public void execute() {
@@ -259,14 +315,14 @@ public enum Actions {
 
 			if (titles.length != messages.length)
 				throw new RuntimeException(
-				        "Number of help titles doesn't match number of messages."); //$NON-NLS-1$
+				        "Number of help titles doesn't match number of messages"); //$NON-NLS-1$
 
-			// yes=0 no=1 cancel=2 x=-1 (+1)
+			// yes=0 no=1 cancel=2 x=-1 (+1 to adjust for array index)
 			final int[] res = { 0, 0, 0, 0 };
 
 			final Frame frame = context.context().getFrame();
 
-			for (int i = 0; i < messages.length; i++)
+			for (int i = 0, count = messages.length; i < count; i++)
 				++res[1 + msg(frame, messages[i], titles[i])];
 		}
 
@@ -280,42 +336,24 @@ public enum Actions {
 	private static final Integer start = 10, eof = 42;
 
 	/** The Requirements of the Action */
-	protected final Requirements<Object> reqs;
+	protected final Requirements reqs;
 
 	/** The context of the Action */
-	Editor context;
+	protected Editor context;
 
 	Actions() {
-		reqs = null;
-	}
-
-	Actions(String reqKey) {
-		reqs = new Requirements<>();
-		reqs.add(reqKey);
-	}
-
-	Actions(String reqKey, StringType stringType) {
-		reqs = new Requirements<>();
-		reqs.add(reqKey, stringType);
-	}
-
-	Actions(String[] reqKeys) {
-		reqs = new Requirements<>();
-		Utility.foreach(reqKeys, reqs::add);
-	}
-
-	Actions(String[] reqKeys, StringType[] types) {
-		reqs = new Requirements<>();
-
-		if (reqKeys.length != types.length)
-			throw new RuntimeException("Invalid arguments in Actions enum constructor"); //$NON-NLS-1$
-
-		for (int i = 0; i < reqKeys.length; i++)
-			reqs.add(reqKeys[i], types[i]);
+		reqs = new Requirements();
+		constructRequirements();
 	}
 
 	/** Executes the Action */
 	public abstract void execute();
+
+	@Override
+	public void constructRequirements() {}
+
+	@Override
+	public void adjustRequirements() {}
 
 	/**
 	 * Specifies the Action's context.
@@ -337,6 +375,7 @@ public enum Actions {
 	 * @return this (used for chaining)
 	 */
 	public final Actions specifyWithDialog(Editor editor) {
+		adjustRequirements();
 		reqs.fulfillWithDialog(editor.context().getFrame(), toString());
 		return this;
 	}
@@ -349,7 +388,7 @@ public enum Actions {
 	 *
 	 * @return this (used for chaining)
 	 *
-	 * @see Requirement#finalise
+	 * @see AbstractRequirement#finalise
 	 */
 	public final Actions specify(String req, Object c) {
 		reqs.finalise(req, c);
