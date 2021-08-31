@@ -1,22 +1,27 @@
-package exceptions;
+package component.exceptions;
 
-import components.Component;
-import components.ComponentType;
+import component.ComponentType;
+import component.components.Component;
 import localisation.Languages;
 
-/** Thrown when a Component of a wrong type is provided in a Factory method. */
+/**
+ * Thrown when a {@code Component} of a wrong {@code Type} is provided.
+ *
+ * @see component.ComponentType ComponentType
+ *
+ * @author Alex Mandelias
+ */
 public final class InvalidComponentException extends RuntimeException {
 
 	/**
-	 * Constructs the exception using information about the {@code Component} and
-	 * the expected {@code correctType}.
-	 * 
-	 * @param c           the Component with the wrong type
-	 * @param correctType the correct type
+	 * Constructs the Exception with a {@code Component} and the expected
+	 * {@code Type}.
+	 *
+	 * @param component    the Component with the wrong Type
+	 * @param expectedType the expected Type
 	 */
-	public InvalidComponentException(Component c, ComponentType correctType) {
-		super(String.format(Languages.getString("InvalidComponentException.0"), correctType.description(), //$NON-NLS-1$
-				c.type().description()));
+	public InvalidComponentException(Component component, ComponentType expectedType) {
+		super(String.format(Languages.getString("InvalidComponentException.0"), //$NON-NLS-1$
+		        expectedType.description(), component.type().description()));
 	}
-
 }
