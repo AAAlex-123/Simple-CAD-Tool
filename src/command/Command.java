@@ -11,6 +11,7 @@ import application.editor.Undoable;
 import components.Component;
 import components.ComponentFactory;
 import components.ComponentType;
+import requirement.requirements.HasRequirements;
 import requirement.requirements.Requirements;
 
 /**
@@ -27,7 +28,7 @@ import requirement.requirements.Requirements;
  *
  * @author alexm
  */
-public abstract class Command implements Undoable, Serializable, Cloneable {
+public abstract class Command implements HasRequirements, Undoable, Serializable, Cloneable {
 
 	private static final long serialVersionUID = 4L;
 
@@ -82,10 +83,15 @@ public abstract class Command implements Undoable, Serializable, Cloneable {
 	 * Constructs the Command with the given {@code context}.
 	 *
 	 * @param editor the context
+	 *
+	 * @implSpec subclasses are responsible for calling the
+	 *           {@link #constructRequirements()} method
 	 */
-	public Command(Editor editor) {
+	protected Command(Editor editor) {
 		context = editor;
 		requirements = new Requirements();
+		// constructRequirements is NOT called here
+		// each subclass is responsible for calling it
 	}
 
 	/**
@@ -104,9 +110,10 @@ public abstract class Command implements Undoable, Serializable, Cloneable {
 	 * @param parentFrame the parent of the dialog
 	 * @param newContext  the Command's context
 	 */
-	public void fillRequirements(Frame parentFrame, Editor newContext) {
-		requirements.fulfillWithDialog(parentFrame, toString());
+	public final void fillRequirements(Frame parentFrame, Editor newContext) {
 		context(newContext);
+		adjustRequirements();
+		requirements.fulfillWithDialog(parentFrame, toString());
 	}
 
 	/**

@@ -14,7 +14,6 @@ import static requirement.requirements.StringType.CUSTOM;
 import static requirement.requirements.StringType.NON_NEG_INTEGER;
 import static requirement.requirements.StringType.POS_INTEGER;
 
-import java.awt.Frame;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,11 +47,22 @@ class CreateCommand extends Command {
 	 * @param editor the {@code context} of this Command
 	 * @param type   the type of Components this Command creates
 	 */
-	CreateCommand(Editor editor, ComponentType type) {
+	protected CreateCommand(Editor editor, ComponentType type) {
 		super(editor);
 		componentType = type;
 		deleteCommands = new ArrayList<>();
+		constructRequirements();
+	}
 
+	@Override
+	public Command clone() {
+		final CreateCommand newCommand = new CreateCommand(context, componentType);
+		newCommand.requirements = new Requirements(requirements);
+		return newCommand;
+	}
+
+	@Override
+	public void constructRequirements() {
 		switch (componentType) {
 		case BRANCH:
 			requirements.add(IN_ID, ANY);
@@ -75,22 +85,12 @@ class CreateCommand extends Command {
 	}
 
 	@Override
-	public Command clone() {
-		final CreateCommand newCommand = new CreateCommand(context, componentType);
-		newCommand.requirements = new Requirements(requirements);
-		return newCommand;
-	}
-
-	@Override
-	public void fillRequirements(Frame parent, Editor newContext) {
-		context(newContext);
-
+	public void adjustRequirements() {
 		// alter the `CUSTOM` type for this specific use
 		CUSTOM.alter(constructRegex(), Languages.getString("CreateCommand.0")); //$NON-NLS-1$
 
 		// provide preset
 		requirements.offer(NAME, context.getNextID(componentType));
-		super.fillRequirements(parent, newContext);
 	}
 
 	@Override

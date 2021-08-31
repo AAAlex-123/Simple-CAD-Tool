@@ -3,7 +3,6 @@ package command;
 import static localisation.CommandStrings.DELETE_STR;
 import static localisation.CommandStrings.ID;
 
-import java.awt.Frame;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -33,11 +32,10 @@ class DeleteCommand extends Command {
 	 *
 	 * @param editor the {@code context} of this Command.
 	 */
-	DeleteCommand(Editor editor) {
+	protected DeleteCommand(Editor editor) {
 		super(editor);
 		deleteCommands = new Vector<>();
-		requirements.add(ID, new ArrayList<>(),
-		        ComponentRequirement.Policy.ANY);
+		constructRequirements();
 	}
 
 	@Override
@@ -48,10 +46,13 @@ class DeleteCommand extends Command {
 	}
 
 	@Override
-	public void fillRequirements(Frame parentFrame, Editor newContext) {
-		context(newContext);
+	public void constructRequirements() {
+		requirements.add(ID, new ArrayList<>(), ComponentRequirement.Policy.ANY);
+	}
+
+	@Override
+	public void adjustRequirements() {
 		((ComponentRequirement)requirements.get(ID)).setComponentOptions(context.getComponents_());
-		super.fillRequirements(parentFrame, newContext);
 	}
 
 	@Override
