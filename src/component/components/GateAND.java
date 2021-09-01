@@ -14,10 +14,10 @@ final class GateAND extends PrimitiveGate {
 	/**
 	 * Constructs the AND Gate with the given number of inputs and one output.
 	 *
-	 * @param in the number of input pins
+	 * @param inCount the number of input pins
 	 */
-	protected GateAND(int in) {
-		super(in, 1);
+	protected GateAND(int inCount) {
+		super(inCount, 1);
 	}
 
 	@Override
