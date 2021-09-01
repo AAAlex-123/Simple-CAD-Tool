@@ -4,29 +4,35 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 
-import exceptions.ComponentNotAccessibleException;
-import exceptions.InvalidIndexException;
+import component.ComponentType;
+import component.exceptions.ComponentNotAccessibleException;
+import component.exceptions.InvalidIndexException;
+import component.graphics.ComponentGraphic;
 
 /**
- * A class representing a component that is connected to other Components,
+ * A class representing a Component that is connected to other Components,
  * carries a signal and can be drawn.
  * <p>
- * The Component's methods are package-private therefore the client may use the
- * {@link components.ComponentFactory ComponentFactory} to interact with them.
+ * Each Component has a {@link ComponentType Type} and is {@link Identifiable}
+ * by a String that can be altered. A Component may optionally be accompanied by
+ * a {@link ComponentGraphic} to allow users to interact with it using a GUI.
  * <p>
- * Components may be used in the context of an Application which manages when
- * they are created and deleted. This Application will be referenced throughout
- * the documentation.
+ * Almost all of the Component's methods are protected therefore the client may
+ * use the {@link ComponentFactory} to interact with them.
+ * <p>
+ * Components may be used in the context of an {@link application.editor.Editor
+ * Editor} or {@code Application} which manages when they are created and
+ * deleted. This Application will be referenced throughout the documentation.
  *
- * @author alexm
+ * @author Alex Mandelias
  */
 public abstract class Component implements Identifiable<String>, Serializable {
 
 	private static final long serialVersionUID = 6L;
 
-	// 3 private fields
+	// 4 private fields
 
-	/** ID for this Component, to implement the {@link Identifiable} interface */
+	/** ID for this Component */
 	private String componentID;
 
 	/**
@@ -40,13 +46,16 @@ public abstract class Component implements Identifiable<String>, Serializable {
 
 	/**
 	 * Indicates whether or not this Component should be removed. When the method
-	 * {@link Component#destroy() destroy()} is called, this flag is set to true.
-	 * The application is responsible to check, using {@link Component#toRemove()
-	 * toRemove()}, if a Component is destroyed and must therefore be removed.
+	 * {@link #destroy()} is called, this flag is set to true. The application is
+	 * responsible to check, using {@link #toRemove()}, if a Component is destroyed
+	 * and must therefore be removed.
 	 */
 	protected boolean toBeRemoved;
 
-	// 4 core methods
+	/** {@code Graphic} for this Component, created lazily, on-demand */
+	private transient ComponentGraphic g;
+
+	// 6 core methods
 
 	/** Constructs the Component */
 	protected Component() {
@@ -56,21 +65,52 @@ public abstract class Component implements Identifiable<String>, Serializable {
 	}
 
 	/**
-	 * Returns the Component's type, as described by {@link ComponentType}.
+	 * Returns the Component's {@code Type}.
 	 *
 	 * @return the type
+	 *
+	 * @see ComponentType
 	 */
 	public abstract ComponentType type();
+
+	/**
+	 * Returns the Component's {@code description}, an extremely short string that
+	 * briefly describes the purpose of this Component or its function. It is meant
+	 * to be the technical name of the Component and is displayed in its Graphic. To
+	 * avoid cluttering the Graphic, this method should be overridden when the
+	 * Graphic alone doesn't convey enough information in order to understand what a
+	 * built-in Component does.
+	 *
+	 * @return the Component's description
+	 */
+	protected String description() {
+		return ""; //$NON-NLS-1$
+	}
+
+	/**
+	 * Returns the {@code Graphic} object associated with this Component.
+	 * <p>
+	 * <b>Note:</b> the {@code Graphic} returned by this method is different than
+	 * the one created using the Graphic's {@code fromComponent(Component)} method.
+	 * Using both methods interchangeably may result in undefined behaviour.
+	 *
+	 * @return the ComponentGraphics object
+	 */
+	public final ComponentGraphic getGraphics() {
+		if (g == null)
+			g = ComponentGraphic.forComponent(this);
+		return g;
+	}
 
 	/**
 	 * The core of the library: all Components are able to propagate a received
 	 * signal to other components.
 	 * <p>
-	 * Specifically, when the signal (a boolean value) changes to the
-	 * {@code newActive} value in the Component's input at a specific {@code index},
-	 * the Component may propagate it to all of the Components it is connected to.
-	 * The {@code "hiddenness"} of the previous Component is also propagated so that
-	 * a chain of Components can all update their "hiddenness" when one is altered.
+	 * Specifically, when the signal (a boolean) changes to the {@code newActive}
+	 * value in the Component's input at a specific {@code index}, the Component may
+	 * propagate it to all of the Components it is connected to. The
+	 * {@code "hiddenness"} of the previous Component is also propagated so that a
+	 * chain of Components can all update their "hiddenness" when one is altered.
 	 *
 	 * @param newActive  the new signal received
 	 * @param index      the index at which it was received
@@ -83,7 +123,7 @@ public abstract class Component implements Identifiable<String>, Serializable {
 	 *
 	 * @param index the Component's Pin index
 	 *
-	 * @return true if active, false otherwise
+	 * @return {@code true} if active, {@code false} otherwise
 	 */
 	protected abstract boolean getActive(int index);
 
@@ -93,48 +133,52 @@ public abstract class Component implements Identifiable<String>, Serializable {
 	// - remove in/out are called by Branch.destroy()
 
 	/**
-	 * Sets the {@code branch} as the Component's Input at {@code index}.
+	 * Sets the {@code branch} as the Component's Input at the {@code index}.
 	 *
 	 * @param branch the Branch
 	 * @param index  the index the Branch should connect to
 	 */
+	@SuppressWarnings("unused")
 	protected void setIn(Branch branch, int index) {
 		throw new UnsupportedOperationException(String.format(
-				"Components of type %s don't support setIn(Branch, int)", type().description())); //$NON-NLS-1$
+		        "Components of type %s don't support setIn(Branch, int)", type().description())); //$NON-NLS-1$
 	}
 
 	/**
-	 * Adds the {@code branch} to the Component's Outputs at {@code index}.
+	 * Adds the {@code branch} to the Component's Outputs at the {@code index}.
 	 *
 	 * @param branch the Branch
 	 * @param index  the index the Branch should connect to
 	 */
+	@SuppressWarnings("unused")
 	protected void addOut(Branch branch, int index) {
 		throw new UnsupportedOperationException(String.format(
-				"Components of type %s don't support addOut(Branch, int)", type().description())); //$NON-NLS-1$
+		        "Components of type %s don't support addOut(Branch, int)", type().description())); //$NON-NLS-1$
 	}
 
 	/**
-	 * Removes the {@code branch} from the Component's Input at {@code index}.
+	 * Removes the {@code branch} from the Component's Input at the {@code index}.
 	 *
 	 * @param branch the Branch
 	 * @param index  the index the Branch is connected to
 	 */
+	@SuppressWarnings("unused")
 	protected void removeIn(Branch branch, int index) {
 		throw new UnsupportedOperationException(String.format(
-				"Components of type %s don't support removeIn(Branch, int)", type().description())); //$NON-NLS-1$
+		        "Components of type %s don't support removeIn(Branch, int)", type().description())); //$NON-NLS-1$
 	}
 
 	/**
-	 * Removes the {@code branch} from the Component's Output at {@code index}.
+	 * Removes the {@code branch} from the Component's Output at the {@code index}.
 	 *
 	 * @param branch the Branch
 	 * @param index  the index the Branch is connected to
 	 */
+	@SuppressWarnings("unused")
 	protected void removeOut(Branch branch, int index) {
 		throw new UnsupportedOperationException(String.format(
-				"Components of type %s don't support removeOut(Branch, int)", //$NON-NLS-1$
-				type().description()));
+		        "Components of type %s don't support removeOut(Branch, int)", //$NON-NLS-1$
+		        type().description()));
 	}
 
 	// 2 + 4 methods for destroying and restoring Components
@@ -142,12 +186,12 @@ public abstract class Component implements Identifiable<String>, Serializable {
 	/**
 	 * Specifies what this Component should do when it is destroyed. Subclasses
 	 * specify how Components that are connected to this Component should react
-	 * using the template method {@link Component#destroySelf destroySelf}.
+	 * using the template method {@link #destroySelf()}.
 	 * <p>
 	 * In principle, a destroyed Component isn't referenced by any other Component
 	 * and when the application removes it, it should be garbage collected.
 	 *
-	 * @see Component#toBeRemoved
+	 * @see #toBeRemoved
 	 */
 	protected final void destroy() {
 		toBeRemoved = true;
@@ -167,16 +211,16 @@ public abstract class Component implements Identifiable<String>, Serializable {
 	/** Each Component specifies how it is restored after destruction */
 	protected abstract void restoreDeletedSelf();
 
-	/** Restores the state of the Component after it was serialised */
+	/** Restores the state of the Component after it was deserialised */
 	final void restoreSerialised() {
 		restoreSerialisedSelf();
 		getGraphics().restoreSerialised();
 	}
 
-	/** Each Component specifies how it is restored after serialisation */
+	/** Each Component specifies how it is restored after deserialisation */
 	protected abstract void restoreSerialisedSelf();
 
-	// 3 methods to access specific parts and information of the Component
+	// 4 methods to access specific parts and information of the Component
 
 	/**
 	 * Returns an unmodifiable list with the inputs of this Component as specified
@@ -195,18 +239,23 @@ public abstract class Component implements Identifiable<String>, Serializable {
 	protected abstract List<List<Component>> getOutputs();
 
 	/**
-	 * Returns the {@code ComponentGraphics} object associated with this Component.
+	 * Returns the number of available inputs of this Component
 	 *
-	 * @return the ComponentGraphics object
+	 * @return the number of available inputs
+	 *
+	 * @implNote default is {@code 1}
 	 */
-	public abstract ComponentGraphic getGraphics();
-
-	/** @return the number of incoming connections */
 	protected int inCount() {
 		return 1;
 	}
 
-	/** @return the number of outgoing connections */
+	/**
+	 * Returns the number of available outputs of this Component
+	 *
+	 * @return the number of available outputs
+	 *
+	 * @implNote default is {@code 1}
+	 */
 	protected int outCount() {
 		return 1;
 	}
@@ -227,8 +276,8 @@ public abstract class Component implements Identifiable<String>, Serializable {
 	}
 
 	/**
-	 * Checks if the {@code index} given by another component wishing to access this
-	 * component does not exceed {@code indexMax} (specified by this component).
+	 * Checks if the {@code index} given by another Component wishing to access this
+	 * component does not exceed {@code indexMax} (specified by this Component).
 	 * <p>
 	 * This method should be called in every method that is index-sensitive. If
 	 * everything is designed correctly, this method should never throw.
@@ -254,16 +303,22 @@ public abstract class Component implements Identifiable<String>, Serializable {
 	}
 
 	/**
-	 * Returns whether or not this Component is {@link Component#hidden hidden}
-	 * inside another Component.
+	 * Returns whether or not this Component is {@code hidden} inside another
+	 * Component.
 	 *
-	 * @return true if it is hidden, false otherwise
+	 * @return {@code true} if it is hidden, {@code false} otherwise
+	 *
+	 * @see #hidden
 	 */
 	protected final boolean hidden() {
 		return hidden;
 	}
 
-	/** Marks this Component as hidden */
+	/**
+	 * Marks this Component as hidden
+	 *
+	 * @see #hidden
+	 */
 	protected final void hideComponent() {
 		hidden = true;
 	}
@@ -271,9 +326,10 @@ public abstract class Component implements Identifiable<String>, Serializable {
 	/**
 	 * Returns whether or not the application should remove this Component.
 	 *
-	 * @return true if the Component should be removed, false otherwise.
+	 * @return {@code true} if the Component should be removed, {@code false}
+	 *         otherwise.
 	 *
-	 * @see Component#toBeRemoved
+	 * @see #toBeRemoved
 	 */
 	final boolean toRemove() {
 		return toBeRemoved;
@@ -314,9 +370,14 @@ public abstract class Component implements Identifiable<String>, Serializable {
 
 	// toString
 
+	/**
+	 * @implNote this implementation is more like a debug String. For a
+	 *           user-friendly description of this Component
+	 *           {@code type().description()} should be used.
+	 */
 	@Override
 	public final String toString() {
 		return String.format("%s: %d-%d, UID: %s, hidden: %s", type().description(), inCount(), //$NON-NLS-1$
-				outCount(), getID(), hidden());
+		        outCount(), getID(), hidden());
 	}
 }
