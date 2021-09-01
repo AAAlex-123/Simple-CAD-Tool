@@ -1,4 +1,4 @@
-package components;
+package component.components;
 
 import java.io.Serializable;
 import java.util.Collections;
