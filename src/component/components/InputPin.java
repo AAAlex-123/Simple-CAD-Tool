@@ -1,4 +1,4 @@
-package components;
+package component.components;
 
 import static myUtil.Utility.foreach;
 
