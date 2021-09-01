@@ -4,20 +4,21 @@ import localisation.Languages;
 
 /**
  * An enum containing information about the type of different components. Each
- * class of the {@link components} package links to one enum item. Users may
- * refer to the documentation found here for more information about how each
- * Component works in principle without worrying about specific implementations.
+ * class of the {@link component.components} and the {@link component.graphics}
+ * packages links to one enum item. Users may refer to the documentation found
+ * here for more information about how each Component works in principle without
+ * worrying about specific implementations.
  * <p>
  * Component types include:
  * <ul>
- * <li>{@link ComponentType#INPUT_PIN Input Pin}</li>
- * <li>{@link ComponentType#OUTPUT_PIN Output Pin}</li>
- * <li>{@link ComponentType#BRANCH Branch}</li>
- * <li>{@link ComponentType#GATE Gate}</li>
- * <li>{@link ComponentType#GATEAND AND Gate}</li>
- * <li>{@link ComponentType#GATEAND OR Gate}</li>
- * <li>{@link ComponentType#GATENOT NOT Gate}</li>
- * <li>{@link ComponentType#GATENOT XOR Gate}</li>
+ * <li>{@link #INPUT_PIN Input Pin}</li>
+ * <li>{@link #OUTPUT_PIN Output Pin}</li>
+ * <li>{@link #BRANCH Branch}</li>
+ * <li>{@link #GATE Gate}</li>
+ * <li>{@link #GATEAND AND Gate}</li>
+ * <li>{@link #GATEAND OR Gate}</li>
+ * <li>{@link #GATENOT NOT Gate}</li>
+ * <li>{@link #GATENOT XOR Gate}</li>
  * </ul>
  */
 public enum ComponentType {
