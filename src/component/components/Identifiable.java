@@ -1,4 +1,4 @@
-package components;
+package component.components;
 
 /**
  * An Interface for objects that can be identified.
