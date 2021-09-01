@@ -10,4 +10,4 @@
  * {@link components.ComponentFactory ComponentFactory} class to create, delete
  * and connect Components to one another, to give input and to get output.
  */
-package components;
+package component.components;
