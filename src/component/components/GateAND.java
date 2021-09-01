@@ -1,4 +1,4 @@
-package components;
+package component.components;
 
 /**
  * A Primitive Gate that maps the inputs to their logical {@code and}.
