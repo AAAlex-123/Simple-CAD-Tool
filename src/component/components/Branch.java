@@ -1,32 +1,31 @@
 package component.components;
 
-import static components.ComponentType.BRANCH;
-import static components.ComponentType.INPUT_PIN;
-import static components.ComponentType.OUTPUT_PIN;
+import static component.ComponentType.BRANCH;
+import static component.ComponentType.INPUT_PIN;
+import static component.ComponentType.OUTPUT_PIN;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import exceptions.InvalidIndexException;
-import exceptions.MalformedBranchException;
-import exceptions.MalformedGateException;
+import component.ComponentType;
+import component.exceptions.InvalidIndexException;
+import component.exceptions.MalformedBranchException;
+import component.exceptions.MalformedGateException;
 
 /**
  * Corresponds to the {@link ComponentType#BRANCH BRANCH} type.
  *
- * @author alexm
+ * @author Alex Mandelias
  */
 final class Branch extends Component {
 
 	private static final long serialVersionUID = 4L;
 
-	private final Component	in, out;
-	private final int		indexIn, indexOut;
+	private final Component in, out;
+	private final int       indexIn, indexOut;
 
 	private boolean active = false;
-
-	private final ComponentGraphic g;
 
 	/**
 	 * Constructs a {@code Branch} between two Components at the specified indexes.
@@ -38,20 +37,17 @@ final class Branch extends Component {
 	 *
 	 * @throws MalformedBranchException in the case of an invalid connection
 	 */
-	Branch(Component inComponent, int inIndex, Component outComponent, int outIndex)
-			throws MalformedBranchException {
-		if (
-				(inComponent == null) || (outComponent == null) || (inComponent.type() == OUTPUT_PIN)
-				|| (outComponent.type() == INPUT_PIN)
-				|| (inComponent.type() == BRANCH) || (outComponent.type() == BRANCH)
-				)
+	protected Branch(Component inComponent, int inIndex, Component outComponent, int outIndex)
+	        throws MalformedBranchException {
+		if ((inComponent == null) || (outComponent == null) || (inComponent.type() == OUTPUT_PIN)
+		        || (outComponent.type() == INPUT_PIN) || (inComponent.type() == BRANCH)
+		        || (outComponent.type() == BRANCH))
 			throw new MalformedBranchException(inComponent, outComponent);
 		if (inIndex >= inComponent.outCount())
 			throw new MalformedBranchException(inComponent, inIndex);
 		if (outIndex >= outComponent.inCount())
 			throw new MalformedBranchException(outComponent, outIndex);
 
-		g = new BranchGraphic(this);
 		in = inComponent;
 		out = outComponent;
 		indexIn = inIndex;
@@ -108,9 +104,6 @@ final class Branch extends Component {
 		// set active to false so `wake_up` always propagates
 		active = !in.getActive(indexIn);
 		wake_up(in.getActive(indexIn));
-
-		// update the Branch's graphics
-		g.updateOnMovement();
 	}
 
 	@Override
@@ -133,22 +126,17 @@ final class Branch extends Component {
 
 	@Override
 	protected List<Component> getInputs() {
-		List<Component> ls = new ArrayList<>();
+		final List<Component> ls = new ArrayList<>();
 		ls.add(in);
 		return Collections.unmodifiableList(ls);
 	}
 
 	@Override
 	protected List<List<Component>> getOutputs() {
-		List<List<Component>> ls  = new ArrayList<>();
-		List<Component>       ls1 = new ArrayList<>();
+		final List<List<Component>> ls  = new ArrayList<>();
+		final List<Component>       ls1 = new ArrayList<>();
 		ls1.add(out);
 		ls.add(Collections.unmodifiableList(ls1));
 		return Collections.unmodifiableList(ls);
-	}
-
-	@Override
-	public ComponentGraphic getGraphics() {
-		return g;
 	}
 }
