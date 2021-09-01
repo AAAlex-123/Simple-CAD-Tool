@@ -1,4 +1,4 @@
-package components;
+package component.components;
 
 import static components.ComponentType.INPUT_PIN;
 import static components.ComponentType.OUTPUT_PIN;
