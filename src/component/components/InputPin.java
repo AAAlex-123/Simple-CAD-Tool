@@ -1,32 +1,29 @@
-package components;
-
-import static myUtil.Utility.foreach;
+package component.components;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
 
-import exceptions.ComponentNotFoundException;
-import exceptions.MalformedGateException;
+import component.ComponentType;
+import component.exceptions.ComponentNotFoundException;
+import component.exceptions.MalformedGateException;
+import myUtil.Utility;
 
 /**
  * Corresponds to the {@link ComponentType#INPUT_PIN INPUT_PIN} type.
  *
- * @author alexm
+ * @author Alex Mandelias
  */
 final class InputPin extends Component {
 
 	private static final long serialVersionUID = 4L;
 
-	private final Vector<Component> outputBranches;
-	private boolean              active;
-
-	private final ComponentGraphic g;
+	private final List<Branch> outputBranches;
+	private boolean            active;
 
 	/** Constructs an InputPin */
-	InputPin() {
-		g = new InputPinGraphic(this);
+	protected InputPin() {
 		outputBranches = new Vector<>(1, 1);
 		active = false;
 	}
@@ -51,7 +48,7 @@ final class InputPin extends Component {
 		if (active != newActive) {
 			active = newActive;
 			getGraphics().repaint();
-			foreach(outputBranches, b -> b.wake_up(active, hidden()));
+			Utility.foreach(outputBranches, b -> b.wake_up(active, hidden()));
 		}
 	}
 
@@ -93,7 +90,7 @@ final class InputPin extends Component {
 	}
 
 	/**
-	 * Marks this Component as unchangeable because it's hidden in a {@code Gate}.
+	 * Marks this Component as unchangeable because it is hidden in a {@code Gate}.
 	 * Normally should only be called during the construction of a {@code Gate}.
 	 */
 	void setOuterGate() {
@@ -103,7 +100,8 @@ final class InputPin extends Component {
 
 	@Override
 	protected void destroySelf() {
-		foreach(getInputs(), Component::destroy);
+		final List<Branch> branchesToDestroy = new Vector<>(outputBranches);
+		Utility.foreach(branchesToDestroy, Branch::destroy);
 		outputBranches.clear();
 	}
 
@@ -120,13 +118,8 @@ final class InputPin extends Component {
 
 	@Override
 	protected List<List<Component>> getOutputs() {
-		List<List<Component>> ls = new ArrayList<>();
+		final List<List<Component>> ls = new ArrayList<>();
 		ls.add(Collections.unmodifiableList(outputBranches));
 		return Collections.unmodifiableList(ls);
-	}
-
-	@Override
-	public ComponentGraphic getGraphics() {
-		return g;
 	}
 }

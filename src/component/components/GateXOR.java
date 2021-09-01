@@ -1,24 +1,23 @@
-package components;
+package component.components;
+
+import component.ComponentType;
 
 /**
- * A Primitive Gate that maps the inputs to their logical {@code xor}.
+ * Corresponds to the {@link ComponentType#GATEXOR GATEXOR} type.
  *
- * @author alexm
+ * @author Alex Mandelias
  */
 final class GateXOR extends PrimitiveGate {
 
 	private static final long serialVersionUID = 4L;
 
-	private final ComponentGraphic g;
-
 	/**
 	 * Constructs the XOR Gate with the given number of inputs and one output.
 	 *
-	 * @param in the number of input pins
+	 * @param inCount the number of input pins
 	 */
-	GateXOR(int in) {
-		super(in, 1);
-		g = new GateXORGraphic(this);
+	protected GateXOR(int inCount) {
+		super(inCount, 1);
 	}
 
 	@Override
@@ -38,10 +37,5 @@ final class GateXOR extends PrimitiveGate {
 			// and outputs the result
 			outputPins[0].wake_up(res);
 		}
-	}
-
-	@Override
-	public ComponentGraphic getGraphics() {
-		return g;
 	}
 }

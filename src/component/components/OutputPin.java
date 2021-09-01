@@ -1,15 +1,16 @@
-package components;
+package component.components;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import exceptions.MalformedGateException;
+import component.ComponentType;
+import component.exceptions.MalformedGateException;
 
 /**
  * Corresponds to the {@link ComponentType#OUTPUT_PIN OUTPUT_PIN} type
  *
- * @author alexm
+ * @author Alex Mandelias
  */
 final class OutputPin extends Component {
 
@@ -18,15 +19,12 @@ final class OutputPin extends Component {
 	private Component inputBranch;
 	private boolean active;
 
-	private final ComponentGraphic g;
-
 	// information about the enclosing Gate necessary for signal transmission
 	private Gate outerGate;
 	private int  outerGateIndex;
 
 	/** Constructs an OuputPin */
-	OutputPin() {
-		g = new OutputPinGraphic(this);
+	protected OutputPin() {
 		active = false;
 	}
 
@@ -156,10 +154,5 @@ final class OutputPin extends Component {
 	@Override
 	protected List<List<Component>> getOutputs() {
 		return Collections.emptyList();
-	}
-
-	@Override
-	public ComponentGraphic getGraphics() {
-		return g;
 	}
 }

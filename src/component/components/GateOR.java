@@ -1,24 +1,23 @@
-package components;
+package component.components;
+
+import component.ComponentType;
 
 /**
- * A Primitive Gate that maps the inputs to their logical {@code or}.
+ * Corresponds to the {@link ComponentType#GATEOR GATEOR} type.
  *
- * @author alexm
+ * @author Alex Mandelias
  */
 final class GateOR extends PrimitiveGate {
 
 	private static final long serialVersionUID = 4L;
 
-	private final ComponentGraphic g;
-
 	/**
 	 * Constructs the OR Gate with the given number of inputs and one output.
 	 *
-	 * @param in the number of input pins
+	 * @param inCount the number of input pins
 	 */
-	GateOR(int in) {
-		super(in, 1);
-		g = new GateORGraphic(this);
+	protected GateOR(int inCount) {
+		super(inCount, 1);
 	}
 
 	@Override
@@ -38,10 +37,5 @@ final class GateOR extends PrimitiveGate {
 			// and outputs the result
 			outputPins[0].wake_up(res);
 		}
-	}
-
-	@Override
-	public ComponentGraphic getGraphics() {
-		return g;
 	}
 }
