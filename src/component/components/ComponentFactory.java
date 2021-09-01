@@ -1,43 +1,48 @@
 package component.components;
 
-import static components.ComponentType.INPUT_PIN;
-import static components.ComponentType.OUTPUT_PIN;
-import static myUtil.Utility.foreach;
+import static component.ComponentType.INPUT_PIN;
+import static component.ComponentType.OUTPUT_PIN;
 
-import exceptions.InvalidComponentException;
-import exceptions.MalformedBranchException;
+import component.ComponentType;
+import component.exceptions.InvalidComponentException;
+import component.exceptions.MalformedBranchException;
+import myUtil.Utility;
 
 /**
- * A set of static methods that acts as the interface of the {@link components}
- * package. Clients can only interact with {@link components.Component
- * Components} using methods of this class.
+ * A set of static methods to interface with the {@link component.components}
+ * package. Almost all interactions with a {@link Component} can only happen
+ * using the methods of this class.
  * <p>
- * Available Components are:
+ * Available Components include:
  * <ul>
  * <li>{@code InputPin}: get input signal from client</li>
  * <li>{@code OutputPin}: return output signal to client</li>
- * <li>{@code Gate}: map a set of InputPins to a set of OutputPins</li>
  * <li>{@code Branch}: connect the above components</li>
+ * <li>{@code Gate}: map a set of InputPins to a set of OutputPins</li>
+ * <li>{@code PrimitiveGate}: built-in {@code Gate} with predefined
+ * behaviour</li>
  * </ul>
  * A more detailed list of them and their properties can be found in the
  * {@link ComponentType} enum.
  * <p>
  * In order to hide implementation details, methods of this factory handle
  * objects of type {@code Component} but will only accept specific subclasses,
- * indicated both by the parameter name and in the javadoc comment. In case of
- * an object of the wrong subclass being provided, an Exception will be thrown.
- * If everything is designed correctly, however, the methods should never throw.
+ * indicated both by the parameter name and in the documentation. In case of an
+ * object of the wrong subclass being provided, an Exception will be thrown. If
+ * everything is designed correctly, however, the methods should never throw.
+ *
+ * @author Alex Mandelias
  */
 public final class ComponentFactory {
 
-	/** Don't let anyone instantiate this class */
+	/* Don't let anyone instantiate this class */
 	private ComponentFactory() {}
 
 	/**
 	 * Creates an {@code InputPin}.
 	 *
 	 * @return the InputPin
-	 * 
+	 *
 	 * @see ComponentType#INPUT_PIN
 	 */
 	public static Component createInputPin() {
@@ -48,7 +53,7 @@ public final class ComponentFactory {
 	 * Creates an {@code OutputPin}.
 	 *
 	 * @return the OutputPin
-	 * 
+	 *
 	 * @see ComponentType#OUTPUT_PIN
 	 */
 	public static Component createOutputPin() {
@@ -63,11 +68,11 @@ public final class ComponentFactory {
 	 * @param indexIn  the index of the pin on the input gate
 	 * @param out      the Branch's input
 	 * @param indexOut the index of the pin on the output gate
-	 * 
+	 *
 	 * @return the created Branch
-	 * 
+	 *
 	 * @throws MalformedBranchException in the case of connecting invalid components
-	 * 
+	 *
 	 * @see ComponentType#BRANCH
 	 */
 	public static Component connectComponents(Component in, int indexIn, Component out,
@@ -77,14 +82,14 @@ public final class ComponentFactory {
 	}
 
 	/**
-	 * Creates a {@code Primitive Gate} of a specific {@code type} with a given
+	 * Creates a {@code Primitive Gate} of a specific {@code type} with the given
 	 * number of inputs.
 	 *
 	 * @param type    the type of the Primitive Gate
 	 * @param inCount the number of inputs
-	 * 
+	 *
 	 * @return the Primitive Gate
-	 * 
+	 *
 	 * @see ComponentType#GATEAND
 	 * @see ComponentType#GATEOR
 	 * @see ComponentType#GATENOT
@@ -101,7 +106,8 @@ public final class ComponentFactory {
 		case GATEXOR:
 			return new GateXOR(inCount);
 		default:
-			throw new RuntimeException(String.format("Type %s doesn't correspond to Primitive Gate", type)); //$NON-NLS-1$
+			throw new RuntimeException(
+			        String.format("Type %s doesn't correspond to Primitive Gate", type)); //$NON-NLS-1$
 		}
 	}
 
@@ -114,21 +120,21 @@ public final class ComponentFactory {
 	 * @param inputPins   the new Gate's input pins
 	 * @param outputPins  the new Gate's output pins
 	 * @param description the new Gate's description
-	 * 
+	 *
 	 * @return the created Gate
-	 * 
+	 *
 	 * @see ComponentType#GATE
 	 */
 	public static Component createGate(Component[] inputPins, Component[] outputPins,
 	        String description) {
 
 		// check component type
-		foreach(inputPins, t -> checkType(t, INPUT_PIN));
-		foreach(outputPins, t -> checkType(t, OUTPUT_PIN));
+		Utility.foreach(inputPins, t -> ComponentFactory.checkType(t, INPUT_PIN));
+		Utility.foreach(outputPins, t -> ComponentFactory.checkType(t, OUTPUT_PIN));
 
 		// cast to correct type and create Gate
-		InputPin[] inp = new InputPin[inputPins.length];
-		OutputPin[] outp = new OutputPin[outputPins.length];
+		final InputPin[]  inp  = new InputPin[inputPins.length];
+		final OutputPin[] outp = new OutputPin[outputPins.length];
 
 		for (int i = 0; i < inp.length; ++i)
 			inp[i] = (InputPin) inputPins[i];
@@ -142,36 +148,36 @@ public final class ComponentFactory {
 	/**
 	 * Destroys a {@code Component}.
 	 *
-	 * @param c the Component to delete
-	 * 
+	 * @param component the Component to destroy
+	 *
 	 * @see Component#destroy()
 	 */
-	public static void destroyComponent(Component c) {
-		c.destroy();
+	public static void destroyComponent(Component component) {
+		component.destroy();
 	}
 
 	/**
 	 * Returns whether or not the {@code Component} is to be removed from the
 	 * Application. Only destroyed {@code Components} can be removed.
 	 *
-	 * @param c the component to check
-	 * 
+	 * @param component the component to check
+	 *
 	 * @return boolean
-	 * 
+	 *
 	 * @see Component#toBeRemoved
 	 */
-	public static boolean toRemove(Component c) {
-		return c.toRemove();
+	public static boolean toRemove(Component component) {
+		return component.toRemove();
 	}
 
 	/**
 	 * Sets the state of the {@code InputPin} as Active or Inactive.
 	 *
 	 * @param inputPin the InputPin
-	 * @param active   true or false (active or inactive)
+	 * @param active   {@code true} or {@code false} active or inactive
 	 */
 	public static void setActive(Component inputPin, boolean active) {
-		checkType(inputPin, INPUT_PIN);
+		ComponentFactory.checkType(inputPin, INPUT_PIN);
 
 		((InputPin) inputPin).setActive(active);
 	}
@@ -180,11 +186,11 @@ public final class ComponentFactory {
 	 * Returns the state of the {@code OutputPin}.
 	 *
 	 * @param outputPin the OutputPin
-	 * 
-	 * @return true or false (active or inactive)
+	 *
+	 * @return {@code true} or {@code false}, active or inactive
 	 */
 	public static boolean getActive(Component outputPin) {
-		checkType(outputPin, OUTPUT_PIN);
+		ComponentFactory.checkType(outputPin, OUTPUT_PIN);
 
 		return ((OutputPin) outputPin).getActive();
 	}
@@ -208,15 +214,15 @@ public final class ComponentFactory {
 	}
 
 	/**
-	 * Checks if the type of a Component matches the required type. If there is a
-	 * mismatch, an exception is thrown. If everything is designed correctly, this
-	 * should never throw.
+	 * Checks if the type of a {@code Component} matches the {@code required type}.
+	 * If there is a mismatch, an exception is thrown. If everything is designed
+	 * correctly, this method should never throw.
 	 *
-	 * @param c    the Component to check
-	 * @param type the required type
+	 * @param component    the Component to check
+	 * @param expectedType the required type
 	 */
-	private static void checkType(Component c, ComponentType type) {
-		if (c.type() != type)
-			throw new InvalidComponentException(c, type);
+	private static void checkType(Component component, ComponentType expectedType) {
+		if (component.type() != expectedType)
+			throw new InvalidComponentException(component, expectedType);
 	}
 }
