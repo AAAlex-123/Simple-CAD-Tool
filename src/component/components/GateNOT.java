@@ -1,4 +1,4 @@
-package components;
+package component.components;
 
 /**
  * A Primitive Gate that maps every input to its logical not. In this circuit
