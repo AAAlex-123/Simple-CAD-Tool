@@ -1,10 +1,12 @@
 package component.components;
 
-import exceptions.MalformedGateException;
+import component.exceptions.MalformedGateException;
 
 /**
  * The most basic of gates; they can only be implemented with transistors (or by
- * NAND Gates), so their output is artificially calculated (for now).
+ * NAND Gates), so their output is artificially calculated.
+ *
+ * @author Alex Mandelias
  */
 abstract class PrimitiveGate extends Gate {
 
@@ -12,16 +14,16 @@ abstract class PrimitiveGate extends Gate {
 
 	/**
 	 * Constructs the Primitive Gate with the given number of input and output pins.
-	 * 
-	 * @param in  the number of input pins
-	 * @param out the number of output pins
+	 *
+	 * @param inCount  the number of input pins
+	 * @param outCount the number of output pins
 	 */
-	PrimitiveGate(int in, int out) {
-		super(in, out);
+	protected PrimitiveGate(int inCount, int outCount) {
+		super(inCount, outCount);
 	}
 
 	@Override
-	protected void wake_up(boolean newActive, int indexIn, boolean prevHidden) {
+	protected final void wake_up(boolean newActive, int indexIn, boolean prevHidden) {
 
 		// once hidden cannot be un-hidden
 		if (hidden() && !prevHidden)
@@ -32,8 +34,7 @@ abstract class PrimitiveGate extends Gate {
 
 		inputPins[indexIn].wake_up(newActive); // this isn't propagated anywhere
 
-		// each Gate subclass decides how to check if branches are connected
-		// and whether or not to produce an output
+		// each Gate subclass decides how and whether or not to produce an output
 		calculateOutput();
 	}
 
