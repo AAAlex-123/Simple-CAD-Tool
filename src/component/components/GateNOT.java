@@ -1,27 +1,27 @@
 package component.components;
 
+import component.ComponentType;
+
 /**
- * A Primitive Gate that maps every input to its logical not. In this circuit
- * there may be multiple input pins. Each of them is mapped to its logical
- * {@code not} and output at the output pin at the same index, provided that a
- * Branch is connected to that input pin.
+ * Corresponds to the {@link ComponentType#GATENOT GATENOT} type.
+ * <p>
+ * In this circuit there may be multiple input pins. Each of them is mapped to
+ * its logical {@code not} and output at the output pin at the same index,
+ * provided that a Branch is connected to that input pin.
  *
- * @author alexm
+ * @author Alex Mandelias
  */
 final class GateNOT extends PrimitiveGate {
 
 	private static final long serialVersionUID = 4L;
 
-	private final ComponentGraphic g;
-
 	/**
 	 * Constructs the NOT Gate with the given number of inputs and outputs.
 	 *
-	 * @param n the number of pairs of pins.
+	 * @param count the number of pairs of pins.
 	 */
-	GateNOT(int n) {
-		super(n, n);
-		g = new GateNOTGraphic(this);
+	protected GateNOT(int count) {
+		super(count, count);
 	}
 
 	@Override
@@ -39,10 +39,5 @@ final class GateNOT extends PrimitiveGate {
 				outputPins[i].wake_up(res);
 			}
 		}
-	}
-
-	@Override
-	public ComponentGraphic getGraphics() {
-		return g;
 	}
 }
