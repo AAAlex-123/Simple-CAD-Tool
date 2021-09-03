@@ -1,6 +1,5 @@
 package component.graphics;
 
-import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 
 import application.StringConstants;
@@ -13,7 +12,7 @@ import component.components.Component;
  */
 class GateGraphic extends ComponentGraphic {
 
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 2L;
 
 	private static final String sprite = StringConstants.COMPONENT_ICON_PATH
 	        + "gate.png"; //$NON-NLS-1$
@@ -31,11 +30,6 @@ class GateGraphic extends ComponentGraphic {
 	 */
 	public GateGraphic(Component component) {
 		super(component);
-	}
-
-	@Override
-	protected final void draw(Graphics g) {
-		g.drawImage(getImage(), 0, 0, null);
 	}
 
 	/** @implNote the default implementation returns a grey rectangle */
