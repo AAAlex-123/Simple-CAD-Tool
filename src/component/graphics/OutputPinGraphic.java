@@ -13,7 +13,7 @@ import component.components.GraphicHook;
  */
 final class OutputPinGraphic extends ComponentGraphic {
 
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 2L;
 
 	private static final String sprite = StringConstants.COMPONENT_ICON_PATH
 	        + "output_pin_{state}.png"; //$NON-NLS-1$
