@@ -1,4 +1,4 @@
-package components;
+package component.graphics;
 
 import static components.ComponentType.BRANCH;
 import static components.ComponentType.INPUT_PIN;
