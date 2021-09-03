@@ -1,55 +1,41 @@
 package component.graphics;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.util.function.Function;
 
-import javax.imageio.ImageIO;
-
 import application.StringConstants;
-import exceptions.MissingSpriteException;
+import component.components.Component;
 
 /**
- * Handles the Graphics of a {@link GateNOT}.
+ * Graphics for a {@link component.ComponentType#GATEOR GATEOR}.
  *
- * @author alexm
+ * @author Alex Mandelias
  */
 final class GateORGraphic extends GateGraphic {
 
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 2L;
 
 	private static final String sprite = StringConstants.COMPONENT_ICON_PATH
-			+ "gate_or.png"; //$NON-NLS-1$
+	        + "gate_or.png"; //$NON-NLS-1$
 
 	private static final BufferedImage image;
 
 	static {
-		BufferedImage temp = null;
-		File          file = null;
-
-		try {
-			file = new File(sprite);
-			temp = ImageIO.read(file);
-		} catch (IOException e) {
-			throw new MissingSpriteException(file);
-		}
-
-		image = temp;
+		image = ComponentGraphic.loadImage(GateORGraphic.sprite);
 	}
 
 	/**
-	 * Constructs the graphics object
+	 * Constructs the Graphics object.
 	 *
-	 * @param c the related Component
+	 * @param component the related {@code Component}
 	 */
-	public GateORGraphic(Component c) {
-		super(c);
+	public GateORGraphic(Component component) {
+		super(component);
 	}
 
 	@Override
 	protected BufferedImage getImage() {
-		return image;
+		return GateORGraphic.image;
 	}
 
 	@Override
