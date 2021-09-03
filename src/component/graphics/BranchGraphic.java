@@ -1,16 +1,17 @@
 package component.graphics;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.min;
-
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
+import java.awt.image.BufferedImage;
+
+import component.components.Component;
+import component.components.GraphicHook;
 
 /**
- * Handles the Graphics of an {@link OutputPin}.
+ * Graphics for a {@link component.ComponentType#BRANCH BRANCH}.
  *
- * @author alexm
+ * @author Alex Mandelias
  */
 final class BranchGraphic extends ComponentGraphic {
 
@@ -22,24 +23,24 @@ final class BranchGraphic extends ComponentGraphic {
 	private int direction;
 
 	/**
-	 * Constructs the graphics object
+	 * Constructs the Graphics object.
 	 *
-	 * @param c the related Component
+	 * @param component the related {@code Component}
 	 */
-	public BranchGraphic(Component c) {
-		super(c);
+	public BranchGraphic(Component component) {
+		super(component);
 	}
 
 	@Override
 	protected void attachListeners() {
-		attachListeners_((byte) 0);
+		attachListenersByFlags((byte) 0);
 	}
 
 	@Override
 	protected void draw(Graphics g) {
-		g.setColor(component.getActive(0) ? Color.green : Color.red);
+		g.setColor(GraphicHook.getActive(component, 0) ? Color.green : Color.red);
 
-		// draw with correct direction (as specified in the `direction` declaration)
+		// draw with correct direction (as specified in its declaration)
 		if (direction == 1)
 			g.drawLine(5, 5, getWidth() - 5, getHeight() - 6);
 		else if (direction == -1)
@@ -49,8 +50,7 @@ final class BranchGraphic extends ComponentGraphic {
 	}
 
 	@Override
-	protected void drawPins(Graphics g) {
-	}
+	protected void drawPins(Graphics g) {}
 
 	@Override
 	protected void drawID(Graphics g) {
@@ -59,17 +59,22 @@ final class BranchGraphic extends ComponentGraphic {
 	}
 
 	@Override
+	protected BufferedImage getImage() {
+		return null;
+	}
+
+	@Override
 	protected void updateOnMovement() {
 		// from the new coordinates calculate the Branch's start point, width and height
-		// and also calculate its direction (as specified in the declaration).
-		final Component in  = component.getInputs().get(0);
-		final Component out = component.getOutputs().get(0).get(0);
-		Point           p1  = in.getGraphics().getBranchInputCoords(component);
-		Point           p2  = out.getGraphics().getBranchOutputCoords(component);
+		// and also calculate its direction (as specified in its declaration).
+		final Component in  = GraphicHook.getInputs(component).get(0);
+		final Component out = GraphicHook.getOutputs(component).get(0).get(0);
+		final Point     p1  = in.getGraphics().getBranchInputCoords(component);
+		final Point     p2  = out.getGraphics().getBranchOutputCoords(component);
 		direction = ((p2.x - p1.x) * (p2.y - p1.y)) > 0 ? 1 : -1;
 		// components with a dimension = 0 aren't drawn and text can't be drawn on a
-		// small space so add extra width/height here and remove it when drawing
-		setBounds(min(p1.x, p2.x) - 5, min(p1.y, p2.y) - 5, abs(p2.x - p1.x) + 11,
-				abs(p2.y - p1.y) + 11);
+		// small space, so extra width/height is added here and removed it when drawing
+		setBounds(Math.min(p1.x, p2.x) - 5, Math.min(p1.y, p2.y) - 5, Math.abs(p2.x - p1.x) + 11,
+		        Math.abs(p2.y - p1.y) + 11);
 	}
 }
