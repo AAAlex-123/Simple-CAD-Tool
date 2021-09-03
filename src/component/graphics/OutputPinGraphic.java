@@ -1,67 +1,47 @@
 package component.graphics;
 
-import java.awt.Graphics;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-
-import javax.imageio.ImageIO;
 
 import application.StringConstants;
-import exceptions.MissingSpriteException;
+import component.components.Component;
+import component.components.GraphicHook;
 
 /**
- * Handles the Graphics of an {@link OutputPin}.
+ * Graphics for an {@link component.ComponentType#OUTPUT_PIN OUTPUT_PIN}.
  *
- * @author alexm
+ * @author Alex Mandelias
  */
 final class OutputPinGraphic extends ComponentGraphic {
 
 	private static final long serialVersionUID = 1L;
 
 	private static final String sprite = StringConstants.COMPONENT_ICON_PATH
-			+ "output_pin_{state}.png"; //$NON-NLS-1$
+	        + "output_pin_{state}.png"; //$NON-NLS-1$
 
 	private static final BufferedImage image_on, image_off;
 
 	static {
-		BufferedImage temp_on = null, temp_off = null;
-		File          file    = null;
-
-		try {
-			file = new File(sprite.replace("{state}", "on")); //$NON-NLS-1$ //$NON-NLS-2$
-			temp_on = ImageIO.read(file);
-		} catch (IOException e) {
-			throw new MissingSpriteException(file);
-		}
-
-		try {
-			file = new File(sprite.replace("{state}", "off")); //$NON-NLS-1$ //$NON-NLS-2$
-			temp_off = ImageIO.read(file);
-		} catch (IOException e) {
-			throw new MissingSpriteException(file);
-		}
-
-		image_on = temp_on;
-		image_off = temp_off;
+		image_on = ComponentGraphic.loadImage(OutputPinGraphic.sprite.replace("{state}", "on")); //$NON-NLS-1$ //$NON-NLS-2$
+		image_off = ComponentGraphic.loadImage(OutputPinGraphic.sprite.replace("{state}", "off")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/**
-	 * Constructs the graphics object
+	 * Constructs the Graphics object.
 	 *
-	 * @param c the related Component
+	 * @param component the related {@code Component}
 	 */
-	public OutputPinGraphic(Component c) {
-		super(c);
+	public OutputPinGraphic(Component component) {
+		super(component);
 	}
 
 	@Override
-	protected void draw(Graphics g) {
-		g.drawImage(component.getActive(0) ? image_on : image_off, 0, 0, null);
+	protected BufferedImage getImage() {
+		return GraphicHook.getActive(component, 0) ? OutputPinGraphic.image_on
+		        : OutputPinGraphic.image_off;
 	}
 
 	@Override
 	protected void attachListeners() {
-		attachListeners_(DRAG_KB_FOCUS);
+		attachListenersByFlags(ComponentGraphic.DRAG_KB_FOCUS);
 	}
 }
