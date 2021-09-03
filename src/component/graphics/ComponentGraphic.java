@@ -42,7 +42,7 @@ import myUtil.Utility;
  */
 public abstract class ComponentGraphic extends JComponent {
 
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 2L;
 
 	/** Size of the drawn image in pixels */
 	private static final int SIZE = 40;
@@ -182,6 +182,9 @@ public abstract class ComponentGraphic extends JComponent {
 	 * Each Graphic specifies how it's drawn.
 	 *
 	 * @param g the Graphics object necessary to draw
+	 *
+	 * @implNote the default implementation draws the Image returned by the
+	 *           {@link #getImage()} method
 	 */
 	protected void draw(Graphics g) {
 		g.drawImage(getImage(), 0, 0, null);
@@ -191,6 +194,10 @@ public abstract class ComponentGraphic extends JComponent {
 	 * Draws the pins of the {@code Component}.
 	 *
 	 * @param g the Graphics object necessary to draw
+	 *
+	 * @implNote the default implementation uses the 4 {@code Functions} to draw the
+	 *           correct number of pins to the locations specified by the
+	 *           {@code Functions}
 	 */
 	protected void drawPins(Graphics g) {
 		for (int i = 0, size = GraphicHook.inCount(component); i < size; ++i) {
@@ -206,9 +213,13 @@ public abstract class ComponentGraphic extends JComponent {
 
 	/**
 	 * Draws the ID of the {@code Component}. The ID is the Component's unique
-	 * identifier that can be used to access it among other Components.
+	 * identifier that can be used to distinguish it among other Components.
 	 *
 	 * @param g the Graphics object necessary to draw
+	 *
+	 * @implNote the default implementation uses yellow or black (focused or not)
+	 *           colour to draw the ID of the {@code component} on the lower-left
+	 *           corner of the graphic
 	 */
 	protected void drawID(Graphics g) {
 		g.setColor(focused ? Color.YELLOW : Color.BLACK);
@@ -221,6 +232,10 @@ public abstract class ComponentGraphic extends JComponent {
 	 * from the Graphic alone.
 	 *
 	 * @param g the Graphics object necessary to draw
+	 *
+	 * @implNote the default implementation uses black colour to draw the
+	 *           description of the {@code component} in the center of the graphic,
+	 *           aligned close to its left edge
 	 */
 	protected void drawDescription(Graphics g) {
 		g.setColor(Color.BLACK);
@@ -229,7 +244,7 @@ public abstract class ComponentGraphic extends JComponent {
 
 	/**
 	 * Returns the Image used to draw the Graphic or null if no Image is suitable
-	 * for drawing. In this case, the {@code draw(Graphics)} method should also be
+	 * for drawing. In this case, the {@link #draw(Graphics)} method should also be
 	 * overridden to draw the Graphic without the Image.
 	 *
 	 * @return the Image
