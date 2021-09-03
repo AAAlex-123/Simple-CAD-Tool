@@ -1,8 +1,8 @@
 package component.graphics;
 
-import static components.ComponentType.BRANCH;
-import static components.ComponentType.INPUT_PIN;
-import static components.ComponentType.OUTPUT_PIN;
+import static component.ComponentType.BRANCH;
+import static component.ComponentType.INPUT_PIN;
+import static component.ComponentType.OUTPUT_PIN;
 
 import java.awt.Color;
 import java.awt.Graphics;
@@ -14,29 +14,35 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.function.Function;
 
+import javax.imageio.ImageIO;
 import javax.swing.JComponent;
 
-import exceptions.ComponentNotFoundException;
+import component.ComponentType;
+import component.components.Component;
+import component.components.GraphicHook;
+import component.exceptions.ComponentNotFoundException;
+import component.exceptions.MissingSpriteException;
 import myUtil.Utility;
 
 /**
- * A class encapsulating the drawing behaviour of a {@link Component}.
+ * A Graphic object that is responsible for drawing a representation of a
+ * {@link Component}. It uses information from the {@code Component} to
+ * accurately represent it (including ID, description, number of inputs and
+ * outputs) and can also alter the state of it when the user interacts with the
+ * Graphic (e.g. turn it on/off). A {@link GraphicHook} is used to access the
+ * {@code Component's} protected members.
  *
- * @author alexm
+ * @author Alex Mandelias
  */
 public abstract class ComponentGraphic extends JComponent {
 
 	private static final long serialVersionUID = 1L;
-
-	/**
-	 * The {@link Component} that is drawn by this {@code ComponentGraphics}. It is
-	 * used to access information necessary to properly draw the {@code Component}
-	 * and in some cases alter its state.
-	 */
-	protected final Component component;
 
 	/** Size of the drawn image in pixels */
 	private static final int SIZE = 40;
@@ -44,32 +50,105 @@ public abstract class ComponentGraphic extends JComponent {
 	/** Size of the drawn pins in pixels */
 	private static final int PIN_SIZE = 3;
 
-	/** Functions to draw the pins. let subclasses specify any number of them */
-	private transient Function<Integer, Integer> dxi, dyi, dxo, dyo;
-
-	/** bit to make component dragable, keyboard-usable and focusable */
+	/** byte to make component dragable, keyboard-usable and focusable */
 	protected static final byte DRAG_KB_FOCUS = 0x1;
-	/** bit to make component (de)activate on click */
+	/** byte to make component (de-)activate on click */
 	protected static final byte ACTIVATE      = 0x2;
 
 	/**
-	 * Used instead of hasFocus() because it does not return true immediately after
-	 * requestFocus() is called and therefore the user has no indication of focus.
+	 * The {@code Component} that is drawn by this Graphic. It is used to access
+	 * information necessary to correctly draw the {@code Component} and alter its
+	 * state.
+	 */
+	protected final Component component;
+
+	/**
+	 * Used instead of {@code hasFocus()} because it does not return {@code true}
+	 * immediately after {@code requestFocus()} is called and therefore the user has
+	 * no indication of focus.
 	 */
 	private boolean focused = false;
 
 	/**
-	 * Constructs the Graphics object with information about the
-	 * {@link ComponentGraphic#component component} it's drawing.
+	 * Functions that together define the curve along which the pins are placed.
+	 * Subclasses may specify any number of them by overriding the corresponding
+	 * methods.
 	 *
-	 * @param c the Component.
+	 * @see #dxi()
+	 * @see #dyi()
+	 * @see #dxo()
+	 * @see #dyo()
 	 */
-	ComponentGraphic(Component c) {
-		this(c, 0, 0, ComponentGraphic.SIZE, ComponentGraphic.SIZE);
+	private transient Function<Integer, Integer> dxi, dyi, dxo, dyo;
+
+	/**
+	 * Constructs a Graphic associated with the {@code component}.
+	 * <p>
+	 * <b>Note:</b> getting the Graphic of a {@code Component} with its
+	 * {@code getGraphics()} method will not return this Graphic.
+	 *
+	 * @param component the Component related to the Graphic
+	 *
+	 * @return the Graphic for that Component
+	 */
+	public static ComponentGraphic forComponent(Component component) {
+		switch (component.type()) {
+		case INPUT_PIN:
+			return new InputPinGraphic(component);
+		case OUTPUT_PIN:
+			return new OutputPinGraphic(component);
+		case BRANCH:
+			return new BranchGraphic(component);
+		case GATE:
+			return new GateGraphic(component);
+		case GATEAND:
+			return new GateANDGraphic(component);
+		case GATENOT:
+			return new GateNOTGraphic(component);
+		case GATEOR:
+			return new GateORGraphic(component);
+		case GATEXOR:
+			return new GateXORGraphic(component);
+		default:
+			return null;
+		}
 	}
 
 	/**
-	 * Constructor specifying Component, location and dimensions.
+	 * Loads the contents of an image file into a BufferedImage and returns it.
+	 *
+	 * @param imageFileName the name of file with the sprite
+	 *
+	 * @return the BufferedImage
+	 *
+	 * @throws MissingSpriteException if the file couldn't be opened
+	 */
+	protected static final BufferedImage loadImage(String imageFileName) {
+		BufferedImage img  = null;
+		File          file = null;
+
+		try {
+			file = new File(imageFileName);
+			img = ImageIO.read(file);
+		} catch (final IOException e) {
+			throw new MissingSpriteException(file);
+		}
+
+		return img;
+	}
+
+	/**
+	 * Constructs the Graphics object with information about the {@link #component}
+	 * that it is drawing.
+	 *
+	 * @param component the Component.
+	 */
+	protected ComponentGraphic(Component component) {
+		this(component, 0, 0, ComponentGraphic.SIZE, ComponentGraphic.SIZE);
+	}
+
+	/**
+	 * Constructor specifying the component, location and dimensions.
 	 *
 	 * @param c the Component that this graphics object is drawing
 	 * @param x the Component's X position
@@ -82,67 +161,52 @@ public abstract class ComponentGraphic extends JComponent {
 		setBounds(x, y, w, h);
 		attachListeners();
 		addFunctions();
+		updateOnMovement();
 	}
 
-	// 5 draw methods
+	// 7 draw methods
 
 	@Override
 	public final void paintComponent(Graphics g) {
-		if (component.hidden())
+		if (GraphicHook.hidden(component))
 			throw new RuntimeException("Hidden Components can't be drawn"); //$NON-NLS-1$
 
 		super.paintComponent(g);
 		draw(g);
 		drawPins(g);
 		drawID(g);
+		drawDescription(g);
 	}
 
 	/**
-	 * Each {@code ComponentGraphic} specifies how it's drawn.
+	 * Each Graphic specifies how it's drawn.
 	 *
 	 * @param g the Graphics object necessary to draw
 	 */
-	protected abstract void draw(Graphics g);
+	protected void draw(Graphics g) {
+		g.drawImage(getImage(), 0, 0, null);
+	}
 
+	/**
+	 * Draws the pins of the {@code Component}.
+	 *
+	 * @param g the Graphics object necessary to draw
+	 */
 	protected void drawPins(Graphics g) {
-		final List<Component> inputs = component.getInputs();
-		final List<List<Component>> outputs = component.getOutputs();
-
-		for (int i = 0; i < inputs.size(); ++i) {
-			Component c = inputs.get(i);
-			if (c != null)
-				g.setColor(c.getActive(0) ? Color.GREEN : Color.RED);
-			else
-				g.setColor(Color.RED);
-			drawPin(g, new Point(dxi.apply(i), dyi.apply(i)));
+		for (int i = 0, size = GraphicHook.inCount(component); i < size; ++i) {
+			g.setColor(GraphicHook.getActive(component, i) ? Color.GREEN : Color.RED);
+			ComponentGraphic.drawPin(g, new Point(dxi.apply(i), dyi.apply(i)));
 		}
 
-		// TODO: contemplate whether or not this is worth improving
-
-		switch (component.type()) {
-		case INPUT_PIN:
-		case OUTPUT_PIN:
-			for (int i = 0; i < outputs.size(); ++i) {
-				List<Component> pins = outputs.get(i);
-				if (pins.size() == 0)
-					g.setColor(Color.RED);
-				else
-					g.setColor(pins.get(0).getActive(0) ? Color.GREEN : Color.RED);
-
-				g.setColor(component.getActive(0) ? Color.GREEN : Color.RED);
-				drawPin(g, new Point(dxo.apply(i), dyo.apply(i)));
-			}
-			break;
-		default:
-			for (int i = 0; i < outputs.size(); ++i) {
-				g.setColor(((Gate) component).outputPins[i].getActive(0) ? Color.GREEN : Color.RED);
-				drawPin(g, new Point(dxo.apply(i), dyo.apply(i)));
-			}
+		for (int i = 0, size = GraphicHook.outCount(component); i < size; ++i) {
+			g.setColor(GraphicHook.getActive(component, i) ? Color.GREEN : Color.RED);
+			ComponentGraphic.drawPin(g, new Point(dxo.apply(i), dyo.apply(i)));
 		}
 	}
 
 	/**
-	 * Draws the ID of the {@code ComponentGraphic}.
+	 * Draws the ID of the {@code Component}. The ID is the Component's unique
+	 * identifier that can be used to access it among other Components.
 	 *
 	 * @param g the Graphics object necessary to draw
 	 */
@@ -151,19 +215,42 @@ public abstract class ComponentGraphic extends JComponent {
 		g.drawString(component.getID(), 0, getHeight() - 1);
 	}
 
+	/**
+	 * Draws the description of the {@code Component}. The description is a very
+	 * short string describing the type of the Component in case it is not obvious
+	 * from the Graphic alone.
+	 *
+	 * @param g the Graphics object necessary to draw
+	 */
+	protected void drawDescription(Graphics g) {
+		g.setColor(Color.BLACK);
+		g.drawString(GraphicHook.description(component), 7, (getHeight() / 2) + 5);
+	}
+
+	/**
+	 * Returns the Image used to draw the Graphic or null if no Image is suitable
+	 * for drawing. In this case, the {@code draw(Graphics)} method should also be
+	 * overridden to draw the Graphic without the Image.
+	 *
+	 * @return the Image
+	 */
+	protected abstract BufferedImage getImage();
+
 	private static void drawPin(Graphics g, Point p) {
-		g.fillRect(p.x - (PIN_SIZE / 2), p.y - (PIN_SIZE / 2), PIN_SIZE, PIN_SIZE);
+		final int size = ComponentGraphic.PIN_SIZE;
+		g.fillRect(p.x - (size / 2), p.y - (size / 2), size, size);
 	}
 
 	// 5 methods for moving and resizing
 
-	/** Specifies how this ComponentGraphic should react when moved (or resized) */
+	/** Defines how this Graphic should react when moved or resized */
 	protected void updateOnMovement() {
 		// for Components that are moved by the user (all except for Branches),
 		// tell their inputs and outputs (the Branches connected to them) to update.
-		Utility.foreach(component.getInputs(), comp -> comp.getGraphics().updateOnMovement());
-		Utility.foreach(component.getOutputs(),
-				vc -> Utility.foreach(vc, comp -> comp.getGraphics().updateOnMovement()));
+		Utility.foreach(GraphicHook.getInputs(component),
+		        comp -> comp.getGraphics().updateOnMovement());
+		Utility.foreach(GraphicHook.getOutputs(component),
+		        vc -> Utility.foreach(vc, comp -> comp.getGraphics().updateOnMovement()));
 	}
 
 	@Override
@@ -181,7 +268,7 @@ public abstract class ComponentGraphic extends JComponent {
 	}
 
 	/**
-	 * Returns information about the location of the, imaginary, pins on the
+	 * Returns information about the location of the imaginary pins on the
 	 * Component's output so the {@code branch} knows precisely where to connect.
 	 *
 	 * @param branch the Branch (used for safety, only index is necessary)
@@ -189,18 +276,18 @@ public abstract class ComponentGraphic extends JComponent {
 	 * @return a Point with the coordinates of the Branch
 	 */
 	protected final Point getBranchInputCoords(Component branch) {
-		ComponentType type = component.type();
+		final ComponentType type = component.type();
 		if ((type == BRANCH) || (type == OUTPUT_PIN))
 			throw new UnsupportedOperationException(String.format(
-					"Component of type %s don't support getBranchInputCoords(Branch, int)", type.description())); //$NON-NLS-1$
+			        "Component of type %s don't support getBranchInputCoords(Branch, int)", //$NON-NLS-1$
+			        type.description()));
 
-		List<List<Component>> outputs = component.getOutputs();
-		for (List<Component> ls : outputs) {
+		final List<List<Component>> outputs = GraphicHook.getOutputs(component);
+		for (final List<Component> ls : outputs)
 			if (ls.contains(branch)) {
 				final int index = outputs.indexOf(ls);
-				return new Point(getX() + dxo().apply(index), getY() + dyo().apply(index));
+				return new Point(getX() + dxo.apply(index), getY() + dyo.apply(index));
 			}
-		}
 
 		throw new ComponentNotFoundException(branch, component);
 	}
@@ -214,15 +301,15 @@ public abstract class ComponentGraphic extends JComponent {
 	 * @return a Point with the coordinates of the Branch
 	 */
 	protected final Point getBranchOutputCoords(Component branch) {
-		ComponentType type = component.type();
+		final ComponentType type = component.type();
 		if ((type == BRANCH) || (type == INPUT_PIN))
 			throw new UnsupportedOperationException(String
-					.format("Component of type %s don't support getBranchOutputCoords(Branch, int)", //$NON-NLS-1$
-							type.description()));
+			        .format("Component of type %s don't support getBranchOutputCoords(Branch, int)", //$NON-NLS-1$
+			                type.description()));
 
-		int index = component.getInputs().indexOf(branch);
+		final int index = GraphicHook.getInputs(component).indexOf(branch);
 		if (index != -1)
-			return new Point(getX() + dxi().apply(index), getY() + dyi().apply(index));
+			return new Point(getX() + dxi.apply(index), getY() + dyi.apply(index));
 
 		throw new ComponentNotFoundException(branch, component);
 	}
@@ -231,23 +318,22 @@ public abstract class ComponentGraphic extends JComponent {
 
 	/**
 	 * Each Component specifies which listeners should be attached. This method may
-	 * (and should) be defined to call the
-	 * {@link ComponentGraphic#attachListeners_(byte) attachListeners_(byte)}
-	 * method with the appropriate byte(s).
-	 *
-	 * @see ComponentGraphic#DRAG_KB_FOCUS
-	 * @see ComponentGraphic#ACTIVATE
+	 * (and should) be defined to call the {@link #attachListenersByFlags(byte)}
+	 * method with the appropriate byte.
 	 */
 	protected abstract void attachListeners();
 
 	/**
-	 * Attaches listeners to this Component based on the {@code flags}.
+	 * Attaches listeners to this Component based on the {@code flags} which may be
+	 * formed by {@code OR}-ing together any number of bytes from those defined in
+	 * this class.
 	 *
 	 * @param flags a byte whose bits correspond to different listeners
 	 *
-	 * @see ComponentGraphic#attachListeners()
+	 * @see #DRAG_KB_FOCUS
+	 * @see #ACTIVATE
 	 */
-	protected final void attachListeners_(byte flags) {
+	protected final void attachListenersByFlags(byte flags) {
 		if ((flags & ComponentGraphic.DRAG_KB_FOCUS) != 0) {
 			addDragListener();
 			addKeyboardListener();
@@ -258,16 +344,16 @@ public abstract class ComponentGraphic extends JComponent {
 			addActivateListener();
 	}
 
-	// 2 methods for restoring ComponentGraphics
+	// 2 methods for restoring Graphics
 
-	/** Restores the state of the ComponentGraphic after it was destroyed */
-	protected void restoreDeleted() {
+	/** Restores the state of the Graphic after it was destroyed */
+	public void restoreDeleted() {
 		focused = false;
 		requestFocus();
 	}
 
-	/** Restores the state of the ComponentGraphic after it was serialised */
-	protected void restoreSerialised() {
+	/** Restores the state of the Graphic after it was serialised */
+	public void restoreSerialised() {
 		attachListeners();
 		focused = false;
 		requestFocus();
@@ -284,43 +370,45 @@ public abstract class ComponentGraphic extends JComponent {
 	}
 
 	/**
-	 * Returns a Function for the x coordinate of the Input Pin at index i.
-	 * 
+	 * Function for the {@code x} coordinate of the Input Pin at index {@code i}.
+	 *
 	 * @return the Function
 	 */
 	protected Function<Integer, Integer> dxi() {
-		return i -> PIN_SIZE / 2;
+		return i -> ComponentGraphic.PIN_SIZE / 2;
 	}
 
 	/**
-	 * Returns a Function for the y coordinate of the Input Pin at index i.
-	 * 
+	 * Function for the {@code y} coordinate of the Input Pin at index {@code i}.
+	 *
 	 * @return the Function
 	 */
 	protected Function<Integer, Integer> dyi() {
-		final int count = component.inCount();
-		final int gap = (getHeight() - (count * PIN_SIZE)) / (count + 1);
-		return i -> (((i + 1) * (gap + PIN_SIZE)) - (PIN_SIZE / 2));
+		final int count = GraphicHook.inCount(component);
+		final int gap   = (getHeight() - (count * ComponentGraphic.PIN_SIZE)) / (count + 1);
+		return i -> (((i + 1) * (gap + ComponentGraphic.PIN_SIZE))
+		        - (ComponentGraphic.PIN_SIZE / 2));
 	}
 
 	/**
-	 * Returns a Function for the x coordinate of the Output Pin at index i.
-	 * 
+	 * Function for the {@code x} coordinate of the Output Pin at index {@code i}.
+	 *
 	 * @return the Function
 	 */
 	protected Function<Integer, Integer> dxo() {
-		return i -> (getWidth() - (PIN_SIZE / 2)) - 1;
+		return i -> (getWidth() - (ComponentGraphic.PIN_SIZE / 2)) - 1;
 	}
 
 	/**
-	 * Returns a Function for the y coordinate of the Output Pin at index i.
-	 * 
+	 * Function for the {@code y} coordinate of the Output Pin at index {@code i}.
+	 *
 	 * @return the Function
 	 */
 	protected Function<Integer, Integer> dyo() {
-		final int count = component.outCount();
-		final int gap = (getHeight() - (count * PIN_SIZE)) / (count + 1);
-		return i -> (((i + 1) * (gap + PIN_SIZE)) - (PIN_SIZE / 2));
+		final int count = GraphicHook.outCount(component);
+		final int gap   = (getHeight() - (count * ComponentGraphic.PIN_SIZE)) / (count + 1);
+		return i -> (((i + 1) * (gap + ComponentGraphic.PIN_SIZE))
+		        - (ComponentGraphic.PIN_SIZE / 2));
 	}
 
 	// 5 secondary listener methods
@@ -331,7 +419,7 @@ public abstract class ComponentGraphic extends JComponent {
 			public void mouseDragged(MouseEvent e) {
 				// center on mouse
 				setLocation(getX() + (e.getX() - (getWidth() / 2)),
-						getY() + (e.getY() - (getHeight() / 2)));
+				        getY() + (e.getY() - (getHeight() / 2)));
 				e.consume();
 			}
 		});
@@ -350,8 +438,7 @@ public abstract class ComponentGraphic extends JComponent {
 					break;
 				case KeyEvent.VK_SPACE:
 					if (component.type() == ComponentType.INPUT_PIN)
-						((InputPin) component)
-						.setActive(!component.getActive(0));
+						GraphicHook.wake_up(component, (!GraphicHook.getActive(component, 0)));
 					break;
 				default:
 					break;
@@ -391,7 +478,7 @@ public abstract class ComponentGraphic extends JComponent {
 		addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				component.wake_up(!component.getActive(0));
+				GraphicHook.wake_up(component, !GraphicHook.getActive(component, 0));
 			}
 		});
 	}
@@ -419,7 +506,7 @@ public abstract class ComponentGraphic extends JComponent {
 				break;
 			}
 
-			// check for 'fast' movement
+			// check for fast movement
 			if (e.isShiftDown()) {
 				dx *= dm;
 				dy *= dm;
@@ -428,10 +515,10 @@ public abstract class ComponentGraphic extends JComponent {
 			// check for drawing area bounds
 			int newx = getX(), newy = getY();
 			if ((dx != 0) && ((getX() + dx) >= 0)
-					&& ((getX() + dx) <= (getParent().getWidth() - getWidth())))
+			        && ((getX() + dx) <= (getParent().getWidth() - getWidth())))
 				newx = (int) Math.floor((getX() + dx) / (double) d) * d;
 			if ((dy != 0) && ((getY() + dy) >= 0)
-					&& ((getY() + dy) <= (getParent().getHeight() - getHeight())))
+			        && ((getY() + dy) <= (getParent().getHeight() - getHeight())))
 				newy = (int) Math.floor((getY() + dy) / (double) d) * d;
 
 			// update location
