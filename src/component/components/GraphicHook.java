@@ -2,6 +2,8 @@ package component.components;
 
 import java.util.List;
 
+import component.graphics.ComponentGraphic;
+
 /**
  * Defines static methods to give to {@link component.graphics.ComponentGraphic
  * Graphic} objects access to the necessary information to fully represent
@@ -28,6 +30,18 @@ public final class GraphicHook {
 	 */
 	public static String description(Component component) {
 		return component.description();
+	}
+
+	/**
+	 * Delegate method.
+	 *
+	 * @param component the Component
+	 * @param g         the Graphic
+	 *
+	 * @see Component#setGraphics(ComponentGraphic)
+	 */
+	public static void setGraphics(Component component, ComponentGraphic g) {
+		component.setGraphics(g);
 	}
 
 	/**
