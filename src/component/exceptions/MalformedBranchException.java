@@ -15,7 +15,7 @@ public final class MalformedBranchException extends Exception {
 
 	private static final Pattern p = Pattern
 	        .compile(
-	                "(?<type>.*?): (?<inCount>\\d+)-(?<outCount>\\d+), UID: (?<id>\\w+), hidden: (?<not_used>true|false)"); //$NON-NLS-1$
+	                "(?<type>.*?): (?<inCount>\\d+)-(?<outCount>\\d+), UID: (?<id>\\w+), hidden: (?<unused>true|false)"); //$NON-NLS-1$
 
 	/**
 	 * Constructs the Exception with the two {@code Components}.
