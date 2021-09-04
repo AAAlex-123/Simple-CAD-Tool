@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import component.ComponentType;
-import component.components.Component;
+import components.Component;
+import components.ComponentType;
 
 /**
- * A {@link ListRequirement} that handles {@link component.components.Component
+ * A {@link ListRequirement} that handles {@link components.Component
  * Components}, utilises their {@code IDs} and can perform filtering using a
  * {@link Policy} taking into account the state and purpose of different
  * {@code Components}.
@@ -83,7 +83,7 @@ public class ComponentRequirement extends ListRequirement<String> {
 
 	/**
 	 * Constants denoting whether or not the list's purpose is for a
-	 * {@link component.ComponentType#BRANCH}'s input gate, output gate, or is for
+	 * {@link components.ComponentType#BRANCH}'s input gate, output gate, or is for
 	 * an entirely different use altogether. Is used internally to filter available
 	 * components.
 	 */
