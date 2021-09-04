@@ -231,12 +231,12 @@ public abstract class ComponentGraphic extends JComponent {
 	 */
 	protected void drawPins(Graphics g) {
 		for (int i = 0, size = GraphicHook.inCount(component); i < size; ++i) {
-			g.setColor(GraphicHook.getActive(component, i) ? Color.GREEN : Color.RED);
+			g.setColor(GraphicHook.getActiveIn(component, i) ? Color.GREEN : Color.RED);
 			ComponentGraphic.drawPin(g, new Point(dxi.apply(i), dyi.apply(i)));
 		}
 
 		for (int i = 0, size = GraphicHook.outCount(component); i < size; ++i) {
-			g.setColor(GraphicHook.getActive(component, i) ? Color.GREEN : Color.RED);
+			g.setColor(GraphicHook.getActiveOut(component, i) ? Color.GREEN : Color.RED);
 			ComponentGraphic.drawPin(g, new Point(dxo.apply(i), dyo.apply(i)));
 		}
 	}
@@ -395,6 +395,7 @@ public abstract class ComponentGraphic extends JComponent {
 	public void restoreDeleted() {
 		focused = false;
 		requestFocus();
+		updateOnMovement();
 	}
 
 	/** Restores the state of the Graphic after it was serialised */
@@ -483,7 +484,7 @@ public abstract class ComponentGraphic extends JComponent {
 					break;
 				case KeyEvent.VK_SPACE:
 					if (component.type() == ComponentType.INPUT_PIN)
-						GraphicHook.wake_up(component, (!GraphicHook.getActive(component, 0)));
+						GraphicHook.wake_up(component, (!GraphicHook.getActiveOut(component, 0)));
 					break;
 				default:
 					break;
@@ -523,7 +524,7 @@ public abstract class ComponentGraphic extends JComponent {
 		addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				GraphicHook.wake_up(component, !GraphicHook.getActive(component, 0));
+				GraphicHook.wake_up(component, !GraphicHook.getActiveOut(component, 0));
 			}
 		});
 	}

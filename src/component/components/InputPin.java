@@ -69,7 +69,13 @@ final class InputPin extends Component {
 	}
 
 	@Override
-	protected boolean getActive(int index) {
+	protected boolean getActiveIn(int index) {
+		throw new UnsupportedOperationException(String.format(
+		        "Components of type %s don't support getActiveIn(int)", type().description())); //$NON-NLS-1$
+	}
+
+	@Override
+	protected boolean getActiveOut(int index) {
 		checkIndex(index, outCount());
 		return active;
 	}

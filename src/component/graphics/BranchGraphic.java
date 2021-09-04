@@ -38,7 +38,7 @@ final class BranchGraphic extends ComponentGraphic {
 
 	@Override
 	protected void draw(Graphics g) {
-		g.setColor(GraphicHook.getActive(component, 0) ? Color.green : Color.red);
+		g.setColor(GraphicHook.getActiveIn(component, 0) ? Color.green : Color.red);
 
 		// draw with correct direction (as specified in its declaration)
 		if (direction == 1)

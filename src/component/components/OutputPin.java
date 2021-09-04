@@ -71,9 +71,15 @@ final class OutputPin extends Component {
 	}
 
 	@Override
-	protected boolean getActive(int index) {
+	protected boolean getActiveIn(int index) {
 		checkIndex(index, inCount());
 		return active;
+	}
+
+	@Override
+	protected boolean getActiveOut(int index) {
+		throw new UnsupportedOperationException(String.format(
+		        "Components of type %s don't support getActiveOut(int)", type().description())); //$NON-NLS-1$
 	}
 
 	@Override

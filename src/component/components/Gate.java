@@ -141,13 +141,19 @@ class Gate extends Component {
 		checkIndex(index, outCount());
 
 		Utility.foreach(outputBranches.get(index),
-		        b -> b.wake_up(outputPins[index].getActive(0), hidden()));
+		        b -> b.wake_up(outputPins[index].getActiveIn(0), hidden()));
 	}
 
 	@Override
-	protected final boolean getActive(int index) {
+	protected final boolean getActiveIn(int index) {
+		checkIndex(index, inCount());
+		return inputPins[index].getActiveOut(0);
+	}
+
+	@Override
+	protected final boolean getActiveOut(int index) {
 		checkIndex(index, outCount());
-		return outputPins[index].getActive(0);
+		return outputPins[index].getActiveIn(0);
 	}
 
 	@Override
