@@ -32,7 +32,7 @@ final class GateXOR extends PrimitiveGate {
 
 			// perform logical `xor` all of the input pins
 			for (int i = 0; i < inputPins.length; ++i)
-				res ^= inputPins[i].getActive(0);
+				res ^= inputPins[i].getActiveOut(0);
 
 			// and outputs the result
 			outputPins[0].wake_up(res);
