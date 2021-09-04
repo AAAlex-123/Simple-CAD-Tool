@@ -32,8 +32,11 @@ import myUtil.Utility;
 
 /**
  * A Graphic object that is responsible for drawing a representation of a
- * {@link Component}. It uses information from the {@code Component} to
- * accurately represent it (including ID, description, number of inputs and
+ * {@link Component}.
+ * <p>
+ * Each Graphic has a {@link ComponentType Type} that matches that of its
+ * {@code Component} and uses information from the {@code Component} to
+ * accurately represent it (including its ID, description, number of inputs and
  * outputs) and can also alter the state of it when the user interacts with the
  * Graphic (e.g. turn it on/off). A {@link GraphicHook} is used to access the
  * {@code Component's} protected members.
@@ -62,6 +65,8 @@ public abstract class ComponentGraphic extends JComponent {
 	 */
 	protected final Component component;
 
+	private final ComponentType type;
+
 	/**
 	 * Used instead of {@code hasFocus()} because it does not return {@code true}
 	 * immediately after {@code requestFocus()} is called and therefore the user has
@@ -82,10 +87,9 @@ public abstract class ComponentGraphic extends JComponent {
 	private transient Function<Integer, Integer> dxi, dyi, dxo, dyo;
 
 	/**
-	 * Constructs a Graphic associated with the {@code component}.
-	 * <p>
-	 * <b>Note:</b> getting the Graphic of a {@code Component} with its
-	 * {@code getGraphics()} method will not return this Graphic.
+	 * Constructs a Graphic associated with the {@code component} while also setting
+	 * the {@code component's} Graphic to the Graphic that was just created, thereby
+	 * synchronising the {@code Component} with its {@code Graphic}.
 	 *
 	 * @param component the Component related to the Graphic
 	 *
@@ -139,7 +143,7 @@ public abstract class ComponentGraphic extends JComponent {
 
 	/**
 	 * Constructs the Graphics object with information about the {@link #component}
-	 * that it is drawing.
+	 * that it is drawing and sets the {@code Component's} Graphic to this Graphic.
 	 *
 	 * @param component the Component.
 	 */
@@ -148,7 +152,8 @@ public abstract class ComponentGraphic extends JComponent {
 	}
 
 	/**
-	 * Constructor specifying the component, location and dimensions.
+	 * Constructor specifying the component, location and dimensions and sets the
+	 * {@code Component's} Graphic to this Graphic.
 	 *
 	 * @param c the Component that this graphics object is drawing
 	 * @param x the Component's X position
@@ -158,10 +163,35 @@ public abstract class ComponentGraphic extends JComponent {
 	 */
 	private ComponentGraphic(Component c, int x, int y, int w, int h) {
 		component = c;
+		type = component.type();
+		GraphicHook.setGraphics(component, this);
 		setBounds(x, y, w, h);
 		attachListeners();
 		addFunctions();
 		updateOnMovement();
+	}
+
+	/**
+	 * Returns the Graphic's {@code Type}.
+	 *
+	 * @return the type
+	 *
+	 * @see ComponentType
+	 */
+	public final ComponentType type() {
+		return type;
+	}
+
+	/**
+	 * Returns whether or not this Graphic's {@code Component} is the same as the
+	 * other one.
+	 *
+	 * @param other the other Component
+	 *
+	 * @return {@code true} if they are the same Component, {@code false} otherwise
+	 */
+	public final boolean matchesComponent(Component other) {
+		return component == other;
 	}
 
 	// 7 draw methods
@@ -291,11 +321,11 @@ public abstract class ComponentGraphic extends JComponent {
 	 * @return a Point with the coordinates of the Branch
 	 */
 	protected final Point getBranchInputCoords(Component branch) {
-		final ComponentType type = component.type();
-		if ((type == BRANCH) || (type == OUTPUT_PIN))
+		final ComponentType componentType = component.type();
+		if ((componentType == BRANCH) || (componentType == OUTPUT_PIN))
 			throw new UnsupportedOperationException(String.format(
 			        "Component of type %s don't support getBranchInputCoords(Branch, int)", //$NON-NLS-1$
-			        type.description()));
+			        componentType.description()));
 
 		final List<List<Component>> outputs = GraphicHook.getOutputs(component);
 		for (final List<Component> ls : outputs)
@@ -316,11 +346,11 @@ public abstract class ComponentGraphic extends JComponent {
 	 * @return a Point with the coordinates of the Branch
 	 */
 	protected final Point getBranchOutputCoords(Component branch) {
-		final ComponentType type = component.type();
-		if ((type == BRANCH) || (type == INPUT_PIN))
+		final ComponentType componentType = component.type();
+		if ((componentType == BRANCH) || (componentType == INPUT_PIN))
 			throw new UnsupportedOperationException(String
 			        .format("Component of type %s don't support getBranchOutputCoords(Branch, int)", //$NON-NLS-1$
-			                type.description()));
+			                componentType.description()));
 
 		final int index = GraphicHook.getInputs(component).indexOf(branch);
 		if (index != -1)
