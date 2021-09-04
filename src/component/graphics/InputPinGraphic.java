@@ -36,7 +36,7 @@ final class InputPinGraphic extends ComponentGraphic {
 
 	@Override
 	protected BufferedImage getImage() {
-		return GraphicHook.getActive(component, 0) ? InputPinGraphic.image_on
+		return GraphicHook.getActiveOut(component, 0) ? InputPinGraphic.image_on
 		        : InputPinGraphic.image_off;
 	}
 
