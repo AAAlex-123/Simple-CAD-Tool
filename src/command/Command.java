@@ -8,9 +8,9 @@ import java.util.List;
 
 import application.editor.Editor;
 import application.editor.Undoable;
-import components.Component;
-import components.ComponentFactory;
-import components.ComponentType;
+import component.ComponentType;
+import component.components.Component;
+import component.components.ComponentFactory;
 import requirement.requirements.HasRequirements;
 import requirement.requirements.Requirements;
 
@@ -19,7 +19,7 @@ import requirement.requirements.Requirements;
  * Application. {@link command.Command Commands} have certain
  * {@link requirement.requirements.AbstractRequirement requirements}, act on a
  * {@link application.editor.Editor context} and manipulate
- * {@link components.Component Components} by creating or deleting them.
+ * {@link component.components.Component Components} by creating or deleting them.
  * <p>
  * <b>Note:</b> the Command does not check if the {@code requirements} are set.
  * If they are not, the Command neither prints an error message nor attempts to
@@ -34,7 +34,7 @@ public abstract class Command implements HasRequirements, Undoable, Serializable
 
 	/**
 	 * Creates a Command that creates a {@code Component} of the given
-	 * {@link components.ComponentType Type}.
+	 * {@link component.ComponentType Type}.
 	 *
 	 * @param componentType the type of the Component
 	 *
@@ -52,7 +52,7 @@ public abstract class Command implements HasRequirements, Undoable, Serializable
 	 *
 	 * @return the Command
 	 *
-	 * @see components.ComponentType#GATE
+	 * @see component.ComponentType#GATE
 	 */
 	public static Command create(List<Command> commands, String description) {
 		return new CreateGateCommand(null, commands, description);

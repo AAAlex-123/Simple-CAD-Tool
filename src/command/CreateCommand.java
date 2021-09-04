@@ -1,6 +1,6 @@
 package command;
 
-import static components.ComponentType.BRANCH;
+import static component.ComponentType.BRANCH;
 import static localisation.CommandStrings.CREATE_STR;
 import static localisation.CommandStrings.ID;
 import static localisation.CommandStrings.IN_COUNT;
@@ -19,12 +19,13 @@ import java.util.List;
 
 import application.editor.Editor;
 import application.editor.MissingComponentException;
-import components.Component;
-import components.ComponentFactory;
-import components.ComponentType;
-import exceptions.MalformedBranchException;
+import component.ComponentType;
+import component.components.Component;
+import component.components.ComponentFactory;
+import component.exceptions.MalformedBranchException;
 import localisation.Languages;
 import myUtil.Utility;
+import requirement.requirements.ComponentRequirement;
 import requirement.requirements.Requirements;
 
 /**
@@ -135,17 +136,19 @@ class CreateCommand extends Command {
 		// delete the branch that may have been deleted when creating this branch
 		// there can't be more than two branches deleted when creating a branch
 		if (associatedComponent.type() == BRANCH) {
-			final List<Component> ls = context.getDeletedComponents();
+			final List<Component> deletedComps = context.getDeletedComponents();
 
-			if (ls.size() == 0)
+			if (deletedComps.size() == 0)
 				return;
 
-			if (ls.size() > 1)
+			if (deletedComps.size() > 1)
 				throw new RuntimeException("There can't be more than 1 deleted Branches after creating a Branch"); //$NON-NLS-1$
 
 			final Command d = new DeleteCommand(context);
+			((ComponentRequirement) d.requirements.get(ID)).setComponentOptions(deletedComps);
+			d.requirements.fulfil(ID, String.valueOf(deletedComps.get(0).getID()));
+
 			deleteCommands.add(d);
-			d.requirements.fulfil(ID, String.valueOf(ls.get(0).getID()));
 
 			try {
 				// the Component with that id for sure exists; this statement can't throw

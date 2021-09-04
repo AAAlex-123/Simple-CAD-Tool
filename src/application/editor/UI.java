@@ -5,10 +5,10 @@ import java.awt.Color;
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 
-import components.Component;
+import component.components.Component;
 
 /**
- * A JPanel to display {@link components.Component Components} that repaints
+ * A JPanel to display {@link component.components.Component Components} that repaints
  * itself when a {@code Component} is added or removed.
  *
  * @author alexm

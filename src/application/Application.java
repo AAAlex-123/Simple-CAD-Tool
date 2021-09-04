@@ -16,7 +16,7 @@ import javax.swing.WindowConstants;
 
 import application.editor.Editor;
 import command.Command;
-import components.ComponentType;
+import component.ComponentType;
 import localisation.Languages;
 import myUtil.StringGenerator;
 import myUtil.Utility;

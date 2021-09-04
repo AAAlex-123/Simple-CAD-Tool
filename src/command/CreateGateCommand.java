@@ -1,16 +1,16 @@
 package command;
 
-import static components.ComponentType.INPUT_PIN;
-import static components.ComponentType.OUTPUT_PIN;
+import static component.ComponentType.INPUT_PIN;
+import static component.ComponentType.OUTPUT_PIN;
 import static localisation.CommandStrings.NAME;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import application.editor.Editor;
-import components.Component;
-import components.ComponentFactory;
-import components.ComponentType;
+import component.ComponentType;
+import component.components.Component;
+import component.components.ComponentFactory;
 import myUtil.Utility;
 import requirement.requirements.Requirements;
 
