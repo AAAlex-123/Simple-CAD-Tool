@@ -81,8 +81,14 @@ final class Branch extends Component {
 	}
 
 	@Override
-	protected boolean getActive(int index) {
+	protected boolean getActiveIn(int index) {
 		checkIndex(index, inCount());
+		return active;
+	}
+
+	@Override
+	protected boolean getActiveOut(int index) {
+		checkIndex(index, outCount());
 		return active;
 	}
 
@@ -102,8 +108,9 @@ final class Branch extends Component {
 		}
 
 		// set active to false so `wake_up` always propagates
-		active = !in.getActive(indexIn);
-		wake_up(in.getActive(indexIn));
+		final boolean newActive = in.getActiveOut(indexIn);
+		active = !newActive;
+		wake_up(newActive);
 	}
 
 	@Override
