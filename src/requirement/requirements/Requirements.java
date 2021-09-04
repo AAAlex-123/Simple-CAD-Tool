@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import component.components.Component;
 import localisation.Languages;
 import localisation.RequirementStrings;
 import myUtil.Utility;
@@ -89,7 +90,7 @@ public final class Requirements implements Iterable<AbstractRequirement>, Serial
 	 * @param components the suitable components
 	 * @param policy     the Policy for filtering the Components
 	 */
-	public void add(String key, List<components.Component> components,
+	public void add(String key, List<Component> components,
 	        ComponentRequirement.Policy policy) {
 		requirements.put(key, new ComponentRequirement(key, components, policy));
 	}
