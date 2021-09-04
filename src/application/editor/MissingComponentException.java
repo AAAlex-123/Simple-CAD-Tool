@@ -3,7 +3,7 @@ package application.editor;
 import localisation.Languages;
 
 /**
- * Thrown when no {@link components.Component Component} with the {@code ID}
+ * Thrown when no {@link component.components.Component Component} with the {@code ID}
  * exists
  *
  * @author alexm

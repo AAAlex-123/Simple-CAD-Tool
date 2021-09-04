@@ -1,13 +1,13 @@
 package application.editor;
 
-import static components.ComponentType.BRANCH;
-import static components.ComponentType.GATE;
-import static components.ComponentType.GATEAND;
-import static components.ComponentType.GATENOT;
-import static components.ComponentType.GATEOR;
-import static components.ComponentType.GATEXOR;
-import static components.ComponentType.INPUT_PIN;
-import static components.ComponentType.OUTPUT_PIN;
+import static component.ComponentType.BRANCH;
+import static component.ComponentType.GATE;
+import static component.ComponentType.GATEAND;
+import static component.ComponentType.GATENOT;
+import static component.ComponentType.GATEOR;
+import static component.ComponentType.GATEXOR;
+import static component.ComponentType.INPUT_PIN;
+import static component.ComponentType.OUTPUT_PIN;
 
 import java.awt.BorderLayout;
 import java.util.ArrayList;
@@ -20,15 +20,15 @@ import javax.swing.JOptionPane;
 import application.Application;
 import application.StringConstants;
 import command.Command;
-import components.Component;
-import components.ComponentFactory;
-import components.ComponentType;
+import component.ComponentType;
+import component.components.Component;
+import component.components.ComponentFactory;
 import localisation.EditorStrings;
 import localisation.Languages;
 import myUtil.Utility;
 
 /**
- * An Editor to edit a file. The Editor manages {@link components.Component
+ * An Editor to edit a file. The Editor manages {@link component.components.Component
  * Components} with the help of an {@link ItemManager} (which takes care of
  * creating and deleting them) and a {@link UI} (which displays them on the
  * screen). Additional information is displayed at the bottom of the screen

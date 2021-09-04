@@ -24,9 +24,9 @@ import javax.swing.JOptionPane;
 
 import application.StringConstants;
 import command.Command;
-import components.Component;
-import components.ComponentFactory;
-import exceptions.MalformedBranchException;
+import component.components.Component;
+import component.components.ComponentFactory;
+import component.exceptions.MalformedBranchException;
 import localisation.EditorStrings;
 import localisation.Languages;
 import myUtil.Utility;
