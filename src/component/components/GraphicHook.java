@@ -62,12 +62,26 @@ public final class GraphicHook {
 	 * @param component the Component
 	 * @param index     the index of the pin on the Component
 	 *
-	 * @return the active state of the Component at the index
+	 * @return the active state of the Component's input pin at the index
 	 *
-	 * @see Component#getActive(int)
+	 * @see Component#getActiveIn(int)
 	 */
-	public static boolean getActive(Component component, int index) {
-		return component.getActive(index);
+	public static boolean getActiveIn(Component component, int index) {
+		return component.getActiveIn(index);
+	}
+
+	/**
+	 * Delegate method.
+	 *
+	 * @param component the Component
+	 * @param index     the index of the pin on the Component
+	 *
+	 * @return the active state of the Component's output pin at the index
+	 *
+	 * @see Component#getActiveOut(int)
+	 */
+	public static boolean getActiveOut(Component component, int index) {
+		return component.getActiveOut(index);
 	}
 
 	/**
