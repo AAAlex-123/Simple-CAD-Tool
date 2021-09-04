@@ -6,6 +6,7 @@ import java.util.List;
 
 import component.ComponentType;
 import component.exceptions.ComponentNotAccessibleException;
+import component.exceptions.GraphicMismatchException;
 import component.exceptions.InvalidIndexException;
 import component.graphics.ComponentGraphic;
 
@@ -88,11 +89,9 @@ public abstract class Component implements Identifiable<String>, Serializable {
 	}
 
 	/**
-	 * Returns the {@code Graphic} object associated with this Component.
-	 * <p>
-	 * <b>Note:</b> the {@code Graphic} returned by this method is different than
-	 * the one created using the Graphic's {@code fromComponent(Component)} method.
-	 * Using both methods interchangeably may result in undefined behaviour.
+	 * Returns the {@code Graphic} object associated with this Component. The first
+	 * time this method is called a {@code Graphic} object is created referencing
+	 * this {@code Component}, effectively synchronising them with one another.
 	 *
 	 * @return the ComponentGraphics object
 	 */
@@ -100,6 +99,23 @@ public abstract class Component implements Identifiable<String>, Serializable {
 		if (g == null)
 			g = ComponentGraphic.forComponent(this);
 		return g;
+	}
+
+	/**
+	 * Sets the {@code Graphic} object associated with this Component.
+	 *
+	 * @param g the new Graphic object for this Component
+	 *
+	 * @throws GraphicMismatchException if this Component can't use the Graphic
+	 */
+	protected final void setGraphics(ComponentGraphic g) {
+		if (type() != g.type())
+			throw new GraphicMismatchException(this.type(), g.type());
+
+		if (!g.matchesComponent(this))
+			throw new GraphicMismatchException(this, g);
+
+		this.g = g;
 	}
 
 	/**
