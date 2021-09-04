@@ -9,8 +9,8 @@ import java.util.Vector;
 
 import application.editor.Editor;
 import application.editor.MissingComponentException;
-import component.components.Component;
-import component.components.ComponentFactory;
+import components.Component;
+import components.ComponentFactory;
 import myUtil.Utility;
 import requirement.requirements.ComponentRequirement;
 import requirement.requirements.Requirements;

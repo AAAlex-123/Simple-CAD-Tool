@@ -1,6 +1,6 @@
 package command;
 
-import static component.ComponentType.BRANCH;
+import static components.ComponentType.BRANCH;
 import static localisation.CommandStrings.CREATE_STR;
 import static localisation.CommandStrings.ID;
 import static localisation.CommandStrings.IN_COUNT;
@@ -19,10 +19,10 @@ import java.util.List;
 
 import application.editor.Editor;
 import application.editor.MissingComponentException;
-import component.ComponentType;
-import component.components.Component;
-import component.components.ComponentFactory;
-import component.exceptions.MalformedBranchException;
+import components.Component;
+import components.ComponentFactory;
+import components.ComponentType;
+import exceptions.MalformedBranchException;
 import localisation.Languages;
 import myUtil.Utility;
 import requirement.requirements.Requirements;
