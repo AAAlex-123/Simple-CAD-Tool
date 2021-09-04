@@ -135,13 +135,22 @@ public abstract class Component implements Identifiable<String>, Serializable {
 	protected abstract void wake_up(boolean newActive, int index, boolean prevHidden);
 
 	/**
-	 * Returns the active state of the Component's pin at the specified index.
+	 * Returns the active state of the Component's input pin at the {@code index}.
 	 *
-	 * @param index the Component's Pin index
+	 * @param index the Component's input pin index
 	 *
 	 * @return {@code true} if active, {@code false} otherwise
 	 */
-	protected abstract boolean getActive(int index);
+	protected abstract boolean getActiveIn(int index);
+
+	/**
+	 * Returns the active state of the Component's output pin at the {@code index}.
+	 *
+	 * @param index the Component's output pin index
+	 *
+	 * @return {@code true} if active, {@code false} otherwise
+	 */
+	protected abstract boolean getActiveOut(int index);
 
 	// 4 methods to change the inputs and outputs of a Component.
 	// Only Branches should call them.
@@ -221,7 +230,8 @@ public abstract class Component implements Identifiable<String>, Serializable {
 	final void restoreDeleted() {
 		restoreDeletedSelf();
 		toBeRemoved = false;
-		getGraphics().restoreDeleted();
+		if (g != null)
+			g.restoreDeleted();
 	}
 
 	/** Each Component specifies how it is restored after destruction */
@@ -230,7 +240,8 @@ public abstract class Component implements Identifiable<String>, Serializable {
 	/** Restores the state of the Component after it was deserialised */
 	final void restoreSerialised() {
 		restoreSerialisedSelf();
-		getGraphics().restoreSerialised();
+		if (g != null)
+			g.restoreSerialised();
 	}
 
 	/** Each Component specifies how it is restored after deserialisation */
