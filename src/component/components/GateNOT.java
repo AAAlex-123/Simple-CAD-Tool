@@ -35,7 +35,7 @@ final class GateNOT extends PrimitiveGate {
 			// for each individual NOT gate check if a Branch is connected
 			// and if it is, produce the correct output
 			if (checkBranch(i)) {
-				boolean res = !inputPins[i].getActive(0);
+				boolean res = !inputPins[i].getActiveOut(0);
 				outputPins[i].wake_up(res);
 			}
 		}
