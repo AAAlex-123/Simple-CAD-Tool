@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
-import localisation.Languages;
+import component.components.Identifiable;
 import myUtil.StringGenerator;
 import myUtil.Utility;
 
@@ -18,9 +18,9 @@ import myUtil.Utility;
  *
  * @author alexm
  */
-class ItemManager<T extends components.Identifiable<String>> {
+class ItemManager<T extends Identifiable<String>> {
 
-	private final Map<String, T> map;
+	private final Map<String, T>               map;
 	private final Map<String, StringGenerator> generators;
 
 	/** Constructs the ItemManager */
@@ -35,7 +35,7 @@ class ItemManager<T extends components.Identifiable<String>> {
 	 * @param item the Item
 	 */
 	void add(T item) {
-		String id = item.getID();
+		final String id = item.getID();
 		if (map.containsKey(id))
 			throw new DuplicateIdException(id);
 
@@ -100,7 +100,7 @@ class ItemManager<T extends components.Identifiable<String>> {
 	 * @return a List with the Items
 	 */
 	List<T> getall(Predicate<T> predicate) {
-		List<T> list = new ArrayList<>(size());
+		final List<T> list = new ArrayList<>(size());
 		Utility.foreach(map.values(), item -> {
 			if (predicate.test(item))
 				list.add(item);
@@ -153,7 +153,7 @@ class ItemManager<T extends components.Identifiable<String>> {
 		 * @param id the duplicate id
 		 */
 		public DuplicateIdException(String id) {
-			super(String.format("Another Item associated with ID %s", id)); 
+			super(String.format("Another Item associated with ID %s", id)); //$NON-NLS-1$
 		}
 	}
 }
