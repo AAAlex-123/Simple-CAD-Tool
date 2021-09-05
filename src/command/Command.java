@@ -90,7 +90,7 @@ public abstract class Command implements HasRequirements, Undoable, Serializable
 	protected Command(Editor editor) {
 		context = editor;
 		requirements = new Requirements();
-		// constructRequirements is NOT called here
+		// constructRequirements() is NOT called here
 		// each subclass is responsible for calling it
 	}
 
