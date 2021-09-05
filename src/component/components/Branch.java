@@ -129,9 +129,6 @@ final class Branch extends Component {
 	}
 
 	@Override
-	protected void restoreSerialisedSelf() {}
-
-	@Override
 	protected List<Component> getInputs() {
 		final List<Component> ls = new ArrayList<>();
 		ls.add(in);

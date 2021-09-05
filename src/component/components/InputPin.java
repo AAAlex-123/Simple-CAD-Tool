@@ -115,9 +115,6 @@ final class InputPin extends Component {
 	protected void restoreDeletedSelf() {}
 
 	@Override
-	protected void restoreSerialisedSelf() {}
-
-	@Override
 	protected List<Component> getInputs() {
 		return Collections.unmodifiableList(Collections.emptyList());
 	}

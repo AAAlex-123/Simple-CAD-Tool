@@ -145,9 +145,6 @@ final class OutputPin extends Component {
 	protected void restoreDeletedSelf() {}
 
 	@Override
-	protected void restoreSerialisedSelf() {}
-
-	@Override
 	protected List<Component> getInputs() {
 		if (inputBranch == null)
 			return Collections.emptyList();

@@ -213,9 +213,6 @@ class Gate extends Component {
 			outputBranches.add(new ArrayList<>(1));
 	}
 
-	@Override
-	protected final void restoreSerialisedSelf() {}
-
 	/**
 	 * Checks if the Input Pin at the given index is connected to a Branch. Should
 	 * only be called by primitive gates that contain multiple gates e.g. NOT.
