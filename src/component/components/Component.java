@@ -238,14 +238,10 @@ public abstract class Component implements Identifiable<String>, Serializable {
 	protected abstract void restoreDeletedSelf();
 
 	/** Restores the state of the Component after it was deserialised */
-	final void restoreSerialised() {
-		restoreSerialisedSelf();
+	protected final void restoreSerialised() {
 		if (g != null)
 			g.restoreSerialised();
 	}
-
-	/** Each Component specifies how it is restored after deserialisation */
-	protected abstract void restoreSerialisedSelf();
 
 	// 4 methods to access specific parts and information of the Component
 
