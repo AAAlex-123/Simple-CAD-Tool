@@ -22,35 +22,35 @@ import myUtil.StringGenerator;
 import myUtil.Utility;
 
 /**
- * A class representing an Application. It aggregates all of the individual
- * components and handles the communications between them. The client has to
- * create an {@code Application} object then call its {@code run} method to
- * start the program.
+ * This class aggregates all of the individual components that comprise an
+ * Application and handles the communications between them. The client creates
+ * an {@code Application} then call its {@link #run()} method to start it.
  *
- * @author alexm
+ * @author Alex Mandelias
  */
-public class Application {
+public final class Application {
+
 	private final JFrame window;
-	private final MyMenu menu;
+	private final MyMenu menuBar;
 
 	private final JTabbedPane     editorPane;
-	private final List<Editor>    editors;
-	private final StringGenerator nameGenerator;
+	private final List<Editor>    editorList;
+	private final StringGenerator editorNameGenerator;
 
 	/** Constructs the Application */
 	public Application() {
 		window = new JFrame();
-		menu = new MyMenu(this);
-		editors = new ArrayList<>();
+		menuBar = new MyMenu(this);
+		editorList = new ArrayList<>();
 		editorPane = new JTabbedPane(SwingConstants.TOP, JTabbedPane.SCROLL_TAB_LAYOUT);
-		nameGenerator = new StringGenerator(Languages.getString("Application.0")); //$NON-NLS-1$
+		editorNameGenerator = new StringGenerator(Languages.getString("Application.0")); //$NON-NLS-1$
 	}
 
-	/** Runs the application and configures the UI */
+	/** Configures the UI and launches the Application */
 	public void run() {
+
+		// configure the frame
 		window.setLayout(new BorderLayout());
-		window.add(editorPane, BorderLayout.CENTER);
-		window.setJMenuBar(menu);
 		window.setTitle(Languages.getString("Application.1")); //$NON-NLS-1$
 		window.setSize(1000, 600);
 		window.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
@@ -61,136 +61,138 @@ public class Application {
 			}
 		});
 
+		// add components to the frame
+		window.setJMenuBar(menuBar);
+		window.add(editorPane, BorderLayout.CENTER);
+
+		// add the first editor on start-up
 		addEditor();
 
+		// configure the editor pane
 		editorPane.addChangeListener(l -> {
 			final Editor e = (Editor) editorPane.getSelectedComponent();
 			if (e != null)
 				setActiveEditor(e);
 		});
 
-		addCreateCommand(Command.create(ComponentType.INPUT_PIN));
-		addCreateCommand(Command.create(ComponentType.OUTPUT_PIN));
-		addCreateCommand(Command.create(ComponentType.BRANCH));
-		addCreateCommand(Command.create(ComponentType.GATEAND));
-		addCreateCommand(Command.create(ComponentType.GATEOR));
-		addCreateCommand(Command.create(ComponentType.GATENOT));
-		addCreateCommand(Command.create(ComponentType.GATEXOR));
+		// add all of the Create Commands
+		for (final ComponentType type : ComponentType.values())
+			if (type != ComponentType.GATE)
+				addCreateCommand(Command.create(type));
 
 		window.setVisible(true);
 	}
 
-	/** Terminates the Application */
-	public void terminate() {
-		Utility.foreach(new ArrayList<>(editors), this::removeEditor);
-
-		if (getActiveEditor() == null)
-			window.dispose();
-	}
-
 	/**
-	 * Returns the Application's frame
+	 * Returns the Application's {@code Frame}, the window that is displayed on the
+	 * user's screen.
 	 *
-	 * @return the Application's frame
+	 * @return the Application's Frame
 	 */
 	public JFrame getFrame() {
 		return window;
 	}
 
 	/**
-	 * Returns the active Editor.
+	 * Adds a {@code Command} for creating {@code Components} to the Application.
 	 *
-	 * @return the active Editor
+	 * @param command the Command
 	 */
-	public Editor getActiveEditor() {
-		return (Editor) editorPane.getSelectedComponent();
+	public void addCreateCommand(Command command) {
+		menuBar.addCreateCommand(command);
+	}
+
+	private void terminate() {
+		Utility.foreach(new ArrayList<>(editorList), this::removeEditor);
+
+		// dispose window if and only if all Editors are closed
+		if (getActiveEditor() == null)
+			window.dispose();
 	}
 
 	/**
-	 * Sets the active Editor.
+	 * Returns the Application's active {@code Editor}, the Editor the user is
+	 * currently working with or {@code null} if there aren't any open Editors.
 	 *
-	 * @param e the active Editor
+	 * @return the active Editor
 	 */
-	public void setActiveEditor(Editor e) {
-		editorPane.setSelectedComponent(e);
-		window.add(e.getStatusBar(), BorderLayout.SOUTH);
-		window.repaint();
+	Editor getActiveEditor() {
+		return (Editor) editorPane.getSelectedComponent();
 	}
 
 	private void addEditor() {
-		final Editor newEditor = new Editor(this, nameGenerator.get());
-		editors.add(newEditor);
+		final Editor newEditor = new Editor(this, editorNameGenerator.get());
+
+		editorList.add(newEditor);
 		editorPane.addTab("", newEditor); //$NON-NLS-1$
 		editorPane.setTabComponentAt(editorPane.getTabCount() - 1,
 		        newEditor.getFileLabel());
+
 		setActiveEditor(newEditor);
 	}
 
 	private void removeEditor(Editor e) {
 		if (e.close()) {
-			editors.remove(e);
+			editorList.remove(e);
 			editorPane.remove(e);
 		}
 	}
 
-	/**
-	 * Adds a Command for creating Components to the Application.
-	 *
-	 * @param c the Command
-	 */
-	public void addCreateCommand(Command c) {
-		menu.addCreateCommand(c);
+	private void setActiveEditor(Editor editor) {
+		editorPane.setSelectedComponent(editor);
+		window.add(editor.getStatusBar(), BorderLayout.SOUTH);
+		window.repaint();
 	}
 
 	/** An enum-strategy for the different Actions the Application may take */
 	enum Actions {
 
-		/** Action for creating an Editor */
+		/** Action for creating an {@code Editor} */
 		NEW {
 			@Override
-			void execute() {
+			protected void execute() {
 				context.addEditor();
 			}
 		},
 
-		/** Action for closing an Editor */
+		/** Action for closing an {@code Editor} */
 		CLOSE {
 			@Override
-			void execute() {
+			protected void execute() {
 				context.removeEditor(context.getActiveEditor());
 			}
 		},
 
-		/** Action for editing settings */
+		/** Action for editing non-language Settings */
 		EDIT_SETTINGS {
 			@Override
-			void execute() {
-				final String file  = StringConstants.FILE;
+			protected void execute() {
 				final Frame  frame = context.getFrame();
+				final String file  = StringConstants.FILE;
 
 				try {
 					final boolean settingsChanged = StringConstants.editAndWriteToFile(frame);
 					if (settingsChanged)
-						message(frame, file, true);
+						Actions.message(frame, file, true);
 				} catch (final IOException e) {
-					message(frame, file, false);
+					Actions.message(frame, file, false);
 				}
 			}
 		},
 
-		/** Action for editing settings */
+		/** Action for editing language-related Settings */
 		EDIT_LANGUAGE {
 			@Override
-			void execute() {
-				final String file  = StringConstants.FILE;
+			protected void execute() {
 				final Frame  frame = context.getFrame();
+				final String file  = Languages.FILE;
 
 				try {
 					final boolean languageChanged = Languages.editAndWriteToFile(frame);
 					if (languageChanged)
-						message(frame, file, true);
+						Actions.message(frame, file, true);
 				} catch (final IOException e) {
-					message(frame, file, false);
+					Actions.message(frame, file, false);
 				}
 			}
 		};
@@ -204,35 +206,34 @@ public class Application {
 		 * @param success {@code true} if the operation was successful, {@code false}
 		 *                otherwise
 		 */
-		protected void message(Frame frame, String file, boolean success) {
-			if (success) {
+		private static void message(Frame frame, String file, boolean success) {
+			if (success)
 				JOptionPane.showMessageDialog(frame, String.format(
 				        Languages.getString("Application.3"), file), //$NON-NLS-1$
 				        Languages.getString("Application.4"), //$NON-NLS-1$
 				        JOptionPane.INFORMATION_MESSAGE);
-			} else {
+			else
 				JOptionPane.showMessageDialog(frame, String.format(
 				        Languages.getString("Application.5"), file), //$NON-NLS-1$
 				        Languages.getString("Application.6"), //$NON-NLS-1$
 				        JOptionPane.ERROR_MESSAGE);
-			}
 		}
 
-		/** The context of the Action */
-		Application context;
+		/** The context of the Action, where it acts */
+		protected Application context;
 
 		/** Executes the Action */
-		abstract void execute();
+		protected abstract void execute();
 
 		/**
 		 * Specifies the Action's context.
 		 *
-		 * @param app the context
+		 * @param application the context
 		 *
 		 * @return this (used for chaining)
 		 */
-		final Actions context(Application app) {
-			context = app;
+		protected final Actions context(Application application) {
+			context = application;
 			return this;
 		}
 	}
