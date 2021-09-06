@@ -1,9 +1,11 @@
 /**
- * Defines a hierarchy of {@code Commands} that encapsulate different commands
- * that can be executed and un-executed on an Editor. These {@code Commands}
- * create or delete {@link component.components.Component Components} from
- * {@link application.editor.Editor Editors}.
+ * Defines a hierarchy of {@link command.Command Commands} that encapsulate the
+ * different commands that can be executed and un-executed in an {@code Editor},
+ * regarding the creation and deletion of {@code Components}.
  *
- * @author alexm
+ * @author Alex Mandelias
+ *
+ * @see component.components.Component Components
+ * @see application.editor.Editor Editors
  */
 package command;

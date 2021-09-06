@@ -1,8 +1,5 @@
 package command;
 
-import static localisation.CommandStrings.DELETE_STR;
-import static localisation.CommandStrings.NAME;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -11,15 +8,15 @@ import application.editor.Editor;
 import application.editor.MissingComponentException;
 import component.components.Component;
 import component.components.ComponentFactory;
+import localisation.CommandStrings;
 import myUtil.Utility;
 import requirement.requirements.ComponentRequirement;
-import requirement.requirements.Requirements;
+import requirement.requirements.ComponentRequirement.Policy;
 
 /**
- * A Command that deletes a {@code Component} and subsequently removes it from
- * the {@code context}.
+ * The Command returned by {@link Command#delete()}.
  *
- * @author alexm
+ * @author Alex Mandelias
  */
 class DeleteCommand extends Command {
 
@@ -28,7 +25,7 @@ class DeleteCommand extends Command {
 	private final List<Command> deleteCommands;
 
 	/**
-	 * Creates a Command initialising its {@code requirements}.
+	 * Creates the Command constructing its {@code Requirements}.
 	 *
 	 * @param editor the {@code context} of this Command.
 	 */
@@ -39,45 +36,43 @@ class DeleteCommand extends Command {
 	}
 
 	@Override
-	public Command clone() {
-		final Command newCommand = new DeleteCommand(context);
-		newCommand.requirements = new Requirements(requirements);
-		return newCommand;
-	}
-
-	@Override
 	public void constructRequirements() {
-		requirements.add(NAME, new ArrayList<>(), ComponentRequirement.Policy.ANY);
+		requirements.add(CommandStrings.NAME, new ArrayList<>(), Policy.ANY);
 	}
 
 	@Override
 	public void adjustRequirements() {
-		((ComponentRequirement) requirements.get(NAME))
+		// provide options
+		((ComponentRequirement) requirements.get(CommandStrings.NAME))
 		        .setComponentOptions(context.getComponents_());
 	}
 
 	@Override
 	public void execute() throws MissingComponentException {
-		deleteCommands.clear();
-		associatedComponent = context.getComponent_((String) requirements.getValue(NAME));
+		associatedComponent = context
+		        .getComponent_((String) requirements.getValue(CommandStrings.NAME));
 
 		ComponentFactory.destroyComponent(associatedComponent);
 		context.removeComponent(associatedComponent);
 
-		List<Component> deletedComps = context.getDeletedComponents();
+		deleteCommands.clear();
+		final List<Component> deletedComps = context.getDeletedComponents();
 
-		Utility.foreach(deletedComps, command -> {
-			final DeleteCommand deleteCommand = new DeleteCommand(context);
-			deleteCommands.add(deleteCommand);
-
+		Utility.foreach(deletedComps, component -> {
 			// component is already deleted the command isn't executed
 			// instead it is just set up so it can be undone successfully
-			((ComponentRequirement) deleteCommand.requirements.get(NAME))
-			        .setComponentOptions(deletedComps);
-			deleteCommand.requirements.fulfil(NAME, String.valueOf(command.getID()));
-			deleteCommand.associatedComponent = command;
+			final DeleteCommand deleteCommand = new DeleteCommand(context);
 
-			context.removeComponent(command);
+			((ComponentRequirement) deleteCommand.requirements.get(CommandStrings.NAME))
+			        .setComponentOptions(deletedComps);
+			deleteCommand.requirements.fulfil(CommandStrings.NAME, component.getID());
+			deleteCommand.associatedComponent = component;
+
+			// store the command to be undone
+			deleteCommands.add(deleteCommand);
+
+			// remove the already deleted component
+			context.removeComponent(component);
 		});
 	}
 
@@ -86,6 +81,7 @@ class DeleteCommand extends Command {
 		ComponentFactory.restoreDeletedComponent(associatedComponent);
 		context.addComponent(associatedComponent);
 		Utility.foreach(deleteCommands, Command::unexecute);
+		deleteCommands.clear();
 	}
 
 	@Override
@@ -96,6 +92,6 @@ class DeleteCommand extends Command {
 
 	@Override
 	public String toString() {
-		return DELETE_STR;
+		return CommandStrings.DELETE_STR;
 	}
 }
