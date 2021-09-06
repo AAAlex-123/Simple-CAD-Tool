@@ -2,7 +2,7 @@ package application;
 
 import static localisation.CommandStrings.CREATE_STR;
 import static localisation.CommandStrings.DELETE_STR;
-import static localisation.CommandStrings.ID;
+import static localisation.CommandStrings.NAME;
 import static localisation.RequirementStrings.ON;
 
 import java.awt.event.ActionEvent;
@@ -302,12 +302,12 @@ final class MyMenu extends JMenuBar {
 			final String ACTIVE = Languages.getString("MyMenu.0"); //$NON-NLS-1$
 
 			final Requirements reqs = new Requirements();
-			reqs.add(ID, activeEditor.getComponents_(), ComponentRequirement.Policy.ANY);
+			reqs.add(NAME, activeEditor.getComponents_(), ComponentRequirement.Policy.ANY);
 			reqs.add(ACTIVE, StringType.ON_OFF);
 			reqs.fulfillWithDialog(context.getFrame(), Languages.getString("MyMenu.34")); //$NON-NLS-1$
 
 			if (reqs.fulfilled()) {
-				final String    id = (String) reqs.getValue(ID);
+				final String    id = (String) reqs.getValue(NAME);
 				final Component comp;
 				try {
 					comp = context.getActiveEditor().getComponent_(id);
@@ -333,11 +333,11 @@ final class MyMenu extends JMenuBar {
 			final Editor activeEditor = context.getActiveEditor();
 
 			final Requirements reqs = new Requirements();
-			reqs.add(ID, activeEditor.getComponents_(), ComponentRequirement.Policy.NONBRANCH);
+			reqs.add(NAME, activeEditor.getComponents_(), ComponentRequirement.Policy.NONBRANCH);
 			reqs.fulfillWithDialog(context.getFrame(), Languages.getString("MyMenu.41")); //$NON-NLS-1$
 
 			if (reqs.fulfilled()) {
-				final String id = (String) reqs.getValue(ID);
+				final String id = (String) reqs.getValue(NAME);
 				Component    comp;
 				try {
 					comp = activeEditor.getComponent_(id);

@@ -2,13 +2,12 @@ package command;
 
 import static component.ComponentType.BRANCH;
 import static localisation.CommandStrings.CREATE_STR;
-import static localisation.CommandStrings.ID;
 import static localisation.CommandStrings.IN_COUNT;
-import static localisation.CommandStrings.IN_ID;
 import static localisation.CommandStrings.IN_INDEX;
+import static localisation.CommandStrings.IN_NAME;
 import static localisation.CommandStrings.NAME;
-import static localisation.CommandStrings.OUT_ID;
 import static localisation.CommandStrings.OUT_INDEX;
+import static localisation.CommandStrings.OUT_NAME;
 import static requirement.requirements.StringType.ANY;
 import static requirement.requirements.StringType.CUSTOM;
 import static requirement.requirements.StringType.NON_NEG_INTEGER;
@@ -66,9 +65,9 @@ class CreateCommand extends Command {
 	public void constructRequirements() {
 		switch (componentType) {
 		case BRANCH:
-			requirements.add(IN_ID, ANY);
+			requirements.add(IN_NAME, ANY);
 			requirements.add(IN_INDEX, NON_NEG_INTEGER);
-			requirements.add(OUT_ID, ANY);
+			requirements.add(OUT_NAME, ANY);
 			requirements.add(OUT_INDEX, NON_NEG_INTEGER);
 			break;
 		case GATEAND:
@@ -109,8 +108,8 @@ class CreateCommand extends Command {
 				associatedComponent = ComponentFactory.createOutputPin();
 				break;
 			case BRANCH:
-				final Component in = context.getComponent_((String) requirements.getValue(IN_ID));
-				final Component out = context.getComponent_((String) requirements.getValue(OUT_ID));
+				final Component in = context.getComponent_((String) requirements.getValue(IN_NAME));
+				final Component out = context.getComponent_((String) requirements.getValue(OUT_NAME));
 				final int inIndex = Integer.parseInt((String) requirements.getValue(IN_INDEX));
 				final int outIndex = Integer.parseInt((String) requirements.getValue(OUT_INDEX));
 
@@ -145,8 +144,8 @@ class CreateCommand extends Command {
 				throw new RuntimeException("There can't be more than 1 deleted Branches after creating a Branch"); //$NON-NLS-1$
 
 			final Command d = new DeleteCommand(context);
-			((ComponentRequirement) d.requirements.get(ID)).setComponentOptions(deletedComps);
-			d.requirements.fulfil(ID, String.valueOf(deletedComps.get(0).getID()));
+			((ComponentRequirement) d.requirements.get(NAME)).setComponentOptions(deletedComps);
+			d.requirements.fulfil(NAME, String.valueOf(deletedComps.get(0).getID()));
 
 			deleteCommands.add(d);
 

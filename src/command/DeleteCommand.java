@@ -1,7 +1,7 @@
 package command;
 
 import static localisation.CommandStrings.DELETE_STR;
-import static localisation.CommandStrings.ID;
+import static localisation.CommandStrings.NAME;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,18 +47,19 @@ class DeleteCommand extends Command {
 
 	@Override
 	public void constructRequirements() {
-		requirements.add(ID, new ArrayList<>(), ComponentRequirement.Policy.ANY);
+		requirements.add(NAME, new ArrayList<>(), ComponentRequirement.Policy.ANY);
 	}
 
 	@Override
 	public void adjustRequirements() {
-		((ComponentRequirement)requirements.get(ID)).setComponentOptions(context.getComponents_());
+		((ComponentRequirement) requirements.get(NAME))
+		        .setComponentOptions(context.getComponents_());
 	}
 
 	@Override
 	public void execute() throws MissingComponentException {
 		deleteCommands.clear();
-		associatedComponent = context.getComponent_((String) requirements.getValue(ID));
+		associatedComponent = context.getComponent_((String) requirements.getValue(NAME));
 
 		ComponentFactory.destroyComponent(associatedComponent);
 		context.removeComponent(associatedComponent);
@@ -71,9 +72,9 @@ class DeleteCommand extends Command {
 
 			// component is already deleted the command isn't executed
 			// instead it is just set up so it can be undone successfully
-			((ComponentRequirement) deleteCommand.requirements.get(ID))
+			((ComponentRequirement) deleteCommand.requirements.get(NAME))
 			        .setComponentOptions(deletedComps);
-			deleteCommand.requirements.fulfil(ID, String.valueOf(command.getID()));
+			deleteCommand.requirements.fulfil(NAME, String.valueOf(command.getID()));
 			deleteCommand.associatedComponent = command;
 
 			context.removeComponent(command);
