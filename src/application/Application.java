@@ -144,7 +144,13 @@ public final class Application {
 		window.repaint();
 	}
 
-	/** An enum-strategy for the different Actions the Application may take */
+	/**
+	 * An enum-strategy for the different Actions the Application may take. Actions
+	 * have {@code context} that must be set using the {@link #context(Application)}
+	 * method before the Action can be executed.
+	 *
+	 * @author Alex Mandelias
+	 */
 	enum Actions {
 
 		/** Action for creating an {@code Editor} */
@@ -152,6 +158,7 @@ public final class Application {
 			@Override
 			protected void execute() {
 				context.addEditor();
+				context = null;
 			}
 		},
 
@@ -160,6 +167,7 @@ public final class Application {
 			@Override
 			protected void execute() {
 				context.removeEditor(context.getActiveEditor());
+				context = null;
 			}
 		},
 
@@ -177,6 +185,7 @@ public final class Application {
 				} catch (final IOException e) {
 					Actions.message(frame, file, false);
 				}
+				context = null;
 			}
 		},
 
@@ -194,8 +203,36 @@ public final class Application {
 				} catch (final IOException e) {
 					Actions.message(frame, file, false);
 				}
+				context = null;
 			}
 		};
+
+		/** The context of the Action, the Application whose state it changes */
+		protected Application context;
+
+		/**
+		 * Executes the Action and clears its context.
+		 *
+		 * @throws NullPointerException if its {@code context} has not been set prior to
+		 *                              execution
+		 *
+		 * @see #context
+		 */
+		protected abstract void execute();
+
+		/**
+		 * Specifies the Action's context.
+		 *
+		 * @param application the context
+		 *
+		 * @return this (used for chaining)
+		 *
+		 * @see #context
+		 */
+		protected final Actions context(Application application) {
+			context = application;
+			return this;
+		}
 
 		/**
 		 * Displays a pop-up window informing the user about the success or failure of a
@@ -217,24 +254,6 @@ public final class Application {
 				        Languages.getString("Application.5"), file), //$NON-NLS-1$
 				        Languages.getString("Application.6"), //$NON-NLS-1$
 				        JOptionPane.ERROR_MESSAGE);
-		}
-
-		/** The context of the Action, where it acts */
-		protected Application context;
-
-		/** Executes the Action */
-		protected abstract void execute();
-
-		/**
-		 * Specifies the Action's context.
-		 *
-		 * @param application the context
-		 *
-		 * @return this (used for chaining)
-		 */
-		protected final Actions context(Application application) {
-			context = application;
-			return this;
 		}
 	}
 }
