@@ -4,7 +4,6 @@ import java.util.regex.Pattern;
 
 import localisation.EditorStrings;
 import localisation.Languages;
-import localisation.RequirementStrings;
 
 /**
  * A wrapper for a regular expression that a String must match. Used by
@@ -27,11 +26,6 @@ public enum StringType {
 	FILETYPE(String.format("%s|%s", EditorStrings.COMPONENT, EditorStrings.CIRCUIT), //$NON-NLS-1$
 	        String.format(Languages.getString("StringType.0"), EditorStrings.COMPONENT, //$NON-NLS-1$
 	                EditorStrings.CIRCUIT)),
-
-	/** Type for 'on' or 'off' */
-	ON_OFF(String.format("%s|%s", RequirementStrings.ON, RequirementStrings.OFF), //$NON-NLS-1$
-	        String.format(Languages.getString("StringType.9"), RequirementStrings.ON, //$NON-NLS-1$
-	                RequirementStrings.OFF)),
 
 	/** Type for any non-empty string */
 	ANY(".+", Languages.getString("StringType.11")), //$NON-NLS-1$ //$NON-NLS-2$

@@ -151,6 +151,24 @@ public final class Editor extends JComponent {
 	}
 
 	/**
+	 * Returns the {@code Component} with the given ID or {@code null} if no such
+	 * {@code Component} exists.
+	 *
+	 * @param ID the ID
+	 *
+	 * @return the Component or {@code null}
+	 */
+	public Component getComponentOrNull(String ID) {
+		Component component;
+		try {
+			component = getComponent_(ID);
+		} catch (MissingComponentException e) {
+			component = null;
+		}
+		return component;
+	}
+
+	/**
 	 * Returns a list of the Editor's {@code Components}.
 	 * <p>
 	 * <b>Note</b> that this does <i>not</i> return a copy of the items. Any changes
