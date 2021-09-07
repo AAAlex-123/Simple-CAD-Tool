@@ -16,27 +16,121 @@ import requirement.requirements.Requirements;
 import requirement.requirements.StringType;
 
 /**
- * A bunch of String and char constants used throughout the project.
+ * Defines many String and char constants that are used as settings throughout
+ * the Application and provides a way to alter them.
  *
- * @author alexm
+ * @author Alex Mandelias
  */
 public final class StringConstants {
 
-	/** The file containing the application's settings */
+	/** The file containing the Application's settings */
 	public static final String FILE = "program_data\\settings.properties"; //$NON-NLS-1$
 
 	private static final Properties properties = new OrderedProperties();
 
 	private static final Requirements reqs = new Requirements();
 
-	public static String COMPONENT_ICON_PATH, MENU_ICON_PATH, USER_DATA, F_NEW_ACCEL, F_CLOSE_ACCEL,
-	        F_SAVE_ACCEL, F_SAVE_AS_ACCEL, F_OPEN_ACCEL, F_CLEAR_ACCEL, F_IMPORT_ACCEL,
-	        F_UNDO_ACCEL, F_REDO_ACCEL, E_ACTIVATE_ACCEL, E_FOCUS_ACCEL, D_COMPONENT_ACCEL,
-	        P_SETTINGS_ACCEL, P_LANGUAGE_ACCEL, H_HELP_ACCEL, BUILTIN_COMMAND_ACCEL_PREFIX,
-	        USER_COMMAND_ACCEL_PREFIX, G_INPUT_PIN, G_OUTPUT_PIN, G_BRANCH, G_GATE, G_GATEAND,
-	        G_GATEOR, G_GATENOT, G_GATEXOR;
-	public static char   M_FILE_MNEMONIC, M_EDIT_MNEMONIC, M_CREATE_MNEMONIC, M_DELETE_MNEMONIC,
-	        M_PREFERENCES_MNEMONIC, M_HELP_MNEMONIC;
+	/** Directory of the Component Icons */
+	public static final String COMPONENT_ICON_PATH;
+
+	/** Directory of the Menu Icons */
+	public static final String MENU_ICON_PATH;
+
+	/** Directory of the user-created .scad files */
+	public static final String USER_DATA;
+
+	/** Accelerator for the {@code NEW} menu item */
+	public static final String F_NEW_ACCEL;
+
+	/** Accelerator for the {@code CLOSE} menu item */
+	public static final String F_CLOSE_ACCEL;
+
+	/** Accelerator for the {@code SAVE} menu item */
+	public static final String F_SAVE_ACCEL;
+
+	/** Accelerator for the {@code SAVE} menu item */
+	public static final String F_SAVE_AS_ACCEL;
+
+	/** Accelerator for the {@code OPEN} menu item */
+	public static final String F_OPEN_ACCEL;
+
+	/** Accelerator for the {@code CLEAR} menu item */
+	public static final String F_CLEAR_ACCEL;
+
+	/** Accelerator for the {@code IMPORT} menu item */
+	public static final String F_IMPORT_ACCEL;
+
+	/** Accelerator for the {@code UNDO} menu item */
+	public static final String F_UNDO_ACCEL;
+
+	/** Accelerator for the {@code REDO} menu item */
+	public static final String F_REDO_ACCEL;
+
+	/** Accelerator for the {@code ACTIVATE} menu item */
+	public static final String E_ACTIVATE_ACCEL;
+
+	/** Accelerator for the {@code FOCUS} menu item */
+	public static final String E_FOCUS_ACCEL;
+
+	/** Accelerator for the {@code DELETE} menu item */
+	public static final String D_COMPONENT_ACCEL;
+
+	/** Accelerator for the {@code SETTINGS} menu item */
+	public static final String P_SETTINGS_ACCEL;
+
+	/** Accelerator for the {@code LANGUAGE} menu item */
+	public static final String P_LANGUAGE_ACCEL;
+
+	/** Accelerator for the {@code HELP} menu item */
+	public static final String H_HELP_ACCEL;
+
+	/** Prefix for accelerator of the {@code built-in commands} */
+	public static final String BUILTIN_COMMAND_ACCEL_PREFIX;
+
+	/** Prefix for accelerator of the {@code user-created commands} */
+	public static final String USER_COMMAND_ACCEL_PREFIX;
+
+	/** Format for the {@code INPUT_PIN} names */
+	public static final String G_INPUT_PIN;
+
+	/** Format for the {@code OUTPUT_PIN} names */
+	public static final String G_OUTPUT_PIN;
+
+	/** Format for the {@code BRANCH} names */
+	public static final String G_BRANCH;
+
+	/** Format for the {@code GATE} names */
+	public static final String G_GATE;
+
+	/** Format for the {@code GATEAND} names */
+	public static final String G_GATEAND;
+
+	/** Format for the {@code GATEOR} names */
+	public static final String G_GATEOR;
+
+	/** Format for the {@code GATENOT} names */
+	public static final String G_GATENOT;
+
+	/** Format for the {@code GATEXOR} names */
+	public static final String G_GATEXOR;
+
+	/** Mnemonic for the {@code FILE} menu */
+	public static final char M_FILE_MNEMONIC;
+
+	/** Mnemonic for the {@code EDIT} menu */
+	public static final char M_EDIT_MNEMONIC;
+
+	/** Mnemonic for the {@code CREATE} menu */
+	public static final char M_CREATE_MNEMONIC;
+
+	/** Mnemonic for the {@code DELETE} menu */
+	public static final char M_DELETE_MNEMONIC;
+
+	/** Mnemonic for the {@code PREFERENCES} menu */
+	public static final char M_PREFERENCES_MNEMONIC;
+
+	/** Mnemonic for the {@code HELP} menu */
+	public static final char M_HELP_MNEMONIC;
 
 	static {
 		try (BufferedReader reader = new BufferedReader(new FileReader(FILE))) {
@@ -93,14 +187,15 @@ public final class StringConstants {
 	}
 
 	/**
-	 * Displays a pop-up dialog to edit the language settings and writes them to the
-	 * file if they are altered.
+	 * Displays a pop-up dialog to edit the settings and writes them to the file if
+	 * any changes were committed.
 	 *
 	 * @param frame the parent frame of the pop-up dialog.
 	 *
 	 * @return {@code true} if they were altered, {@code false} otherwise
 	 *
-	 * @throws IOException if an error occurred while writing to file
+	 * @throws NullPointerException if {@code frame == null}
+	 * @throws IOException          if an error occurred while writing to file
 	 */
 	public static boolean editAndWriteToFile(Frame frame) throws IOException {
 		reqs.clear();
