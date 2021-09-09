@@ -45,7 +45,7 @@ public class FileInfo {
 		if (panel == null) {
 			panel = new JPanel(new FlowLayout());
 			panel.setOpaque(false);
-			panel.add(label = new JLabel());
+			panel.add(label = new JLabel(getLabelText()));
 		}
 		return panel;
 	}
@@ -91,6 +91,11 @@ public class FileInfo {
 	private void updateState(String newFilename, boolean newDirty) {
 		filename = newFilename;
 		dirty = newDirty;
-		label.setText((dirty ? "*" : "") + filename); //$NON-NLS-1$ //$NON-NLS-2$
+		if (label != null)
+			label.setText(getLabelText());
+	}
+
+	private String getLabelText() {
+		return (dirty ? "*" : "") + filename; //$NON-NLS-1$ //$NON-NLS-2$
 	}
 }
