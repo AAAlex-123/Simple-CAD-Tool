@@ -25,8 +25,8 @@ public class FileInfo {
 	private JPanel panel;
 	private JLabel label;
 
-	private String       filename;
-	private boolean      dirty;
+	private String  filename;
+	private boolean dirty;
 
 	/** Constructs a FileInfo object */
 	public FileInfo() {}
