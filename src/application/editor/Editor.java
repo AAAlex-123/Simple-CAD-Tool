@@ -253,7 +253,7 @@ public final class Editor extends JComponent implements EditorInterface {
 	 *
 	 * @return the list
 	 */
-	public List<Undoable> getPastCommands() {
+	public List<Command> getPastCommands() {
 		return new ArrayList<>(undoableHistory.getPast());
 	}
 
