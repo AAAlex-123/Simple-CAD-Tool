@@ -112,8 +112,8 @@ public final class Application {
 		editorManager.addEditor(new Editor(this, editorNameGenerator.get()));
 	}
 
-	private void removeEditor(Editor editor) {
-		editorManager.removeEditor(editor);
+	private void removeActiveEditor() {
+		editorManager.removeActiveEditor();
 	}
 
 	/**
@@ -138,10 +138,7 @@ public final class Application {
 		CLOSE {
 			@Override
 			protected void execute() {
-				final Editor editor = context.getActiveEditor();
-				if (editor != null)
-					context.removeEditor(editor);
-
+				context.removeActiveEditor();
 				context = null;
 			}
 		},
