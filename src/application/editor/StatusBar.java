@@ -22,7 +22,7 @@ import javax.swing.SwingConstants;
  *
  * @author Alex Mandelias
  */
-final class StatusBar extends JPanel {
+public final class StatusBar extends JPanel {
 
 	private final Map<String, JLabel> map;
 
