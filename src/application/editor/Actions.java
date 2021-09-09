@@ -37,9 +37,18 @@ import requirement.requirements.Requirements;
 import requirement.requirements.StringType;
 
 /**
- * An enum-strategy for the different Actions the {@link Editor} may take.
+ * An enum-strategy for the different Actions the Editor may take. Actions have
+ * {@code context} that must be set using the {@link #context(Editor)} method
+ * before the Action can be executed.
+ * <p>
+ * Actions operate on an {@code Editor} and can execute {@code Commands} on it
+ * to manipulate {@code Components}.
  *
- * @author alexm
+ * @author Alex Mandelias
+ *
+ * @see Editor
+ * @see Command
+ * @see Component
  */
 public enum Actions implements HasRequirements {
 
@@ -51,24 +60,25 @@ public enum Actions implements HasRequirements {
 			if (!reqs.fulfilled())
 				throw new RuntimeException("Execute CREATE without requirements"); //$NON-NLS-1$
 
-			final Command cte = (Command) reqs.getValue(EditorStrings.COMMAND);
+			final Command commandToExecute = (Command) reqs.getValue(EditorStrings.COMMAND);
 
 			try {
-				if (!cte.canExecute()) {
-					context.status(Languages.getString("Actions.1"), cte); //$NON-NLS-1$
+				if (!commandToExecute.canExecute()) {
+					context.status(Languages.getString("Actions.1"), commandToExecute); //$NON-NLS-1$
 					return;
 				}
 
-				context.execute(cte);
-				context.status(Languages.getString("Actions.2"), cte); //$NON-NLS-1$
-				context.setDirty(true);
+				context.execute(commandToExecute);
+				context.status(Languages.getString("Actions.2"), commandToExecute); //$NON-NLS-1$
+				context.getFileInfo().markUnsaved();
 			} catch (MissingComponentException | MalformedBranchException e) {
 				context.error(e);
 			} catch (final Exception e) {
-				// Undoable.execute() declares 'throw Exception'
+				// exists because Undoable.execute() declares 'throw Exception'
 				throw new RuntimeException(e);
 			} finally {
 				reqs.clear();
+				context = null;
 			}
 		}
 
@@ -86,24 +96,25 @@ public enum Actions implements HasRequirements {
 			if (!reqs.fulfilled())
 				throw new RuntimeException("Execute DELETE without requirements"); //$NON-NLS-1$
 
-			final Command cte = (Command) reqs.getValue(EditorStrings.COMMAND);
+			final Command commandToExecute = (Command) reqs.getValue(EditorStrings.COMMAND);
 
 			try {
-				if (!cte.canExecute()) {
+				if (!commandToExecute.canExecute()) {
 					context.status(Languages.getString("Actions.4")); //$NON-NLS-1$
 					return;
 				}
 
-				context.execute(cte);
+				context.execute(commandToExecute);
 				context.status(Languages.getString("Actions.5")); //$NON-NLS-1$
-				context.setDirty(true);
+				context.getFileInfo().markUnsaved();
 			} catch (final MissingComponentException e) {
 				context.error(e);
 			} catch (final Exception e) {
-				// Undoable.execute() declares 'throw Exception'
+				// exists because Undoable.execute() declares 'throw Exception'
 				throw new RuntimeException(e);
 			} finally {
 				reqs.clear();
+				context = null;
 			}
 		}
 
@@ -118,7 +129,7 @@ public enum Actions implements HasRequirements {
 		@Override
 		public void execute() {
 
-			final String fname = (String) reqs.getValue(EditorStrings.FILENAME);
+			final String fileToSave = (String) reqs.getValue(EditorStrings.FILENAME);
 
 			try {
 				if (!reqs.fulfilled()) {
@@ -126,19 +137,21 @@ public enum Actions implements HasRequirements {
 					return;
 				}
 
-				Actions.writeToFile(fname, context.getComponents_(), context.getPastCommands());
+				Actions.writeToFile(fileToSave, context.getComponents_(),
+				        context.getPastCommands());
 
-				context.status(Languages.getString("Actions.7"), fname); //$NON-NLS-1$
-				context.setFile(fname);
-				context.setDirty(false);
+				context.status(Languages.getString("Actions.7"), fileToSave); //$NON-NLS-1$
+				context.getFileInfo().markSaved();
+				context.getFileInfo().setFile(fileToSave);
 
 			} catch (final IOException e) {
 				context.error(
-						Languages.getString("Actions.8"), //$NON-NLS-1$
-						fname);
+				        Languages.getString("Actions.8"), //$NON-NLS-1$
+				        fileToSave);
 				throw new RuntimeException(e);
 			} finally {
 				reqs.clear();
+				context = null;
 			}
 		}
 
@@ -153,22 +166,24 @@ public enum Actions implements HasRequirements {
 		@Override
 		public void execute() {
 
-			final String fname = (String) reqs.getValue(EditorStrings.FILENAME);
-			final String ftype = (String) reqs.getValue(EditorStrings.FILETYPE);
+			final String fileToRead       = (String) reqs.getValue(EditorStrings.FILENAME);
+			final String typeOfFileToRead = (String) reqs.getValue(EditorStrings.FILETYPE);
 
 			final List<Component> components = new ArrayList<>();
-			final List<Command> commands = new ArrayList<>();
+			final List<Command>   commands   = new ArrayList<>();
 
 			try {
 				if (!reqs.fulfilled()) {
 					context.status(Languages.getString("Actions.9"), //$NON-NLS-1$
-					        ftype.equals(EditorStrings.CIRCUIT) ? Languages.getString("Actions.10") : Languages.getString("Actions.11")); //$NON-NLS-1$ //$NON-NLS-2$
+					        typeOfFileToRead.equals(EditorStrings.CIRCUIT)
+					                ? Languages.getString("Actions.10") //$NON-NLS-1$
+					                : Languages.getString("Actions.11")); //$NON-NLS-1$
 					return;
 				}
 
-				Actions.readFromFile(fname, components, commands);
+				Actions.readFromFile(fileToRead, components, commands);
 
-				if (ftype.equals(EditorStrings.CIRCUIT)) {
+				if (typeOfFileToRead.equals(EditorStrings.CIRCUIT)) {
 
 					context.clear();
 
@@ -176,39 +191,40 @@ public enum Actions implements HasRequirements {
 						ComponentFactory.restoreSerialisedComponent(component);
 						context.addComponent(component);
 					});
+
 					Utility.foreach(commands, command -> {
 						command.context(context);
 						context.addToHistory(command);
 					});
 
-					context.setFile(fname);
-					context.status(Languages.getString("Actions.12"), fname); //$NON-NLS-1$
-					context.setDirty(false);
+					context.getFileInfo().markSaved();
+					context.getFileInfo().setFile(fileToRead);
+					context.status(Languages.getString("Actions.12"), fileToRead); //$NON-NLS-1$
 
-				} else if (ftype.equals(EditorStrings.COMPONENT)) {
+				} else if (typeOfFileToRead.equals(EditorStrings.COMPONENT)) {
 
-					final Command cgc = Command.create(commands,
+					final Command createCompositeGateCommand = Command.create(commands,
 					        (String) reqs.getValue(EditorStrings.GATENAME));
-					context.context().addCreateCommand(cgc);
-					context.status(Languages.getString("Actions.13"), fname); //$NON-NLS-1$
+					context.context().addCreateCommand(createCompositeGateCommand);
+					context.status(Languages.getString("Actions.13"), fileToRead); //$NON-NLS-1$
 
-				} else {
+				} else
 					throw new RuntimeException(
-							Languages.getString("Actions.14")); //$NON-NLS-1$
-				}
+					        Languages.getString("Actions.14")); //$NON-NLS-1$
 			} catch (Actions.IncompatibleFileException | Actions.FileCorruptedException e) {
 				context.error(e);
 			} catch (final FileNotFoundException e) {
-				context.error(Languages.getString("Actions.15"), fname); //$NON-NLS-1$
+				context.error(Languages.getString("Actions.15"), fileToRead); //$NON-NLS-1$
 			} catch (final IOException e) {
 				context.error(
-						Languages.getString("Actions.16"), //$NON-NLS-1$
-						fname);
+				        Languages.getString("Actions.16"), //$NON-NLS-1$
+				        fileToRead);
 				throw new RuntimeException(e);
 			} catch (final Exception e) {
 				throw new RuntimeException(e);
 			} finally {
 				reqs.clear();
+				context = null;
 			}
 		}
 
@@ -222,24 +238,26 @@ public enum Actions implements HasRequirements {
 		@SuppressWarnings("unchecked") //yes this is safe
 		@Override
 		public void adjustRequirements() {
-			Path dir = Paths.get(
-			        System.getProperty("user.dir") + File.separator + StringConstants.USER_DATA);
-			if (!Files.exists(dir)) { //create directory if it doesn't exist
+			final Path dir = Paths.get(
+			        System.getProperty("user.dir") + File.separator + StringConstants.USER_DATA); //$NON-NLS-1$
+
+			//create directory if it doesn't exist
+			if (!Files.exists(dir))
 				try {
 					Files.createDirectory(dir);
-				} catch (IOException e1) {
+				} catch (final IOException e1) {
 					e1.printStackTrace();
 				}
-			}
 
 			List<String> files;
 			try (Stream<Path> paths = Files.walk(dir)) {
 				files = paths
-				        .filter(file -> file.toString().contains(".scad"))
+				        // TODO: regret later not externalising and not syncing it to the file name generator
+				        .filter(file -> file.toString().contains(".scad")) //$NON-NLS-1$
 				        .map(file -> file.toString()
 				                .substring(file.toString().lastIndexOf(File.separator) + 1)) //get file name
 				        .collect(Collectors.toList());
-			} catch (IOException e) {
+			} catch (final IOException e) {
 				throw new UncheckedIOException(e);
 			}
 
@@ -253,7 +271,8 @@ public enum Actions implements HasRequirements {
 		public void execute() {
 			context.clear();
 			context.status(Languages.getString("Actions.17")); //$NON-NLS-1$
-			context.setDirty(true);
+			context.getFileInfo().markUnsaved();
+			context = null;
 		}
 	},
 
@@ -263,7 +282,8 @@ public enum Actions implements HasRequirements {
 		public void execute() {
 			context.undo();
 			context.status(Languages.getString("Actions.18")); //$NON-NLS-1$
-			context.setDirty(true);
+			context.getFileInfo().markUnsaved();
+			context = null;
 		}
 	},
 
@@ -273,7 +293,8 @@ public enum Actions implements HasRequirements {
 		public void execute() {
 			context.redo();
 			context.status(Languages.getString("Actions.19")); //$NON-NLS-1$
-			context.setDirty(true);
+			context.getFileInfo().markUnsaved();
+			context = null;
 		}
 	},
 
@@ -298,32 +319,34 @@ public enum Actions implements HasRequirements {
 			};
 
 			final String[] messages = {
-					Languages.getString("Actions.33"), //$NON-NLS-1$
-					Languages.getString("Actions.34"), //$NON-NLS-1$
-					Languages.getString("Actions.35"), //$NON-NLS-1$
-					Languages.getString("Actions.36"), //$NON-NLS-1$
-					Languages.getString("Actions.37"), //$NON-NLS-1$
-					Languages.getString("Actions.38"), //$NON-NLS-1$
-					Languages.getString("Actions.39"), //$NON-NLS-1$
-					Languages.getString("Actions.40"), //$NON-NLS-1$
-					Languages.getString("Actions.41"), //$NON-NLS-1$
-					Languages.getString("Actions.42"), //$NON-NLS-1$
-					Languages.getString("Actions.43"), //$NON-NLS-1$
-					Languages.getString("Actions.44"), //$NON-NLS-1$
-					Languages.getString("Actions.45"), //$NON-NLS-1$
+			        Languages.getString("Actions.33"), //$NON-NLS-1$
+			        Languages.getString("Actions.34"), //$NON-NLS-1$
+			        Languages.getString("Actions.35"), //$NON-NLS-1$
+			        Languages.getString("Actions.36"), //$NON-NLS-1$
+			        Languages.getString("Actions.37"), //$NON-NLS-1$
+			        Languages.getString("Actions.38"), //$NON-NLS-1$
+			        Languages.getString("Actions.39"), //$NON-NLS-1$
+			        Languages.getString("Actions.40"), //$NON-NLS-1$
+			        Languages.getString("Actions.41"), //$NON-NLS-1$
+			        Languages.getString("Actions.42"), //$NON-NLS-1$
+			        Languages.getString("Actions.43"), //$NON-NLS-1$
+			        Languages.getString("Actions.44"), //$NON-NLS-1$
+			        Languages.getString("Actions.45"), //$NON-NLS-1$
 			};
 
 			if (titles.length != messages.length)
 				throw new RuntimeException(
 				        "Number of help titles doesn't match number of messages"); //$NON-NLS-1$
 
-			// yes=0 no=1 cancel=2 x=-1 (+1 to adjust for array index)
+			// yes=0, no=1, cancel=2, x=-1 (+1 to adjust for array index)
 			final int[] res = { 0, 0, 0, 0 };
 
 			final Frame frame = context.context().getFrame();
 
 			for (int i = 0, count = messages.length; i < count; i++)
 				++res[1 + msg(frame, messages[i], titles[i])];
+
+			context = null;
 		}
 
 		private int msg(Frame frame, String message, String title) {
@@ -338,7 +361,7 @@ public enum Actions implements HasRequirements {
 	/** The Requirements of the Action */
 	protected final Requirements reqs;
 
-	/** The context of the Action */
+	/** The context of the Action, the Editor whose state it changes */
 	protected Editor context;
 
 	Actions() {
@@ -346,7 +369,14 @@ public enum Actions implements HasRequirements {
 		constructRequirements();
 	}
 
-	/** Executes the Action */
+	/**
+	 * Executes the Action and clears its context.
+	 *
+	 * @throws NullPointerException if its {@code context} has not been set prior to
+	 *                              execution
+	 *
+	 * @see #context
+	 */
 	public abstract void execute();
 
 	@Override
@@ -356,11 +386,14 @@ public enum Actions implements HasRequirements {
 	public void adjustRequirements() {}
 
 	/**
-	 * Specifies the Action's context.
+	 * Specifies the Action's context. This method must be called before every
+	 * Action execution.
 	 *
 	 * @param editor the context
 	 *
 	 * @return this (used for chaining)
+	 *
+	 * @see #context
 	 */
 	public final Actions context(Editor editor) {
 		context = editor;
@@ -383,40 +416,40 @@ public enum Actions implements HasRequirements {
 	/**
 	 * Specifies an Object to finalise a specific Requirement.
 	 *
-	 * @param req the Requirement
-	 * @param c   the Command
+	 * @param requirement the Requirement
+	 * @param command     the Command
 	 *
 	 * @return this (used for chaining)
 	 *
 	 * @see AbstractRequirement#finalise
 	 */
-	public final Actions specify(String req, Object c) {
-		reqs.finalise(req, c);
+	public final Actions specify(String requirement, Object command) {
+		reqs.finalise(requirement, command);
 		return this;
 	}
 
-	/** Thrown when a file is corrupted and can't be read */
+	/** Thrown when a File is corrupted and can't be read */
 	protected final static class FileCorruptedException extends Exception {
 
 		/**
-		 * Constructs the Exception with information about the {@code filename}.
+		 * Constructs the Exception with a {@code filename}.
 		 *
-		 * @param filename the name of the corrupted file
+		 * @param filename the name of the corrupted File
 		 */
 		public FileCorruptedException(String filename) {
 			super(String.format(Languages.getString("Actions.48"), //$NON-NLS-1$
-					filename));
+			        filename));
 		}
 	}
 
-	/** Thrown when a file's data are incompatible with current program version */
+	/** Thrown when a File's data are incompatible with current program version */
 	protected final static class IncompatibleFileException extends Exception {
 
 		/**
-		 * Constructs the Exception with information about the {@code filename}.
+		 * Constructs the Exception with a {@code filename}.
 		 *
 		 * @param filename the name of the file with incompatible data
-		 * @param e        the Exception that triggered this Exception
+		 * @param e        the InvalidClassException that triggered this Exception
 		 */
 		public IncompatibleFileException(String filename, InvalidClassException e) {
 			super(IncompatibleFileException.formatMessage(filename, e));
@@ -425,17 +458,18 @@ public enum Actions implements HasRequirements {
 		private static String formatMessage(String filename, InvalidClassException e) {
 			// extract version information from exception message
 			final Pattern p = Pattern
-					.compile(".*? serialVersionUID = (\\d+), .*? serialVersionUID = (\\d+)"); //$NON-NLS-1$
+			        .compile(".*? serialVersionUID = (\\d+), .*? serialVersionUID = (\\d+)"); //$NON-NLS-1$
 			final Matcher m = p.matcher(e.getMessage());
 
 			if (!m.matches())
 				throw new RuntimeException("Invalid regex in IncompatibleFileException"); //$NON-NLS-1$
 
-			final int idInFile = Integer.parseInt(m.group(1));
+			final int idInFile  = Integer.parseInt(m.group(1));
 			final int idInClass = Integer.parseInt(m.group(2));
 
 			return String.format(Languages.getString("Actions.51"), //$NON-NLS-1$
-					filename, idInFile > idInClass ? Languages.getString("Actions.52") : Languages.getString("Actions.53")); //$NON-NLS-1$ //$NON-NLS-2$
+			        filename, idInFile > idInClass ? Languages.getString("Actions.52") //$NON-NLS-1$
+			                : Languages.getString("Actions.53")); //$NON-NLS-1$
 		}
 	}
 
@@ -443,11 +477,26 @@ public enum Actions implements HasRequirements {
 	 * Writes the contents of Lists of Components and Commands to a file.
 	 *
 	 * @param filename   the filename
-	 * @param commands   the list of commands to write
-	 * @throws IOException when an IOExcetpion occurs
+	 * @param components the list of Components to write to the file
+	 * @param commands   the list of Commands to write to the file
+	 *
+	 * @throws IOException if an IOExcetpion occurred
+	 *
+	 * @see #readFromFile(String, List, List)
 	 */
-	protected static void writeToFile(String filename, List<Component> components, List<Undoable> commands)
-			throws IOException {
+	protected static void writeToFile(String filename, List<Component> components,
+	        List<Command> commands)
+	        throws IOException {
+
+		final File dir = Paths.get(StringConstants.USER_DATA).toFile();
+
+		if (!dir.isDirectory()) {
+			final boolean createDirectorySuccess = dir.mkdir();
+			if (!createDirectorySuccess)
+				throw new IOException(
+				        String.format("Didn't find directory %s and could not create it", //$NON-NLS-1$
+				                StringConstants.USER_DATA));
+		}
 
 		final String outputFile = String.format("%s%s%s", StringConstants.USER_DATA, //$NON-NLS-1$
 		        System.getProperty("file.separator"), filename); //$NON-NLS-1$
@@ -456,12 +505,12 @@ public enum Actions implements HasRequirements {
 			oos.writeByte(Actions.start);
 
 			oos.writeInt(components.size());
-			for (final Component c : components)
-				oos.writeObject(c);
+			for (final Component component : components)
+				oos.writeObject(component);
 
 			oos.writeInt(commands.size());
-			for (final Undoable u : commands)
-				oos.writeObject(u);
+			for (final Command command : commands)
+				oos.writeObject(command);
 
 			oos.writeByte(Actions.eof);
 		}
@@ -471,16 +520,21 @@ public enum Actions implements HasRequirements {
 	 * Fills the Lists with the Components and Commands from the file.
 	 *
 	 * @param filename   the filename
+	 * @param components the list that will be filled with Components
 	 * @param commands   the list that will be filled with Commands
-	 * @throws IOException               when an IOException occurred
-	 * @throws FileNotFoundException     when the file couldn't be found
-	 * @throws FileCorruptedException    when the contents of the file are corrupted
-	 * @throws IncompatibleFileException when the file data corresponds to a
-	 *                                   previous version of the program
+	 *
+	 * @throws IOException               if an IOException occurred
+	 * @throws FileNotFoundException     if the file couldn't be found
+	 * @throws FileCorruptedException    if the contents of the file are corrupted
+	 * @throws IncompatibleFileException if the file data corresponds to a previous
+	 *                                   version of the program
+	 *
+	 * @see #writeToFile(String, List, List)
 	 */
-	protected static void readFromFile(String filename, List<Component> components, List<Command> commands)
-			throws FileNotFoundException, IOException, Actions.FileCorruptedException,
-			Actions.IncompatibleFileException {
+	protected static void readFromFile(String filename, List<Component> components,
+	        List<Command> commands)
+	        throws FileNotFoundException, IOException, Actions.FileCorruptedException,
+	        Actions.IncompatibleFileException {
 
 		final String inputFile = String.format("%s%s%s", StringConstants.USER_DATA, //$NON-NLS-1$
 		        System.getProperty("file.separator"), filename); //$NON-NLS-1$

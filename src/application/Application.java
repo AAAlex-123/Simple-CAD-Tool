@@ -5,13 +5,9 @@ import java.awt.Frame;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.JTabbedPane;
-import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 
 import application.editor.Editor;
@@ -19,12 +15,11 @@ import command.Command;
 import component.ComponentType;
 import localisation.Languages;
 import myUtil.StringGenerator;
-import myUtil.Utility;
 
 /**
- * This class aggregates all of the individual components that comprise an
- * Application and handles the communications between them. The client creates
- * an {@code Application} then call its {@link #run()} method to start it.
+ * Aggregates all of the individual components that comprise an Application and
+ * handles the communications between them. The client creates an instance of
+ * this class and then call its {@link #run()} method to start it.
  *
  * @author Alex Mandelias
  */
@@ -33,16 +28,14 @@ public final class Application {
 	private final JFrame window;
 	private final MyMenu menuBar;
 
-	private final JTabbedPane     editorPane;
-	private final List<Editor>    editorList;
-	private final StringGenerator editorNameGenerator;
+	private final EditorManager<Editor> editorManager;
+	private final StringGenerator       editorNameGenerator;
 
-	/** Constructs the Application */
+	/** Constructs an Application */
 	public Application() {
 		window = new JFrame();
 		menuBar = new MyMenu(this);
-		editorList = new ArrayList<>();
-		editorPane = new JTabbedPane(SwingConstants.TOP, JTabbedPane.SCROLL_TAB_LAYOUT);
+		editorManager = new EditorManager<>();
 		editorNameGenerator = new StringGenerator(Languages.getString("Application.0")); //$NON-NLS-1$
 	}
 
@@ -63,17 +56,10 @@ public final class Application {
 
 		// add components to the frame
 		window.setJMenuBar(menuBar);
-		window.add(editorPane, BorderLayout.CENTER);
+		window.add(editorManager.getGraphics(), BorderLayout.CENTER);
 
 		// add the first editor on start-up
-		addEditor();
-
-		// configure the editor pane
-		editorPane.addChangeListener(l -> {
-			final Editor e = (Editor) editorPane.getSelectedComponent();
-			if (e != null)
-				setActiveEditor(e);
-		});
+		editorManager.addEditor(new Editor(this, editorNameGenerator.get()));
 
 		// add all of the Create Commands
 		for (final ComponentType type : ComponentType.values())
@@ -97,13 +83,15 @@ public final class Application {
 	 * Adds a {@code Command} for creating {@code Components} to the Application.
 	 *
 	 * @param command the Command
+	 *
+	 * @see Command
 	 */
 	public void addCreateCommand(Command command) {
 		menuBar.addCreateCommand(command);
 	}
 
 	private void terminate() {
-		Utility.foreach(new ArrayList<>(editorList), this::removeEditor);
+		editorManager.removeAllEditors();
 
 		// dispose window if and only if all Editors are closed
 		if (getActiveEditor() == null)
@@ -112,36 +100,20 @@ public final class Application {
 
 	/**
 	 * Returns the Application's active {@code Editor}, the Editor the user is
-	 * currently working with or {@code null} if there aren't any open Editors.
+	 * currently working with, or {@code null} if there aren't any open Editors.
 	 *
-	 * @return the active Editor
+	 * @return the active Editor or {@code null}
 	 */
 	Editor getActiveEditor() {
-		return (Editor) editorPane.getSelectedComponent();
+		return editorManager.getSelectedEditor();
 	}
 
 	private void addEditor() {
-		final Editor newEditor = new Editor(this, editorNameGenerator.get());
-
-		editorList.add(newEditor);
-		editorPane.addTab("", newEditor); //$NON-NLS-1$
-		editorPane.setTabComponentAt(editorPane.getTabCount() - 1,
-		        newEditor.getFileLabel());
-
-		setActiveEditor(newEditor);
+		editorManager.addEditor(new Editor(this, editorNameGenerator.get()));
 	}
 
-	private void removeEditor(Editor e) {
-		if (e.close()) {
-			editorList.remove(e);
-			editorPane.remove(e);
-		}
-	}
-
-	private void setActiveEditor(Editor editor) {
-		editorPane.setSelectedComponent(editor);
-		window.add(editor.getStatusBar(), BorderLayout.SOUTH);
-		window.repaint();
+	private void removeEditor(Editor editor) {
+		editorManager.removeEditor(editor);
 	}
 
 	/**
@@ -166,7 +138,10 @@ public final class Application {
 		CLOSE {
 			@Override
 			protected void execute() {
-				context.removeEditor(context.getActiveEditor());
+				final Editor editor = context.getActiveEditor();
+				if (editor != null)
+					context.removeEditor(editor);
+
 				context = null;
 			}
 		},
@@ -221,7 +196,8 @@ public final class Application {
 		protected abstract void execute();
 
 		/**
-		 * Specifies the Action's context.
+		 * Specifies the Action's context. This method must be called before every
+		 * Action execution.
 		 *
 		 * @param application the context
 		 *

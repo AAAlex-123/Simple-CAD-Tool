@@ -18,6 +18,7 @@ import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 
 import application.Application;
+import application.EditorInterface;
 import application.StringConstants;
 import command.Command;
 import component.ComponentType;
@@ -28,44 +29,45 @@ import localisation.Languages;
 import myUtil.Utility;
 
 /**
- * An Editor to edit a file. The Editor manages {@link component.components.Component
- * Components} with the help of an {@link ItemManager} (which takes care of
- * creating and deleting them) and a {@link UI} (which displays them on the
- * screen). Additional information is displayed at the bottom of the screen
- * using the Editor's {@link StatusBar}.
+ * An Editor to edit a file. The Editor manages {@link Component Components}
+ * with the help of an {@link ItemManager} (which takes care of creating and
+ * deleting them) and a {@link UI} (which displays them on the screen).
+ * Additional information is displayed at the bottom of the screen using the
+ * Editor's {@link StatusBar}.
  * <p>
- * Component creation and deletion is accomplished using {@link command.Command
- * Commands} which are managed using a {@link UndoableHistory}.
+ * The creation and deletion of Components is accomplished using {@link Command}
+ * objects, which are managed using a {@link UndoableHistory}.
  * <p>
  * Every Action the Editor takes is encapsulated in an {@link Actions Action}
  * instance.
  *
- * @author alexm
+ * @author Alex Mandelias
  */
-public final class Editor extends JComponent {
+public final class Editor extends JComponent implements EditorInterface {
 
 	private final Application app;
 	private final UI          editorUI;
-	private final FileLabel   fileLabel;
-	private String            filename;
-	private boolean           dirty;
+	private final FileInfo    fileInfo;
 	private final StatusBar   statusBar;
 
 	private final ItemManager<Component>   components;
 	private final UndoableHistory<Command> undoableHistory;
 
 	/**
-	 * Constructs the Editor with the given context.
+	 * Constructs an Editor with the given context.
 	 *
-	 * @param app         the Editor's context
-	 * @param initialFile the initial file name
+	 * @param application     the Editor's context
+	 * @param initialFilename the initial file name
 	 */
-	public Editor(Application app, String initialFile) {
-		this.app = app;
+	public Editor(Application application, String initialFilename) {
+		app = application;
+
 		editorUI = new UI();
-		fileLabel = new FileLabel();
-		setDirty(false);
-		setFile(initialFile);
+
+		fileInfo = new FileInfo();
+		fileInfo.markSaved();
+		fileInfo.setFile(initialFilename);
+
 		statusBar = new StatusBar();
 
 		components = new ItemManager<>();
@@ -89,32 +91,36 @@ public final class Editor extends JComponent {
 		components.addGenerator(GATEXOR.description(), StringConstants.G_GATEXOR);
 	}
 
-	/**
-	 * Closes the Editor asking for confirmation to save if dirty.
-	 *
-	 * @return {@code false} if cancel was selected, {@code true} otherwise
-	 */
+	@Override
 	public boolean close() {
 		int res = JOptionPane.YES_OPTION;
-		if (isDirty()) {
-			res = JOptionPane.showConfirmDialog(null, Languages.getString("Editor.2"), //$NON-NLS-1$
-			        Languages.getString("Editor.3") + filename, JOptionPane.YES_NO_CANCEL_OPTION, //$NON-NLS-1$
+		if (getFileInfo().isDirty()) {
+			res = JOptionPane.showConfirmDialog(context().getFrame(),
+			        Languages.getString("Editor.2"), //$NON-NLS-1$
+			        Languages.getString("Editor.3") + getFileInfo().getFile(), //$NON-NLS-1$
+			        JOptionPane.YES_NO_CANCEL_OPTION,
 			        JOptionPane.WARNING_MESSAGE);
 
 			if (res == JOptionPane.YES_OPTION)
-				Actions.SAVE.specify(EditorStrings.FILENAME, filename).context(this)
+				Actions.SAVE.specify(EditorStrings.FILENAME, getFileInfo().getFile())
+				        .context(this)
 				        .execute();
 		}
+
 		return (res == JOptionPane.YES_OPTION) || (res == JOptionPane.NO_OPTION);
 	}
 
-	/** @return the Editor's context */
+	/**
+	 * Returns the Editor's context, the Application in which it exists.
+	 *
+	 * @return the Editor's context
+	 */
 	Application context() {
 		return app;
 	}
 
 	/**
-	 * Adds a {@code Component} to the {@code Editor}.
+	 * Adds a {@code Component} to the Editor.
 	 *
 	 * @param component the Component
 	 */
@@ -126,7 +132,7 @@ public final class Editor extends JComponent {
 	}
 
 	/**
-	 * Removes a {@code Component} from the {@code Editor}.
+	 * Removes a {@code Component} from the Editor.
 	 *
 	 * @param component the Component
 	 */
@@ -140,9 +146,9 @@ public final class Editor extends JComponent {
 	/**
 	 * Returns the {@code Component} with the given ID.
 	 *
-	 * @param ID the ID
+	 * @param ID the Component's ID
 	 *
-	 * @return the Component
+	 * @return the Component with that ID
 	 *
 	 * @throws MissingComponentException if no Component with the ID exists
 	 */
@@ -154,15 +160,15 @@ public final class Editor extends JComponent {
 	 * Returns the {@code Component} with the given ID or {@code null} if no such
 	 * {@code Component} exists.
 	 *
-	 * @param ID the ID
+	 * @param ID the Component's ID
 	 *
-	 * @return the Component or {@code null}
+	 * @return the Component with that ID or {@code null}
 	 */
 	public Component getComponentOrNull(String ID) {
 		Component component;
 		try {
 			component = getComponent_(ID);
-		} catch (MissingComponentException e) {
+		} catch (final MissingComponentException e) {
 			component = null;
 		}
 		return component;
@@ -198,12 +204,14 @@ public final class Editor extends JComponent {
 	 * @param type the type of the Component
 	 *
 	 * @return the next ID
+	 *
+	 * @see ComponentType
 	 */
 	public String getNextID(ComponentType type) {
 		return components.getNextID(type.description());
 	}
 
-	/** Clears the {@code Editor} resetting it to its original state */
+	/** Clears the Editor resetting it to its original state */
 	void clear() {
 		Utility.foreach(new ArrayList<>(getComponents_()), this::removeComponent);
 		undoableHistory.clear();
@@ -212,16 +220,16 @@ public final class Editor extends JComponent {
 	/**
 	 * Executes a {@code Command}.
 	 *
-	 * @param c the Command to execute
+	 * @param command the Command to execute
 	 *
 	 * @throws Exception when something exceptional happens
 	 */
-	void execute(Command c) throws Exception {
-		c.execute();
-		undoableHistory.add(c);
+	void execute(Command command) throws Exception {
+		command.execute();
+		undoableHistory.add(command);
 	}
 
-	/** Undoes the most recent {@code Command} */
+	/** Undoes the most recently executed {@code Command} */
 	void undo() {
 		undoableHistory.undo();
 	}
@@ -231,106 +239,58 @@ public final class Editor extends JComponent {
 		undoableHistory.redo();
 	}
 
-	void addToHistory(Command u) {
-		undoableHistory.add(u);
+	/**
+	 * Adds a {@code Command} to the history without executing it.
+	 *
+	 * @param command the Command
+	 */
+	void addToHistory(Command command) {
+		undoableHistory.add(command);
 	}
 
 	/**
-	 * Returns a list with the {@code Commands} executed on this {@code Editor}.
-	 * <p>
-	 * <b>Note</b> that this does <i>not</i> return a copy of the Commands. Any
-	 * changes to the Commands will be reflected in the {@code Editor}.
+	 * Returns a list with a copy of the {@code Commands} previously executed.
 	 *
 	 * @return the list
 	 */
-	public List<Undoable> getPastCommands() {
+	public List<Command> getPastCommands() {
 		return new ArrayList<>(undoableHistory.getPast());
 	}
 
-	/**
-	 * Returns the Editor's {@code StatusBar}.
-	 *
-	 * @return the StatusBar
-	 */
+	@Override
 	public StatusBar getStatusBar() {
 		return statusBar;
 	}
 
-	/**
-	 * Returns the File LabeL.
-	 *
-	 * @return the fileLabel
-	 */
-	public FileLabel getFileLabel() {
-		return fileLabel;
-	}
-
-	/**
-	 * Returns the name of the file that is being edited.
-	 *
-	 * @return the filename
-	 */
-	public String getFile() {
-		return filename;
-	}
-
-	/**
-	 * Sets the name of the file that is being edited.
-	 *
-	 * @param filename the file name
-	 */
-	void setFile(String filename) {
-		this.filename = filename;
-		updateTitle();
-	}
-
-	/**
-	 * Returns the dirtiness of the editor.
-	 *
-	 * @return the dirtiness
-	 */
-	boolean isDirty() {
-		return dirty;
-	}
-
-	/**
-	 * Sets the dirtiness of the Editor.
-	 *
-	 * @param newDirty the new dirtiness
-	 */
-	void setDirty(boolean newDirty) {
-		dirty = newDirty;
-		updateTitle();
-	}
-
-	private void updateTitle() {
-		fileLabel.updateText(getFile(), isDirty());
+	@Override
+	public FileInfo getFileInfo() {
+		return fileInfo;
 	}
 
 	/**
 	 * Updates the 'message' label with a status message. The message is formatted
-	 * exactly as if String.format(text, args) was called.
+	 * exactly as if {@code String.format(format, args)} was called.
 	 *
-	 * @param text the text
-	 * @param args the format arguments
+	 * @param format the format
+	 * @param args   the format arguments
 	 */
-	public void status(String text, Object... args) {
-		statusBar.setLabelText(EditorStrings.MESSAGE, StatusBar.TextType.DEFAULT, text, args);
+	public void status(String format, Object... args) {
+		statusBar.setLabelText(EditorStrings.MESSAGE, StatusBar.MessageType.DEFAULT, format, args);
 	}
 
 	/**
 	 * Updates the 'message' label with an error message. The message is formatted
-	 * exactly as if String.format(text, args) was called.
+	 * exactly as if {@code String.format(format, args)} was called.
 	 *
-	 * @param text the text
-	 * @param args the format arguments
+	 * @param format the format
+	 * @param args   the format arguments
 	 */
-	public void error(String text, Object... args) {
-		statusBar.setLabelText(EditorStrings.MESSAGE, StatusBar.TextType.FAILURE, text, args);
+	public void error(String format, Object... args) {
+		statusBar.setLabelText(EditorStrings.MESSAGE, StatusBar.MessageType.FAILURE, format, args);
 	}
 
 	/**
-	 * Updates the 'message' label with the message of the {@code exception}.
+	 * Updates the 'message' label with the message of an {@code exception}.
 	 *
 	 * @param exception the Exception
 	 */

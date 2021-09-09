@@ -11,17 +11,21 @@ import javax.swing.SwingConstants;
 
 /**
  * Convenient way to display multiple messages in JLabels. The labels may be
- * formatted according to the {@link TextType Type} of message they display and
- * are displayed horizontally across this JPanel.
+ * formatted according to a {@link MessageType} and are displayed horizontally
+ * across this JPanel.
  *
- * @author alexm
+ * @author Alex Mandelias
  */
 public final class StatusBar extends JPanel {
 
 	private final Map<String, JLabel> map;
 
-	/** Provides formatting according to the type of the Label's message */
-	public enum TextType {
+	/**
+	 * Provides formatting according to the type of the Label's message
+	 *
+	 * @author Alex Mandelias
+	 */
+	public enum MessageType {
 
 		/** Default text */
 		DEFAULT {
@@ -48,35 +52,37 @@ public final class StatusBar extends JPanel {
 		};
 
 		/**
-		 * Formats the text on the {@code label} according to this {@code Type}.
+		 * Formats the text on the {@code label} according to this {@code MessageType}.
 		 *
 		 * @param label the label
 		 */
 		protected abstract void format(JLabel label);
 	}
 
-	/** Creates the Status Bar */
+	/** Creates an empty Status Bar */
 	public StatusBar() {
 		map = new HashMap<>();
 		setLayout(new GridLayout(1, 0));
 	}
 
 	/**
-	 * Adds a new Label to the {@code StatusBar} with default {@code TextType}.
+	 * Adds a new Label to the StatusBar with default {@code message type}.
 	 *
 	 * @param labelID the Label's ID
 	 */
 	public void addLabel(String labelID) {
-		addLabel(labelID, TextType.DEFAULT);
+		addLabel(labelID, MessageType.DEFAULT);
 	}
 
 	/**
-	 * Adds a new Label to the {@code StatusBar} with the given {@code TextType}.
+	 * Adds a new Label to the StatusBar with the given {@code message type}.
 	 *
 	 * @param labelID the Label's ID
 	 * @param type    the Label's text type
+	 *
+	 * @see MessageType
 	 */
-	public void addLabel(String labelID, TextType type) {
+	public void addLabel(String labelID, MessageType type) {
 		final JLabel newLabel = new JLabel(" "); //$NON-NLS-1$
 		newLabel.setHorizontalAlignment(SwingConstants.LEFT);
 		type.format(newLabel);
@@ -86,7 +92,7 @@ public final class StatusBar extends JPanel {
 	}
 
 	/**
-	 * Removes a Label from the {@code StatusBar}.
+	 * Removes a Label from this StatusBar.
 	 *
 	 * @param labelID the Label's ID
 	 */
@@ -108,13 +114,12 @@ public final class StatusBar extends JPanel {
 	 * {@code String.format} was called with parameter {@code args}.
 	 *
 	 * @param labelID the ID of the Label
-	 * @param text    the text
-	 * @param args    the format arguments for the text
+	 * @param format  the format
+	 * @param args    the format arguments
 	 */
-	public void setLabelText(String labelID, String text, Object... args) {
+	public void setLabelText(String labelID, String format, Object... args) {
 		final JLabel label = getLabel(labelID);
-
-		label.setText(String.format(text, args));
+		label.setText(String.format(format, args));
 	}
 
 	/**
@@ -125,28 +130,31 @@ public final class StatusBar extends JPanel {
 	 *
 	 * @param labelID the ID of the Label
 	 * @param type    the type of the text
-	 * @param text    the text
-	 * @param args    the format arguments for the text
+	 * @param format  the format
+	 * @param args    the format arguments
 	 *
-	 * @see TextType
+	 * @see MessageType
 	 */
-	public void setLabelText(String labelID, TextType type, String text, Object... args) {
+	public void setLabelText(String labelID, MessageType type, String format, Object... args) {
 		final JLabel label = getLabel(labelID);
-
 		type.format(label);
-		label.setText(String.format(text, args));
+		label.setText(String.format(format, args));
 	}
 
-	/** Thrown when no Label with the {@code labelID} exists */
+	/**
+	 * Thrown when no Label with the {@code labelID} exists
+	 *
+	 * @author Alex Mandelias
+	 */
 	public static class MissingLabelException extends RuntimeException {
 
 		/**
-		 * Constructs the Exception with information about the {@code labelID}.
+		 * Constructs the Exception with a {@code labelID}.
 		 *
 		 * @param labelID the ID for which no Label exists
 		 */
 		public MissingLabelException(String labelID) {
-			super(String.format("No label with ID %s exists", labelID)); //$NON-NLS-1$
+			super(String.format("No label with ID '%s' exists", labelID)); //$NON-NLS-1$
 		}
 	}
 }

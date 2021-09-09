@@ -115,7 +115,8 @@ final class MyMenu extends JMenuBar {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				final Editor activeEditor = context.getActiveEditor();
-				Actions.SAVE.specify(EditorStrings.FILENAME, activeEditor.getFile())
+				Actions.SAVE
+				        .specify(EditorStrings.FILENAME, activeEditor.getFileInfo().getFile())
 				        .context(activeEditor)
 				        .execute();
 			}
