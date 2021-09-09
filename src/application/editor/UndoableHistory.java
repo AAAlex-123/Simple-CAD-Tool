@@ -7,9 +7,11 @@ import java.util.Vector;
 /**
  * A wrapper for implementing undo and redo functionality.
  *
- * @param <T> the type of {@link Undoable} object that will be stored
+ * @param <T> the type of {@code Undoable} object that will be stored
  *
- * @author alexm
+ * @author Alex Mandelias
+ *
+ * @see Undoable
  */
 public final class UndoableHistory<T extends Undoable> {
 
@@ -24,10 +26,10 @@ public final class UndoableHistory<T extends Undoable> {
 	/**
 	 * Adds the given {@code Undoable} to the history <i>without</i> executing it.
 	 *
-	 * @param c the undoable
+	 * @param undoable the undoable
 	 */
-	public void add(T c) {
-		past.push(c);
+	public void add(T undoable) {
+		past.push(undoable);
 
 		// flush the redo history
 		if (!future.isEmpty())
@@ -64,7 +66,7 @@ public final class UndoableHistory<T extends Undoable> {
 		}
 	}
 
-	/** Empties the history */
+	/** Clears the past and future parts of this UndoableHistory */
 	public void clear() {
 		past.clear();
 		future.clear();
@@ -89,10 +91,7 @@ public final class UndoableHistory<T extends Undoable> {
 	}
 
 	/**
-	 * Returns the past part of the history.
-	 * <p>
-	 * <b>Note:</b> this does <i>not</i> return a copy of the history. Any changes
-	 * to the items will be reflected in this UndoableHistory object.
+	 * Returns a <i>copy</i> of the past part of this history.
 	 *
 	 * @return a List with the previously executed Undoables
 	 */
@@ -101,10 +100,7 @@ public final class UndoableHistory<T extends Undoable> {
 	}
 
 	/**
-	 * Returns the future part of the history.
-	 * <p>
-	 * <b>Note:</b> this does <i>not</i> return a copy of the history. Any changes
-	 * to the items will be reflected in this UndoableHistory object.
+	 * Returns a <i>copy</i> of the future part of this history.
 	 *
 	 * @return a List with the previously un-executed Undoables
 	 */
