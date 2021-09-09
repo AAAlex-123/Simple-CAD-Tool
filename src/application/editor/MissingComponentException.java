@@ -3,15 +3,14 @@ package application.editor;
 import localisation.Languages;
 
 /**
- * Thrown when no {@link component.components.Component Component} with the {@code ID}
- * exists
+ * Thrown when no {@code Component} with an {@code ID} exists
  *
- * @author alexm
+ * @author Alex Mandelias
  */
 public class MissingComponentException extends Exception {
 
 	/**
-	 * Constructs the Exception with information about the {@code ID}.
+	 * Constructs the Exception an {@code ID}.
 	 *
 	 * @param id the id for which no {@code Component} exists
 	 */
