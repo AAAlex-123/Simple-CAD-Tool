@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.GridLayout;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -139,6 +140,15 @@ public final class StatusBar extends JPanel {
 		final JLabel label = getLabel(labelID);
 		type.format(label);
 		label.setText(String.format(format, args));
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		for (Entry<String, JLabel> e : map.entrySet())
+			sb.append(String.format("'%s':'%s', ", e.getKey(), e.getValue().getText())); //$NON-NLS-1$
+		sb.setLength(sb.length() - 2);
+		return sb.toString();
 	}
 
 	/**
