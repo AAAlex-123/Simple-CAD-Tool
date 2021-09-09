@@ -196,7 +196,8 @@ public final class Application {
 		protected abstract void execute();
 
 		/**
-		 * Specifies the Action's context.
+		 * Specifies the Action's context. This method must be called before every
+		 * Action execution.
 		 *
 		 * @param application the context
 		 *
