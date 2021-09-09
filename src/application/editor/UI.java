@@ -8,15 +8,17 @@ import javax.swing.JPanel;
 import component.components.Component;
 
 /**
- * A JPanel to display {@link component.components.Component Components} that repaints
- * itself when a {@code Component} is added or removed.
+ * A JPanel to display {@code Components} that repaints itself when a
+ * {@code Component} is added or removed.
  *
- * @author alexm
+ * @author Alex Mandelias
+ *
+ * @see Component
  */
 final class UI extends JPanel {
 
 	/** Creates the UI */
-	UI() {
+	public UI() {
 		setLayout(null);
 		setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
 	}
@@ -24,20 +26,20 @@ final class UI extends JPanel {
 	/**
 	 * Adds a {@code Component} to the UI and repaints.
 	 *
-	 * @param c the Component
+	 * @param component the Component
 	 */
-	void addComponent(Component c) {
-		add(c.getGraphics());
+	public void addComponent(Component component) {
+		add(component.getGraphics());
 		repaint();
 	}
 
 	/**
 	 * Removes a {@code Component} from the UI and repaints.
 	 *
-	 * @param c the Component
+	 * @param component the Component
 	 */
-	void removeComponent(Component c) {
-		remove(c.getGraphics());
+	public void removeComponent(Component component) {
+		remove(component.getGraphics());
 		repaint();
 	}
 }
