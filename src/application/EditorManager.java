@@ -2,7 +2,7 @@ package application;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import javax.swing.JPanel;
@@ -41,7 +41,7 @@ public class EditorManager<T extends Component & EditorInterface> {
 
 		mainPanel.add(editorTabbedPane, BorderLayout.CENTER);
 
-		editorSet = new HashSet<>();
+		editorSet = new LinkedHashSet<>();
 	}
 
 	/**
@@ -102,6 +102,7 @@ public class EditorManager<T extends Component & EditorInterface> {
 		if (!editorSet.contains(editor))
 			throw new MissingEditorException(editor, this);
 
+		setActiveEditor(editor);
 		if (editor.close()) {
 			editorSet.remove(editor);
 			editorTabbedPane.remove(editor);
@@ -111,7 +112,8 @@ public class EditorManager<T extends Component & EditorInterface> {
 
 	/** Calls {@link #removeEditor(Component)} for every {@code Editor} */
 	public void removeAllEditors() {
-		editorSet.forEach(this::removeEditor);
+		new LinkedHashSet<>(editorSet).forEach(this::removeEditor);
+		editorSet.clear();
 	}
 
 	private void setActiveEditor(T editor) {
