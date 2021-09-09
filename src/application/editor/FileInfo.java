@@ -6,29 +6,91 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 /**
- * A JLabel that displays the {@code filename} with a leading '*' if the,
- * hypothetical, file associated with that name is {@code dirty}.
+ * Encapsulates information about a File that is being edited. This includes its
+ * {@code filename} and whether or not it is {@code dirty}. A dirty file is a
+ * file that has unsaved changes.
+ * <p>
+ * <b>Note:</b> the File doesn't have to actually exists, this class simply
+ * defines file-like behaviour, which an Editor of that file may find useful.
+ * None of the methods actually read from or write to the disk.
+ * <p>
+ * A JPanel that displays the file's relevant information can be obtained with
+ * the {@link #getGraphic()} method and is created on-demand the first time the
+ * method is called.
  *
- * @author alexm
+ * @author Alex Mandelias
  */
-final class FileLabel extends JPanel {
+public class FileInfo {
 
-	private final JLabel label;
+	private JPanel panel;
+	private JLabel label;
 
-	/** Constructs the FileLabel */
-	FileLabel() {
-		super(new FlowLayout());
-		setOpaque(false);
-		add(label = new JLabel());
+	private String       filename;
+	private boolean      dirty;
+
+	/** Constructs a FileInfo object */
+	public FileInfo() {}
+
+	/**
+	 * Returns a Graphic for this FileInfo object that accurately represents it. It
+	 * consists of a JLabel whose text is effectively formed by calling:
+	 *
+	 * <pre>
+	 * String.format("%s%s", dirty ? "*" : "", filename)
+	 * </pre>
+	 *
+	 * @return the JPanel with that text
+	 */
+	public JPanel getGraphic() {
+		if (panel == null) {
+			panel = new JPanel(new FlowLayout());
+			panel.setOpaque(false);
+			panel.add(label = new JLabel());
+		}
+		return panel;
 	}
 
 	/**
-	 * Updates the Label's text.
+	 * Returns the name of the File.
 	 *
-	 * @param fname the file name
-	 * @param dirty the dirtiness of the file
+	 * @return the filename
 	 */
-	void updateText(String fname, boolean dirty) {
-		label.setText((dirty ? "*" : "") + fname); //$NON-NLS-1$ //$NON-NLS-2$
+	public String getFile() {
+		return filename;
+	}
+
+	/**
+	 * Returns the dirty state of the File. A {@code dirty} file has unsaved changes
+	 * while a {@code non-dirty} one doesn't.
+	 *
+	 * @return {@code true} if the file is dirty, {@code false} otherwise
+	 */
+	public boolean isDirty() {
+		return dirty;
+	}
+
+	/**
+	 * Updates the name of the File.
+	 *
+	 * @param newFilename the new name of the File.
+	 */
+	public void setFile(String newFilename) {
+		updateState(newFilename, dirty);
+	}
+
+	/** Marks the File as having unsaved changes */
+	public void markUnsaved() {
+		updateState(filename, true);
+	}
+
+	/** Marks the File as saved */
+	public void markSaved() {
+		updateState(filename, false);
+	}
+
+	private void updateState(String newFilename, boolean newDirty) {
+		filename = newFilename;
+		dirty = newDirty;
+		label.setText((dirty ? "*" : "") + filename); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 }
