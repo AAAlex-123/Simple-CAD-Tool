@@ -14,10 +14,15 @@ import javax.swing.SwingConstants;
  * Convenient way to display multiple messages in JLabels. The labels may be
  * formatted according to a {@link MessageType} and are displayed horizontally
  * across this JPanel.
+ * <p>
+ * All methods that access a specific Label throw a RuntimeException if the
+ * Label is not found.
+ *
+ * @see MissingLabelException
  *
  * @author Alex Mandelias
  */
-public final class StatusBar extends JPanel {
+final class StatusBar extends JPanel {
 
 	private final Map<String, JLabel> map;
 
