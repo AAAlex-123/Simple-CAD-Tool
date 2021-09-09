@@ -13,7 +13,7 @@ import java.util.Vector;
  *
  * @see Undoable
  */
-public final class UndoableHistory<T extends Undoable> {
+final class UndoableHistory<T extends Undoable> {
 
 	private final Stack<T> past, future;
 
