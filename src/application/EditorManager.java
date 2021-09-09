@@ -23,7 +23,7 @@ import javax.swing.SwingConstants;
  *
  * @see EditorInterface
  */
-public class EditorManager<T extends Component & EditorInterface> {
+class EditorManager<T extends Component & EditorInterface> {
 
 	private final JPanel      mainPanel;
 	private final JTabbedPane editorTabbedPane;
