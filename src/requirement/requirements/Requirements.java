@@ -132,6 +132,11 @@ public final class Requirements implements Iterable<AbstractRequirement>, Serial
 		return get(key).value();
 	}
 
+	// TODO: this
+	//	public <E> E getValueAs(String key, Class<E> clazz) {
+	//		return clazz.cast(getValue(key));
+	//	}
+
 	/**
 	 * Offers {@code v} for the Requirement with key {@code k}.
 	 *
@@ -174,6 +179,8 @@ public final class Requirements implements Iterable<AbstractRequirement>, Serial
 	 *
 	 * @param frame       the parent of the dialog
 	 * @param description the text that will be displayed
+	 *
+	 * @throws NullPointerException if {@code frame == null}
 	 *
 	 * @see RequirementsDialog
 	 */
@@ -244,7 +251,7 @@ public final class Requirements implements Iterable<AbstractRequirement>, Serial
 	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
-		sb.append(String.format(Languages.getString("Requirements.0"), //$NON-NLS-1$
+		sb.append(String.format("Requirements fulfilled: %s, finalised: %s%n", 
 		        fulfilled() ? RequirementStrings.YES : RequirementStrings.NO,
 		        finalised() ? RequirementStrings.YES : RequirementStrings.NO));
 		Utility.foreach(this, req -> sb.append(req));
