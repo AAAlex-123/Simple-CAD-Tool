@@ -233,8 +233,8 @@ public abstract class AbstractRequirement implements Serializable, Cloneable {
 	}
 
 	/**
-	 * Calls {@link #offer(Object) offer(Object)} and additionally sets the
-	 * {@code value} of this Requirement, marking is as {@code fulfilled}.
+	 * Calls {@link #offer(Object)} and additionally sets the {@code value} of this
+	 * Requirement, marking is as {@code fulfilled}.
 	 * <p>
 	 * This method is intended for normal use, to specify that a value for this
 	 * Requirement exists and may be retrieved.
@@ -252,8 +252,8 @@ public abstract class AbstractRequirement implements Serializable, Cloneable {
 	}
 
 	/**
-	 * Calls {@link #fulfil(Object) fulfil(Object)} and additionally marks this
-	 * Requirement as {@code finalised}.
+	 * Calls {@link #fulfil(Object)} and additionally marks this Requirement as
+	 * {@code finalised}.
 	 * <p>
 	 * This method is intended for providing a strict default or for ensuring the
 	 * value cannot be altered in the future.
@@ -287,7 +287,7 @@ public abstract class AbstractRequirement implements Serializable, Cloneable {
 	}
 
 	/**
-	 * Returns the value of {@link #fulfilled fulfilled}
+	 * Returns the value of {@link #fulfilled}
 	 *
 	 * @return {@code fulfilled}
 	 */
@@ -296,7 +296,7 @@ public abstract class AbstractRequirement implements Serializable, Cloneable {
 	}
 
 	/**
-	 * Returns the value of {@link #finalised finalised}
+	 * Returns the value of {@link #finalised}
 	 *
 	 * @return {@code finalised}
 	 */
