@@ -181,7 +181,7 @@ class CreateCommand extends Command {
 	private String constructRegex() {
 		// Constructs the following regex: ^(?!foo$|bar$|)[^\s]*$
 		// to match IDs that don't contain blanks and are not in use
-		final StringBuilder regex = new StringBuilder(Languages.getString("CreateCommand.4")); //$NON-NLS-1$
+		final StringBuilder regex = new StringBuilder("^(?!$"); //$NON-NLS-1$
 
 		Utility.foreach(context.getComponents_(), component -> {
 			regex.append("|"); //$NON-NLS-1$
