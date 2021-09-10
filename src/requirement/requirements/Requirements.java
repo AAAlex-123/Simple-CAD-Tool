@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 import component.components.Component;
-import localisation.Languages;
 import localisation.RequirementStrings;
 import myUtil.Utility;
 import requirement.exceptions.MissingRequirementException;
@@ -251,7 +250,7 @@ public final class Requirements implements Iterable<AbstractRequirement>, Serial
 	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
-		sb.append(String.format("Requirements fulfilled: %s, finalised: %s%n", 
+		sb.append(String.format("Requirements fulfilled: %s, finalised: %s%n", //$NON-NLS-1$
 		        fulfilled() ? RequirementStrings.YES : RequirementStrings.NO,
 		        finalised() ? RequirementStrings.YES : RequirementStrings.NO));
 		Utility.foreach(this, req -> sb.append(req));
