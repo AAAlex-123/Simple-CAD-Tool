@@ -53,7 +53,7 @@ public class Languages {
 
 	static {
 		final String regex = String.format(
-		        "^language(?:_(?<%s>[a-zA-Z]{2})(?:_(?<%s>[a-zA-Z]{2})(?:_(?<%s>[a-zA-Z]{2}))?)?)?", //$NON-NLS-1$
+		        "^language(?:_(?<%s>[a-zA-Z]{2})(?:_(?<%s>[a-zA-Z]{2})(?:_(?<%s>[a-zA-Z]{2}))?)?)", //$NON-NLS-1$
 		        Languages.LANGUAGE_LITERAL, Languages.COUNTRY_LITERAL, Languages.VARIANT_LITERAL);
 		pattern = Pattern.compile(regex);
 
@@ -112,7 +112,7 @@ public class Languages {
 				final Matcher m = Languages.pattern.matcher(fname);
 				if (!m.find())
 					throw new RuntimeException(
-					        String.format("Invalid properties file name: %s", fname)); //$NON-NLS-1$
+					        String.format("Invalid language file name: %s", fname)); //$NON-NLS-1$
 
 				final Function<String, String> f = (s -> s == null ? "" : s); //$NON-NLS-1$
 
@@ -167,6 +167,6 @@ public class Languages {
 	}
 
 	private static boolean isLanguageFile(String filename) {
-		return filename.startsWith("language") && filename.endsWith(".properties"); //$NON-NLS-1$ //$NON-NLS-2$
+		return filename.startsWith("language_") && filename.endsWith(".properties"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 }
