@@ -2,7 +2,6 @@ package requirement.requirements;
 
 import java.io.Serializable;
 
-import localisation.Languages;
 import localisation.RequirementStrings;
 import requirement.exceptions.LockedRequirementException;
 import requirement.graphics.AbstractRequirementGraphic;
@@ -308,7 +307,9 @@ public abstract class AbstractRequirement implements Serializable, Cloneable {
 	@Override
 	public final String toString() {
 		final StringBuilder sb = new StringBuilder(
-		        String.format(Languages.getString("Requirement.1"), this.getClass().getSimpleName(), //$NON-NLS-1$
+		        String.format(
+		                "%s: %s%n\tDefault:   %s%n\tValue:     %s%n\tFulfilled: %s%n\tFinalised: %s%n", //$NON-NLS-1$
+		                this.getClass().getSimpleName(),
 		                key, defaultValue, value,
 		                fulfilled() ? RequirementStrings.YES : RequirementStrings.NO,
 		                finalised() ? RequirementStrings.YES : RequirementStrings.NO));
