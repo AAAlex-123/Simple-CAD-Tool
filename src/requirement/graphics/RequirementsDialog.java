@@ -25,8 +25,9 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.WindowConstants;
 
 import application.editor.StatusBar;
-import application.editor.StatusBar.TextType;
+import application.editor.StatusBar.MessageType;
 import localisation.Languages;
+import localisation.RequirementStrings;
 import myUtil.Utility;
 import requirement.requirements.AbstractRequirement;
 import requirement.requirements.Requirements;
@@ -79,7 +80,7 @@ public final class RequirementsDialog extends JDialog {
 		super(parent, title, true);
 
 		if (parent == null)
-			throw new NullPointerException("The parent frame of the dialog cannot be null");
+			throw new NullPointerException("The parent frame of the dialog cannot be null"); //$NON-NLS-1$
 
 		reqs = dialogsReqs;
 		map = new HashMap<>();
@@ -94,7 +95,7 @@ public final class RequirementsDialog extends JDialog {
 		buttonsPanel.add(resetButton = new JButton(Languages.getString("RequirementsDialog.2"))); //$NON-NLS-1$
 
 		sb = new StatusBar();
-		sb.addLabel("message"); //$NON-NLS-1$
+		sb.addLabel(RequirementStrings.MESSAGE);
 
 		// --- options panel (middle) ---
 		optionsPanel = new JPanel(new GridLayout(reqs.size(), 1, 0, 15));
@@ -107,7 +108,8 @@ public final class RequirementsDialog extends JDialog {
 		}
 
 		if (!allGraphics) {
-			sb.setLabelText("message", TextType.FAILURE, "Not all Requirements support Graphics");
+			sb.setLabelText(RequirementStrings.MESSAGE, MessageType.FAILURE,
+			        Languages.getString("RequirementsDialog.3")); //$NON-NLS-1$
 			okButton.setEnabled(false);
 			resetButton.setEnabled(false);
 		}
