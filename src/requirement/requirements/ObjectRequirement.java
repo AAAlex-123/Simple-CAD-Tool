@@ -1,5 +1,6 @@
 package requirement.requirements;
 
+import localisation.Languages;
 import requirement.graphics.AbstractRequirementGraphic;
 
 /**
@@ -24,7 +25,7 @@ public final class ObjectRequirement extends AbstractRequirement {
 	@Override
 	protected AbstractRequirementGraphic<?> constructGraphicOfSubclass() {
 		hasGraphic = false;
-		return constructNullGraphic("Graphic Not Supported");
+		return constructNullGraphic(Languages.getString("ObjectRequirement.0")); //$NON-NLS-1$
 	}
 
 	@Override
