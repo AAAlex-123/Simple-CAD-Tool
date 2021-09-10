@@ -14,24 +14,24 @@ import localisation.Languages;
 public enum StringType {
 
 	/** Type for non-negative integers */
-	NON_NEG_INTEGER("[0-9]+", Languages.getString("StringType.1")), //$NON-NLS-1$ //$NON-NLS-2$
+	NON_NEG_INTEGER("[0-9]+", Languages.getString("StringType.0")),   //$NON-NLS-1$ //$NON-NLS-2$
 
 	/** Type for positive integers */
-	POS_INTEGER("[1-9][0-9]*", Languages.getString("StringType.3")), //$NON-NLS-1$ //$NON-NLS-2$
+	POS_INTEGER("[1-9][0-9]*", Languages.getString("StringType.3")),   //$NON-NLS-1$ //$NON-NLS-2$
 
 	/** Type for valid file names */
-	FILENAME("^[^\\\\/:*?\"<>|]*$", Languages.getString("StringType.5")), //$NON-NLS-1$ //$NON-NLS-2$
+	FILENAME("^[^\\\\/:*?\"<>|]*$", Languages.getString("StringType.5")),   //$NON-NLS-1$ //$NON-NLS-2$
 
 	/** Type for valid file types */
-	FILETYPE(String.format("%s|%s", EditorStrings.COMPONENT, EditorStrings.CIRCUIT), //$NON-NLS-1$
-	        String.format(Languages.getString("StringType.0"), EditorStrings.COMPONENT, //$NON-NLS-1$
+	FILETYPE(String.format("%s|%s", EditorStrings.COMPONENT, EditorStrings.CIRCUIT),  //$NON-NLS-1$
+	        String.format(Languages.getString("StringType.7"), EditorStrings.COMPONENT,  //$NON-NLS-1$
 	                EditorStrings.CIRCUIT)),
 
 	/** Type for any non-empty string */
-	ANY(".+", Languages.getString("StringType.11")), //$NON-NLS-1$ //$NON-NLS-2$
+	ANY(".+", Languages.getString("StringType.9")),   //$NON-NLS-1$ //$NON-NLS-2$
 
 	/** Type for custom regex. Defaults to any string (including the empty one). */
-	CUSTOM(".*", Languages.getString("StringType.13")) { //$NON-NLS-1$ //$NON-NLS-2$
+	CUSTOM(".*", Languages.getString("StringType.11")) {   //$NON-NLS-1$ //$NON-NLS-2$
 		@Override
 		public StringType alter(String regex, String desc) {
 			p = Pattern.compile(regex);
@@ -63,7 +63,7 @@ public enum StringType {
 	@SuppressWarnings("unused")
 	public StringType alter(String regex, String desc) {
 		throw new UnsupportedOperationException(
-		        String.format("Type %s does not support custom regex and description", this)); //$NON-NLS-1$
+		        String.format("Type %s does not support custom regex and description", this));  //$NON-NLS-1$
 	}
 
 	/**
