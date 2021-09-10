@@ -1,13 +1,12 @@
 package application;
 
 import application.editor.FileInfo;
-import application.editor.StatusBar;
 
 /**
  * Interface for an Editor that edits a File, which will be used in the context
  * of an {@code EditorManager}. Editors need to be able to {@code close} and
- * provide information about their status and the file they edit in order for
- * the {@code EditorManager} to accurately represent them.
+ * provide information about the file they edit in order for the
+ * {@code EditorManager} to accurately represent them.
  *
  * @author Alex Mandelias
  *
@@ -23,16 +22,6 @@ public interface EditorInterface {
 	 *         otherwise
 	 */
 	boolean close();
-
-	/**
-	 * Returns this Editor's {@code StatusBar}, a JPanel that can display a number
-	 * of different messages when appropriate.
-	 *
-	 * @return the StatusBar
-	 *
-	 * @see StatusBar
-	 */
-	StatusBar getStatusBar();
 
 	/**
 	 * Returns this Editor's {@code FileInfo}, an object containing information

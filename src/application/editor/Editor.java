@@ -10,6 +10,7 @@ import static component.ComponentType.INPUT_PIN;
 import static component.ComponentType.OUTPUT_PIN;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -76,10 +77,12 @@ public final class Editor extends JComponent implements EditorInterface {
 		// configure the components of the editor
 		statusBar.addLabel(EditorStrings.MESSAGE);
 		statusBar.addLabel(EditorStrings.COUNT);
+		statusBar.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
 
 		setLayout(new BorderLayout());
 		setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 		add(editorUI, BorderLayout.CENTER);
+		add(statusBar, BorderLayout.SOUTH);
 
 		components.addGenerator(INPUT_PIN.description(), StringConstants.G_INPUT_PIN);
 		components.addGenerator(OUTPUT_PIN.description(), StringConstants.G_OUTPUT_PIN);
@@ -255,11 +258,6 @@ public final class Editor extends JComponent implements EditorInterface {
 	 */
 	public List<Command> getPastCommands() {
 		return new ArrayList<>(undoableHistory.getPast());
-	}
-
-	@Override
-	public StatusBar getStatusBar() {
-		return statusBar;
 	}
 
 	@Override

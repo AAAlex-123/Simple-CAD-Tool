@@ -36,7 +36,7 @@ class EditorManager<T extends Component & EditorInterface> {
 		editorTabbedPane.addChangeListener(l -> {
 			final T selectedEditor = getSelectedEditor();
 			if (selectedEditor != null)
-				setActiveEditor(selectedEditor);
+				editorTabbedPane.setSelectedComponent(selectedEditor);
 		});
 
 		mainPanel.add(editorTabbedPane, BorderLayout.CENTER);
@@ -47,14 +47,12 @@ class EditorManager<T extends Component & EditorInterface> {
 	/**
 	 * Returns a JPanel with a graphical representation of this Manager.
 	 * <p>
-	 * It consists of a JTabbedPane in the centre, which displays information about
-	 * each Editor's file as well as the graphical representation the of active
-	 * Editor, and the StatusBar of the active Editor, located at the bottom.
+	 * It consists of a JTabbedPane, which displays information about each Editor's
+	 * file as well as the graphical representation the of active {@code Editor}.
 	 *
 	 * @return the JPanel
 	 *
 	 * @see EditorInterface#getFileInfo()
-	 * @see EditorInterface#getStatusBar()
 	 */
 	public JPanel getGraphics() {
 		return mainPanel;
@@ -62,9 +60,9 @@ class EditorManager<T extends Component & EditorInterface> {
 
 	/**
 	 * Returns the {@code Editor} the user is currently working with, the selected
-	 * {@code Editor} of the JTabbedPane.
+	 * Editor of the JTabbedPane, or {@code null} if there are no open Editors.
 	 *
-	 * @return the selected Editor
+	 * @return the selected Editor or {@code null}
 	 */
 	@SuppressWarnings("unchecked")
 	public T getSelectedEditor() {
@@ -76,15 +74,20 @@ class EditorManager<T extends Component & EditorInterface> {
 	 * Adds an {@code Editor} to this Manager.
 	 *
 	 * @param newEditor the Editor to add
+	 *
+	 * @throws NullPointerException if {@code newEditor == null}
 	 */
 	public void addEditor(T newEditor) {
+		if (newEditor == null)
+			throw new NullPointerException("newEditor is null"); //$NON-NLS-1$
+
 		editorSet.add(newEditor);
 
 		editorTabbedPane.addTab("", newEditor); //$NON-NLS-1$
 		editorTabbedPane.setTabComponentAt(editorTabbedPane.getTabCount() - 1,
 		        newEditor.getFileInfo().getGraphic());
 
-		setActiveEditor(newEditor);
+		editorTabbedPane.setSelectedComponent(newEditor);
 	}
 
 	/**
@@ -93,32 +96,39 @@ class EditorManager<T extends Component & EditorInterface> {
 	 *
 	 * @param editor the Editor to close
 	 *
+	 * @throws NullPointerException   if {@code editor == null}
 	 * @throws MissingEditorException if the Editor given as an argument is not
 	 *                                present in this Manager
 	 *
 	 * @see EditorInterface#close()
 	 */
 	public void removeEditor(T editor) {
+		if (editor == null)
+			throw new NullPointerException("editor is null"); //$NON-NLS-1${
+
 		if (!editorSet.contains(editor))
 			throw new MissingEditorException(editor, this);
 
-		setActiveEditor(editor);
+		editorTabbedPane.setSelectedComponent(editor);
 		if (editor.close()) {
 			editorSet.remove(editor);
 			editorTabbedPane.remove(editor);
-			mainPanel.remove(editor.getStatusBar());
 		}
 	}
 
-	/** Calls {@link #removeEditor(Component)} for every {@code Editor} */
+	/**
+	 * Calls {@link #removeEditor(Component)} with the active {@code Editor}. This
+	 * method does nothing if there are no open {@code Editors}.
+	 */
+	public void removeActiveEditor() {
+		final T activeEditor = getSelectedEditor();
+		if (editorSet != null)
+			removeEditor(activeEditor);
+	}
+
+	/** Calls {@link #removeEditor(Component)} for every open {@code Editor} */
 	public void removeAllEditors() {
 		new LinkedHashSet<>(editorSet).forEach(this::removeEditor);
 		editorSet.clear();
-	}
-
-	private void setActiveEditor(T editor) {
-		editorTabbedPane.setSelectedComponent(editor);
-		mainPanel.add(editor.getStatusBar(), BorderLayout.SOUTH);
-		mainPanel.repaint();
 	}
 }
