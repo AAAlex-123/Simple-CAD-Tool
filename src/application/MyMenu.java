@@ -263,14 +263,14 @@ final class MyMenu extends JMenuBar {
 		final JMenuItem jmi = new JMenuItem();
 
 		// different text and accelerator depending on command type (build-in vs user-created)
-		final String  patternString = String.format("^(?:%s|%s).*", CommandStrings.CREATE_STR,              //$NON-NLS-1$
+		final String  patternString = String.format("^(%s|%s).*", CommandStrings.CREATE_STR,              //$NON-NLS-1$
 		        CommandStrings.DELETE_STR);
 		final Pattern pattern       = Pattern.compile(patternString);
 		final String  description   = command.toString();
 		final Matcher matcher       = pattern.matcher(description);
 
 		if (matcher.find()) {
-			jmi.setText(description.substring(matcher.group().length()));
+			jmi.setText(description.substring(matcher.group(1).length() + 1));
 			MyMenu.setAccel(jmi, builtin_command_gen.get());
 		} else {
 			jmi.setText(description);
