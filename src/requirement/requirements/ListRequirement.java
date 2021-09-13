@@ -16,6 +16,8 @@ import requirement.graphics.ListRequirementGraphic;
 public class ListRequirement<T> extends AbstractRequirement {
 
 	private List<T> options;
+	private boolean error;
+	private String cause;
 
 	/**
 	 * Construct an empty ListRequirement, whose options will be given later, after
@@ -36,14 +38,14 @@ public class ListRequirement<T> extends AbstractRequirement {
 	public ListRequirement(String key, List<T> options) {
 		super(key);
 		this.options = options;
+		this.cause = "No options";
+		this.error = true;
 	}
 
 	@Override
 	protected AbstractRequirementGraphic<?> constructGraphicOfSubclass() {
-		if (options.size() == 0) {
-			hasGraphic = false;
-			return constructNullGraphic("No options");
-		}
+		if (options.size() == 0)
+			return constructNullGraphic(cause, error);
 
 		return new ListRequirementGraphic<>(this);
 	}
@@ -78,5 +80,19 @@ public class ListRequirement<T> extends AbstractRequirement {
 	 */
 	public List<T> getOptions() {
 		return new ArrayList<>(this.options);
+	}
+
+	/**
+	 * DOC
+	 *
+	 * @param error
+	 * @param format
+	 * @param args
+	 *
+	 * @implNote the default is...
+	 */
+	public void setCaseOfNullGraphic(boolean error, String format, Object... args) {
+		this.error = error;
+		cause = String.format(format, args);
 	}
 }
