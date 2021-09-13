@@ -5,6 +5,7 @@ import java.awt.GridLayout;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 
+import localisation.Languages;
 import requirement.requirements.AbstractRequirement;
 
 /**
@@ -30,8 +31,8 @@ public class NullRequirementGraphic
 		super(requirement);
 		setLayout(new GridLayout(2, 1, 10, 0));
 
-		key = new JLabel(String.format("No Graphic for Requirement: %s", requirement.key()));
-		explanation = new JLabel(String.format("Reason: %s", reason));
+		key = new JLabel(String.format(Languages.getString("NullRequirementGraphic.0"), requirement.key())); //$NON-NLS-1$
+		explanation = new JLabel(String.format(Languages.getString("NullRequirementGraphic.1"), reason)); //$NON-NLS-1$
 
 		key.setHorizontalAlignment(SwingConstants.CENTER);
 		explanation.setHorizontalAlignment(SwingConstants.CENTER);
