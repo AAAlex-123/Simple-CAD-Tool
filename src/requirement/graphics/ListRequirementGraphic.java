@@ -3,7 +3,6 @@ package requirement.graphics;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
-import java.util.NoSuchElementException;
 import java.util.Vector;
 
 import javax.swing.DefaultComboBoxModel;
@@ -55,14 +54,8 @@ public class ListRequirementGraphic<T> extends AbstractRequirementGraphic<ListRe
 	public void update() {
 		final Vector<T> newOptions = new Vector<>(req.getOptions());
 
-		if (!newOptions.equals(currentOptions)) {
-			currentOptions = newOptions;
-			if (currentOptions.isEmpty())
-				throw new NoSuchElementException(
-				        String.format("No options for ListRequirement with key '%s'", req.key())); //$NON-NLS-1$
-
-			optionBox.setModel(new DefaultComboBoxModel<>(currentOptions));
-		}
+		if (!newOptions.equals(currentOptions))
+			optionBox.setModel(new DefaultComboBoxModel<>(currentOptions = newOptions));
 
 		if (req.finalised())
 			optionBox.setEnabled(false);
