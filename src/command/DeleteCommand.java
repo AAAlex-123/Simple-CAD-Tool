@@ -37,20 +37,23 @@ class DeleteCommand extends Command {
 
 	@Override
 	public void constructRequirements() {
-		requirements.add(CommandStrings.NAME, new ArrayList<>(), Policy.ANY);
+		final ComponentRequirement req = new ComponentRequirement(CommandStrings.NAME,
+		        new ArrayList<>(), Policy.ANY);
+		req.setCaseOfNullGraphic(false, "There are no Components to delete");
+		requirements.add(req);
 	}
 
 	@Override
 	public void adjustRequirements() {
 		// provide options
-		((ComponentRequirement) requirements.get(CommandStrings.NAME))
-		        .setComponentOptions(context.getComponents_());
+		ComponentRequirement nameReq = (ComponentRequirement) requirements.get(CommandStrings.NAME);
+		nameReq.setComponentOptions(context.getComponents_());
 	}
 
 	@Override
 	public void execute() throws MissingComponentException {
 		associatedComponent = context
-		        .getComponent_((String) requirements.getValue(CommandStrings.NAME));
+				.getComponent_((String) requirements.getValue(CommandStrings.NAME));
 
 		ComponentFactory.destroyComponent(associatedComponent);
 		context.removeComponent(associatedComponent);
@@ -63,8 +66,9 @@ class DeleteCommand extends Command {
 			// instead it is just set up so it can be undone successfully
 			final DeleteCommand deleteCommand = new DeleteCommand(context);
 
-			((ComponentRequirement) deleteCommand.requirements.get(CommandStrings.NAME))
-			        .setComponentOptions(deletedComps);
+			ComponentRequirement nameReq = (ComponentRequirement) deleteCommand.requirements.get(CommandStrings.NAME);
+			nameReq.setComponentOptions(deletedComps);
+
 			deleteCommand.requirements.fulfil(CommandStrings.NAME, component.getID());
 			deleteCommand.associatedComponent = component;
 
