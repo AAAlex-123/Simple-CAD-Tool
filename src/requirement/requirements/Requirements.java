@@ -90,7 +90,7 @@ public final class Requirements implements Iterable<AbstractRequirement>, Serial
 	 * @param policy     the Policy for filtering the Components
 	 */
 	public void add(String key, List<Component> components,
-	        ComponentRequirement.Policy policy) {
+			ComponentRequirement.Policy policy) {
 		requirements.put(key, new ComponentRequirement(key, components, policy));
 	}
 
@@ -187,8 +187,11 @@ public final class Requirements implements Iterable<AbstractRequirement>, Serial
 		if (fulfilled())
 			return;
 
-		final RequirementsDialog dialog = new RequirementsDialog(description, this, frame);
-		dialog.setVisible(true);
+		RequirementsDialog.showDialog(description, this, frame);
+
+		// final RequirementsDialog dialog = new RequirementsDialog(description, this,
+		// frame);
+		// dialog.setVisible(true);
 	}
 
 	/**
@@ -251,8 +254,8 @@ public final class Requirements implements Iterable<AbstractRequirement>, Serial
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
 		sb.append(String.format("Requirements fulfilled: %s, finalised: %s%n", //$NON-NLS-1$
-		        fulfilled() ? RequirementStrings.YES : RequirementStrings.NO,
-		        finalised() ? RequirementStrings.YES : RequirementStrings.NO));
+				fulfilled() ? RequirementStrings.YES : RequirementStrings.NO,
+						finalised() ? RequirementStrings.YES : RequirementStrings.NO));
 		Utility.foreach(this, req -> sb.append(req));
 		return sb.toString();
 	}
