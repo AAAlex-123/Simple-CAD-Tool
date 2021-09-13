@@ -48,9 +48,16 @@ class CreateCommand extends Command {
 	public void constructRequirements() {
 		switch (componentType) {
 		case BRANCH:
-			requirements.add(CommandStrings.IN_NAME, new ArrayList<>(), Policy.INPUT);
+			final ComponentRequirement inName = new ComponentRequirement(CommandStrings.IN_NAME,
+			        new ArrayList<>(), Policy.INPUT);
+			final ComponentRequirement outName = new ComponentRequirement(CommandStrings.OUT_NAME,
+			        new ArrayList<>(), Policy.OUTPUT);
+			inName.setCaseOfNullGraphic(false, "There are no Components to act as Input");
+			outName.setCaseOfNullGraphic(false, "There are no Components to act as Output");
+
+			requirements.add(inName);
 			requirements.add(CommandStrings.IN_INDEX, StringType.NON_NEG_INTEGER);
-			requirements.add(CommandStrings.OUT_NAME, new ArrayList<>(), Policy.OUTPUT);
+			requirements.add(outName);
 			requirements.add(CommandStrings.OUT_INDEX, StringType.NON_NEG_INTEGER);
 			break;
 		case GATE:
