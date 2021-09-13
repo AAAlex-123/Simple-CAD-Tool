@@ -18,6 +18,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.KeyStroke;
@@ -66,8 +67,13 @@ public final class RequirementsDialog extends JDialog {
 	private final Requirements reqs;
 	private final Map<AbstractRequirement, AbstractRequirementGraphic<?>> map;
 
+	private boolean allReqsHaveGraphics = true;
+	private boolean runtimeGraphicError = false;
+
 	/**
 	 * Constructs the dialog.
+	 * <p>
+	 * DOC: enrich
 	 *
 	 * @param title       the window's title
 	 * @param dialogsReqs the Requirements that the dialog will fulfil
@@ -76,8 +82,26 @@ public final class RequirementsDialog extends JDialog {
 	 *
 	 * @throws NullPointerException if {@code parent == null}
 	 */
-	public RequirementsDialog(String title, Requirements dialogsReqs, Frame parent) {
-		super(parent, title, true);
+	public static void showDialog(String title, Requirements dialogsReqs, Frame parent) {
+
+		RequirementsDialog dialog = new RequirementsDialog(title, dialogsReqs, parent);
+
+		if (dialog.runtimeGraphicError) {
+			dialog.setModal(false);
+			dialog.setVisible(true);
+
+			final String msg = "An error occured while displaying the dialog.<br>Please take a screenshot of the dialog and pass it to the developer";
+			JOptionPane.showMessageDialog(dialog, String.format("<html><center>%s</center></html>", msg),
+			        "Error while displaying dialog", JOptionPane.ERROR_MESSAGE);
+			dialog.setModal(true);
+		} else {
+			dialog.setModal(true);
+			dialog.setVisible(true);
+		}
+	}
+
+	private RequirementsDialog(String title, Requirements dialogsReqs, Frame parent) {
+		super(parent, title);
 
 		if (parent == null)
 			throw new NullPointerException("The parent frame of the dialog cannot be null"); //$NON-NLS-1$
@@ -99,19 +123,19 @@ public final class RequirementsDialog extends JDialog {
 
 		// --- options panel (middle) ---
 		optionsPanel = new JPanel(new GridLayout(reqs.size(), 1, 0, 15));
-		boolean allGraphics = true;
 		for (AbstractRequirement req : reqs) {
 			AbstractRequirementGraphic<?> graphic = req.constructAndGetGraphic();
 			map.put(req, graphic);
 			optionsPanel.add(graphic);
-			allGraphics &= req.hasGraphic();
+			allReqsHaveGraphics &= req.hasGraphic();
+			runtimeGraphicError |= req.graphicError();
 		}
 
-		if (!allGraphics) {
-			sb.setLabelText(RequirementStrings.MESSAGE, MessageType.FAILURE,
-			        Languages.getString("RequirementsDialog.3")); //$NON-NLS-1$
+		if (!allReqsHaveGraphics | runtimeGraphicError) {
 			okButton.setEnabled(false);
 			resetButton.setEnabled(false);
+			sb.setLabelText(RequirementStrings.MESSAGE, MessageType.FAILURE,
+					Languages.getString("RequirementsDialog.3")); //$NON-NLS-1$
 		}
 
 		// --- scroll pane (for options panel) ---
@@ -139,7 +163,7 @@ public final class RequirementsDialog extends JDialog {
 		setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		pack();
 		setSize(new Dimension(Math.min(getWidth() + 30, parent.getWidth()),
-		        Math.min(getHeight(), parent.getHeight())));
+				Math.min(getHeight(), parent.getHeight())));
 		setLocationRelativeTo(parent);
 	}
 
@@ -210,15 +234,15 @@ public final class RequirementsDialog extends JDialog {
 		resetButton.addActionListener(pressReset);
 
 		getRootPane().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
-		        .put(KeyStroke.getKeyStroke("ENTER"), "pressOK"); //$NON-NLS-1$ //$NON-NLS-2$
+		.put(KeyStroke.getKeyStroke("ENTER"), "pressOK"); //$NON-NLS-1$ //$NON-NLS-2$
 		getRootPane().getActionMap().put("pressOK", pressOK); //$NON-NLS-1$
 
 		getRootPane().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
-		        .put(KeyStroke.getKeyStroke("ESCAPE"), "pressCancel"); //$NON-NLS-1$ //$NON-NLS-2$
+		.put(KeyStroke.getKeyStroke("ESCAPE"), "pressCancel"); //$NON-NLS-1$ //$NON-NLS-2$
 		getRootPane().getActionMap().put("pressCancel", pressCancel); //$NON-NLS-1$
 
 		getRootPane().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
-		        .put(KeyStroke.getKeyStroke("control R"), "pressReset"); //$NON-NLS-1$ //$NON-NLS-2$
+		.put(KeyStroke.getKeyStroke("control R"), "pressReset"); //$NON-NLS-1$ //$NON-NLS-2$
 		getRootPane().getActionMap().put("pressReset", pressReset); //$NON-NLS-1$
 
 

@@ -78,7 +78,17 @@ public abstract class AbstractRequirement implements Serializable, Cloneable {
 	 * that this Requirement supports a Graphic. This variable can only be expected
 	 * to have the correct value if a Graphic has previously been constructed.
 	 */
-	protected transient boolean hasGraphic;
+	private transient boolean hasGraphic;
+
+	/**
+	 * DOC
+	 * <p>
+	 * {@code true} if and only if the Graphic is a {@code NullGraphic} and
+	 * additionally the presence of the {@code NullGraphic} is the result of a
+	 * programming error. This variable can only be expected to have the correct
+	 * value if a Graphic has previously been constructed.
+	 */
+	private transient boolean graphicError;
 
 	/**
 	 * Constructs this Requirement with the given {@code key}.
@@ -143,6 +153,17 @@ public abstract class AbstractRequirement implements Serializable, Cloneable {
 	}
 
 	/**
+	 * DOC
+	 * <p>
+	 * Returns {@link #graphicError}.
+	 *
+	 * @return true or false
+	 */
+	public final boolean graphicError() {
+		return graphicError;
+	}
+
+	/**
 	 * Returns the Graphic for this Requirement. {@link #hasGraphic} is set to
 	 * {@code true} and the subclass-specific creation of the Graphic
 	 * ({@link #constructGraphicOfSubclass()}) may set it to {@code false} if a
@@ -152,6 +173,7 @@ public abstract class AbstractRequirement implements Serializable, Cloneable {
 	 */
 	protected final AbstractRequirementGraphic<?> constructGraphic() {
 		hasGraphic = true;
+		graphicError = false;
 		return constructGraphicOfSubclass();
 	}
 
@@ -165,15 +187,20 @@ public abstract class AbstractRequirement implements Serializable, Cloneable {
 	protected abstract AbstractRequirementGraphic<?> constructGraphicOfSubclass();
 
 	/**
+	 * DOC
+	 * <p>
 	 * Returns a {@code NullGraphic}.
 	 *
 	 * @param cause the cause for the NullGrahpic
+	 * @param error {@code true} if the cause for the NullGraphic is the result of a
+	 *              programming error, {@code false} otherwise.
 	 *
 	 * @return the NullGraphic
 	 */
-	protected final AbstractRequirementGraphic<?> constructNullGraphic(String cause) {
+	protected final AbstractRequirementGraphic<?> constructNullGraphic(String cause, boolean error) {
 		hasGraphic = false;
-		return new NullRequirementGraphic(this, cause);
+		graphicError = error;
+		return new NullRequirementGraphic(this, cause, error);
 	}
 
 	/**
@@ -307,12 +334,12 @@ public abstract class AbstractRequirement implements Serializable, Cloneable {
 	@Override
 	public final String toString() {
 		final StringBuilder sb = new StringBuilder(
-		        String.format(
-		                "%s: %s%n\tDefault:   %s%n\tValue:     %s%n\tFulfilled: %s%n\tFinalised: %s%n", //$NON-NLS-1$
-		                this.getClass().getSimpleName(),
-		                key, defaultValue, value,
-		                fulfilled() ? RequirementStrings.YES : RequirementStrings.NO,
-		                finalised() ? RequirementStrings.YES : RequirementStrings.NO));
+				String.format(
+						"%s: %s%n\tDefault:   %s%n\tValue:     %s%n\tFulfilled: %s%n\tFinalised: %s%n", //$NON-NLS-1$
+						this.getClass().getSimpleName(),
+						key, defaultValue, value,
+						fulfilled() ? RequirementStrings.YES : RequirementStrings.NO,
+								finalised() ? RequirementStrings.YES : RequirementStrings.NO));
 		return sb.toString();
 	}
 }
