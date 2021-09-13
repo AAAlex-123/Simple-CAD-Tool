@@ -24,8 +24,7 @@ public final class ObjectRequirement extends AbstractRequirement {
 
 	@Override
 	protected AbstractRequirementGraphic<?> constructGraphicOfSubclass() {
-		hasGraphic = false;
-		return constructNullGraphic(Languages.getString("ObjectRequirement.0")); //$NON-NLS-1$
+		return constructNullGraphic(Languages.getString("ObjectRequirement.0"), true); //$NON-NLS-1$
 	}
 
 	@Override
