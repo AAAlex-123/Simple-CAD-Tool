@@ -96,8 +96,7 @@ public class Languages {
 	 *
 	 * @return {@code true} the Locale was changed, {@code false} otherwise
 	 *
-	 * @throws NullPointerException if {@code frame == null}
-	 * @throws IOException          if an error occurred while writing to file
+	 * @throws IOException if an error occurred while writing to file
 	 */
 	public static boolean editAndWriteToFile(Frame frame) throws IOException {
 
@@ -135,7 +134,7 @@ public class Languages {
 		reqWrapper.add(Languages.getString("MyMenu.1"), locales); //$NON-NLS-1$
 		reqWrapper.fulfillWithDialog(frame, Languages.getString("Languages.3")); //$NON-NLS-1$
 
-		final Locale chosen  = (Locale) reqWrapper.getValue(Languages.getString("MyMenu.1")); //$NON-NLS-1$
+		final Locale chosen  = reqWrapper.getValueAs(Languages.getString("MyMenu.1"), Locale.class); //$NON-NLS-1$
 		final Locale current = Languages.currentLocale();
 
 		if ((chosen == null) || chosen.equals(current))
@@ -154,6 +153,7 @@ public class Languages {
 
 	/* Constructs a Locale from the information found in the properties */
 	private static Locale currentLocale() {
+
 		return new Locale(Languages.get(Languages.LANGUAGE_LITERAL),
 		        Languages.get(Languages.COUNTRY_LITERAL), Languages.get(Languages.VARIANT_LITERAL));
 	}
