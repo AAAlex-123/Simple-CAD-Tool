@@ -233,7 +233,8 @@ public abstract class AbstractRequirement implements Serializable, Cloneable {
 	 *
 	 * @see NullRequirementGraphic
 	 */
-	protected final AbstractRequirementGraphic<?> constructNullGraphic(String cause, boolean error) {
+	protected final AbstractRequirementGraphic<?> constructNullGraphic(String cause,
+	        boolean error) {
 		hasGraphic = false;
 		graphicError = error;
 		return new NullRequirementGraphic(this, cause, error);
