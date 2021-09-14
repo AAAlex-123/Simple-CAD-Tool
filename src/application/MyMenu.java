@@ -321,7 +321,7 @@ final class MyMenu extends JMenuBar {
 
 			final Requirements reqs = new Requirements();
 			final ComponentRequirement req  = new ComponentRequirement(CommandStrings.NAME,
-			        activeEditor.getComponents_(), Policy.ANY);
+			        activeEditor.getComponents_(), Policy.INPUT_PIN);
 			req.setCaseOfNullGraphic(false, "There are no Input Pins to activate");
 			reqs.add(req);
 			reqs.add(ACTIVE, Arrays.asList(RequirementStrings.ON, RequirementStrings.OFF));
