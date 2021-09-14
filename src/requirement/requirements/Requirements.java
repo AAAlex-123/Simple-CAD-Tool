@@ -47,6 +47,16 @@ public final class Requirements implements Iterable<AbstractRequirement>, Serial
 	}
 
 	/**
+	 * Adds a Requirement to this collection. If there already exists a Requirement
+	 * with the same key as the {@code requirement}, it is replaced.
+	 *
+	 * @param requirement the Requirement to add
+	 */
+	public void add(AbstractRequirement requirement) {
+		requirements.put(requirement.key(), requirement);
+	}
+
+	/**
 	 * Constructs and {@code adds} a general-purpose Requirement to this collection
 	 * as specified by the {@link #add(AbstractRequirement)} method.
 	 *
@@ -102,17 +112,8 @@ public final class Requirements implements Iterable<AbstractRequirement>, Serial
 	}
 
 	/**
-	 * Adds a Requirement to this collection. If there already exists a Requirement
-	 * with the same key as the {@code requirement}, it is replaced.
-	 *
-	 * @param requirement the Requirement to add
-	 */
-	public void add(AbstractRequirement requirement) {
-		requirements.put(requirement.key(), requirement);
-	}
-
-	/**
-	 * Returns a Requirement from this collection.
+	 * Returns a Requirement from this collection. Any methods that access the
+	 * individual Requirements in this collection also call this method.
 	 *
 	 * @param key the key of the Requirement
 	 *
@@ -144,9 +145,9 @@ public final class Requirements implements Iterable<AbstractRequirement>, Serial
 	}
 
 	/**
-	 * Returns the value of a Requirement in the collection. The client may cast the
-	 * object returned to the desired class, which is known since the client
-	 * themselves designed how the Requirement will be used.
+	 * Returns the value of a Requirement in the collection. If the Requirement is
+	 * not an ObjectRequirement then the type of the value is known and the client
+	 * may cast the object returned to the desired class.
 	 *
 	 * @param key the key of the Requirement
 	 *
@@ -216,6 +217,8 @@ public final class Requirements implements Iterable<AbstractRequirement>, Serial
 	 *
 	 * @return the value of the Requirement that is cast to a specific class by
 	 *         applying the Function
+	 * 
+	 * @implSpec this method returns {@code castFunction.apply(getValue(key))}
 	 */
 	public <E> E getValue(String key, Function<Object, E> castFunction) {
 		return castFunction.apply(getValue(key));
