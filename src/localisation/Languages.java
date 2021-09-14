@@ -134,7 +134,7 @@ public class Languages {
 		reqWrapper.add(Languages.getString("MyMenu.1"), locales); //$NON-NLS-1$
 		reqWrapper.fulfillWithDialog(frame, Languages.getString("Languages.3")); //$NON-NLS-1$
 
-		final Locale chosen  = reqWrapper.getValueAs(Languages.getString("MyMenu.1"), Locale.class); //$NON-NLS-1$
+		final Locale chosen  = reqWrapper.getValue(Languages.getString("MyMenu.1"), Locale.class); //$NON-NLS-1$
 		final Locale current = Languages.currentLocale();
 
 		if ((chosen == null) || chosen.equals(current))
