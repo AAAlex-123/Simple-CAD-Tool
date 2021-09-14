@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import component.components.Component;
 import localisation.RequirementStrings;
@@ -165,13 +166,59 @@ public final class Requirements implements Iterable<AbstractRequirement>, Serial
 	 * @param key   the key of the Requirement whose value will be cast
 	 * @param clazz the class to cast the Requirement's value to
 	 *
-	 * @return the value of a Requirement that is cast to a specific class
+	 * @return the value of the Requirement that is cast to a specific class
 	 *
 	 * @throws ClassCastException if the class of the Requirement's value cannot be
 	 *                            case to the given class
 	 */
-	public <E> E getValueAs(String key, Class<E> clazz) {
+	public <E> E getValue(String key, Class<E> clazz) {
 		return clazz.cast(getValue(key));
+	}
+
+	/**
+	 * Applies a Function to cast the value of a Requirement to the desired class.
+	 * This method is intended to be a hook into the casting process.
+	 * <p>
+	 * Working example: <blockquote>
+	 *
+	 * <pre>
+	 * {@code private static <E> Function<Object, E> castAndLog(Class<E> clazz)} {
+	 *     return (o -> {
+	 * 		E castValue = null;
+	 * 		try {
+	 * 			castValue = clazz.cast(o);
+	 * 		} catch (ClassCastException e) {
+	 * 			System.err.printf("Cannot cast %s to %s%n", o, clazz);
+	 * 		}
+	 * 		return castValue;
+	 * 	});
+	 * }
+	 *
+	 * public static void main(String[] args) {
+	 *     Requirements reqs = new Requirements();
+	 *     reqs.add("stringValue");
+	 *     reqs.add("intValue");
+	 *
+	 *     reqs.fulfil("stringValue", "foo");
+	 *     reqs.fulfil("intValue", 5);
+	 *
+	 *     Integer intToInt = reqs.getValueAs("intValue", castAndLog(Integer.class));
+	 *     String intToString = reqs.getValueAs("intValue", castAndLog(String.class));
+	 *     Integer stringToInt = reqs.getValueAs("stringValue", castAndLog(Integer.class));
+	 * }
+	 * </pre>
+	 *
+	 * </blockquote>
+	 *
+	 * @param <E>          the type of the returned object
+	 * @param key          the key of the Requirement whose value will be cast
+	 * @param castFunction the Function responsible for the casting
+	 *
+	 * @return the value of the Requirement that is cast to a specific class by
+	 *         applying the Function
+	 */
+	public <E> E getValue(String key, Function<Object, E> castFunction) {
+		return castFunction.apply(getValue(key));
 	}
 
 	/**
