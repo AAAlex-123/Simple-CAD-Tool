@@ -53,7 +53,7 @@ class DeleteCommand extends Command {
 	@Override
 	public void execute() throws MissingComponentException {
 		associatedComponent = context
-				.getComponent_((String) requirements.getValue(CommandStrings.NAME));
+		        .getComponent_(requirements.getValue(CommandStrings.NAME, String.class));
 
 		ComponentFactory.destroyComponent(associatedComponent);
 		context.removeComponent(associatedComponent);
