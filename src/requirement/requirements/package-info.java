@@ -1,8 +1,7 @@
 /**
- * Declares different types of
- * {@link requirement.requirements.AbstractRequirement Requirements} as well as
- * other utility types.
+ * Defines the {@link requirement.requirements.AbstractRequirement Requirement}
+ * hierarchy as well as other utility types to aid working with Requirements.
  *
- * @author alexm
+ * @author Alex Mandelias
  */
 package requirement.requirements;
