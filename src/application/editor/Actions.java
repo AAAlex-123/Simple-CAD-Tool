@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -231,8 +232,9 @@ public enum Actions implements HasRequirements {
 		@Override
 		public void constructRequirements() {
 			reqs.add(EditorStrings.FILENAME, new ArrayList<String>());
-			reqs.add(EditorStrings.FILETYPE, StringType.FILETYPE);
-			reqs.add(EditorStrings.GATENAME, StringType.ANY);
+			reqs.add(EditorStrings.FILETYPE,
+			        Arrays.asList(EditorStrings.CIRCUIT, EditorStrings.COMPONENT));
+			reqs.add(EditorStrings.GATENAME, StringType.NON_EMPTY);
 		}
 
 		@SuppressWarnings("unchecked") //yes this is safe
@@ -261,7 +263,10 @@ public enum Actions implements HasRequirements {
 				throw new UncheckedIOException(e);
 			}
 
-			((ListRequirement<String>) reqs.get(EditorStrings.FILENAME)).setOptions(files);
+			ListRequirement<String> filenameReq = (ListRequirement<String>) reqs
+			        .get(EditorStrings.FILENAME);
+			filenameReq.setOptions(files);
+			filenameReq.setCaseOfNullGraphic(false, "No files found in directory %s", dir);
 		}
 	},
 
