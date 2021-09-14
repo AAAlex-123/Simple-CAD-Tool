@@ -110,15 +110,15 @@ class CreateCommand extends Command {
 				associatedComponent = ComponentFactory.createOutputPin();
 				break;
 			case BRANCH:
-				final Component in = context
-				        .getComponent_((String) requirements.getValue(CommandStrings.IN_NAME));
-				final int inIndex = Integer
-				        .parseInt((String) requirements.getValue(CommandStrings.IN_INDEX));
+				final Class<String> str = String.class;
+				final Class<Integer> int0 = Integer.class;
 
+				final Component in = context
+				        .getComponent_(requirements.getValue(CommandStrings.IN_NAME, str));
+				final int inIndex = requirements.getValue(CommandStrings.IN_INDEX, int0);
 				final Component out = context
-				        .getComponent_((String) requirements.getValue(CommandStrings.OUT_NAME));
-				final int outIndex = Integer
-				        .parseInt((String) requirements.getValue(CommandStrings.OUT_INDEX));
+				        .getComponent_(requirements.getValue(CommandStrings.OUT_NAME, str));
+				final int outIndex = requirements.getValue(CommandStrings.OUT_INDEX, int0);
 
 				associatedComponent = ComponentFactory.connectComponents(in, inIndex, out,
 				        outIndex);
@@ -127,15 +127,15 @@ class CreateCommand extends Command {
 			case GATEOR:
 			case GATENOT:
 			case GATEXOR:
-				associatedComponent = ComponentFactory.createPrimitiveGate(componentType,
-				        Integer.parseInt((String) requirements.getValue(CommandStrings.IN_COUNT)));
+				final int inCount = requirements.getValue(CommandStrings.IN_COUNT, Integer.class);
+				associatedComponent = ComponentFactory.createPrimitiveGate(componentType, inCount);
 				break;
 			case GATE:
 			default:
 				break;
 			}
 
-			associatedComponent.setID((String) requirements.getValue(CommandStrings.NAME));
+			associatedComponent.setID(requirements.getValue(CommandStrings.NAME, String.class));
 			context.addComponent(associatedComponent);
 		}
 
