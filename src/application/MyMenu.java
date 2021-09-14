@@ -328,7 +328,7 @@ final class MyMenu extends JMenuBar {
 			reqs.fulfillWithDialog(context.getFrame(), Languages.getString("MyMenu.34")); //$NON-NLS-1$
 
 			if (reqs.fulfilled()) {
-				final String id = (String) reqs.getValue(CommandStrings.NAME);
+				final String id = reqs.getValue(CommandStrings.NAME, String.class);
 				// because of the ComponentRequirement this component for sure exists
 				final Component component = activeEditor.getComponentOrNull(id);
 
@@ -355,7 +355,7 @@ final class MyMenu extends JMenuBar {
 			reqs.fulfillWithDialog(context.getFrame(), Languages.getString("MyMenu.41")); //$NON-NLS-1$
 
 			if (reqs.fulfilled()) {
-				final String id = (String) reqs.getValue(CommandStrings.NAME);
+				final String id = reqs.getValue(CommandStrings.NAME, String.class);
 				// because of the ComponentRequirement this component for sure exists
 				final Component component = activeEditor.getComponentOrNull(id);
 
