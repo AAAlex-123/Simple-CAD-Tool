@@ -13,8 +13,10 @@ import java.util.Map;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.ActionMap;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.InputMap;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -34,29 +36,32 @@ import requirement.requirements.AbstractRequirement;
 import requirement.requirements.Requirements;
 
 /**
- * A dialog with which the user fulfils a {@link Requirements collection} of
- * {@code Requirements}. After construction, the call {@code setVisible(true)}
- * shows the dialog and the user can use it in order to fulfil the individual
- * Requirements. {@link requirement.graphics.AbstractRequirementGraphic
- * Graphics} are used in order to display every Requirement in the collection of
- * Requirements and to uniformly call the necessary methods on them. If a
- * Requirement doesn't support a Graphic, the user cannot use the Dialog to
- * fulfil the Requirements and may only press {@code CANCEL} or {@code X} to
- * close it.
+ * A dialog with which the user fulfils a {@link Requirements} object. Calling
+ * the {@link #showDialog(String, Requirements, Frame)} method constructs and
+ * shows the dialog with which the user fulfils the individual Requirements in
+ * the collection. {@code Graphic} objects are used internally to display the
+ * Requirements and to enable uniform operation on them. If not all Requirements
+ * have a Graphic, the user may only press {@code CANCEL} or {@code X} to close
+ * the dialog. Additionally, if at least one Requirement has a graphic error, a
+ * pop-up is shown informing the user about what action to take.
  * <p>
- * The dialog has a few buttons that can be used with keyboard shortcuts:
+ * The dialog has some buttons that can be used with keyboard shortcuts:
  * <ul>
- * <li><b>OK {@code (ENTER)}:</b> Attempts to fulfil the {@code Requirements}
- * with the values provided. If a {@code Requirement} cannot be fulfilled (the
- * {@code value} doesn't match its {@code regex}) the dialog doesn't close and
- * instead prompts the user to provide a correct value.
- * <li><b>CANCEL {@code (ESCAPE)}:</b> Closes the dialog without altering the
- * {@code Requirements}
- * <li><b>RESET {@code (CTRL+R)}:</b> Resets the text areas to the default value
- * of the corresponding {@code Requirements}.
+ * <li><b>OK {@code (ENTER)}:</b> Attempts to fulfil every {@code Requirement}
+ * with the values provided. If at least one cannot be fulfilled, the dialog
+ * doesn't close and instead prompts the user to provide a correct value.</li>
+ * <li><b>CANCEL {@code (ESCAPE)}:</b> Closes the dialog without performing any
+ * operations on the {@code Requirements}.</li>
+ * <li><b>RESET {@code (CTRL+R)}:</b> Resets every Requirement.</li>
  * </ul>
  *
- * @author alexm
+ * @author Alex Mandelias
+ *
+ * @see AbstractRequirement
+ * @see AbstractRequirement#hasGraphic()
+ * @see AbstractRequirement#graphicError()
+ * @see AbstractRequirementGraphic
+ * @see NullRequirementGraphic
  */
 public final class RequirementsDialog extends JDialog {
 
@@ -64,35 +69,39 @@ public final class RequirementsDialog extends JDialog {
 	private final JButton   okButton, cancelButton, resetButton;
 	private final StatusBar sb;
 
-	private final Requirements reqs;
+	private final Requirements requirements;
+
 	private final Map<AbstractRequirement, AbstractRequirementGraphic<?>> map;
 
 	private boolean allReqsHaveGraphics = true;
 	private boolean runtimeGraphicError = false;
 
 	/**
-	 * Constructs the dialog.
-	 * <p>
-	 * DOC: enrich
+	 * Constructs and shows a dialog. If at least one Requirement has a graphic
+	 * error, a pop-up is shown to inform the user about what action to take.
 	 *
-	 * @param title       the window's title
+	 * @param title       the dialog's title
 	 * @param dialogsReqs the Requirements that the dialog will fulfil
-	 * @param parent      the parent frame of the dialog, that is used to position
+	 * @param parent      the parent frame of the dialog that is used to position
 	 *                    and resize it
 	 *
-	 * @throws NullPointerException if {@code parent == null}
+	 * @see AbstractRequirement#graphicError()
 	 */
 	public static void showDialog(String title, Requirements dialogsReqs, Frame parent) {
 
-		RequirementsDialog dialog = new RequirementsDialog(title, dialogsReqs, parent);
+		final RequirementsDialog dialog = new RequirementsDialog(title, dialogsReqs, parent);
 
 		if (dialog.runtimeGraphicError) {
 			dialog.setModal(false);
 			dialog.setVisible(true);
 
-			final String msg = "An error occured while displaying the dialog.<br>Please take a screenshot of the dialog and pass it to the developer";
-			JOptionPane.showMessageDialog(dialog, String.format("<html><center>%s</center></html>", msg),
-			        "Error while displaying dialog", JOptionPane.ERROR_MESSAGE);
+			final String messageString = Languages.getString("RequirementsDialog.0"); //$NON-NLS-1$
+			final String titleString   = Languages.getString("RequirementsDialog.2"); //$NON-NLS-1$
+
+			JOptionPane.showMessageDialog(dialog,
+			        String.format("<html><center>%s</center></html>", messageString), //$NON-NLS-1$
+			        titleString, JOptionPane.ERROR_MESSAGE);
+
 			dialog.setModal(true);
 		} else {
 			dialog.setModal(true);
@@ -103,10 +112,9 @@ public final class RequirementsDialog extends JDialog {
 	private RequirementsDialog(String title, Requirements dialogsReqs, Frame parent) {
 		super(parent, title);
 
-		if (parent == null)
-			throw new NullPointerException("The parent frame of the dialog cannot be null"); //$NON-NLS-1$
+		// TODO: fix the focus spaghetti
 
-		reqs = dialogsReqs;
+		requirements = dialogsReqs;
 		map = new HashMap<>();
 
 		setLayout(new BorderLayout());
@@ -114,28 +122,28 @@ public final class RequirementsDialog extends JDialog {
 
 		// --- buttons panel (bottom) ---
 		buttonsPanel = new JPanel(new FlowLayout());
-		buttonsPanel.add(okButton = new JButton(Languages.getString("RequirementsDialog.0"))); //$NON-NLS-1$
-		buttonsPanel.add(cancelButton = new JButton(Languages.getString("RequirementsDialog.1"))); //$NON-NLS-1$
-		buttonsPanel.add(resetButton = new JButton(Languages.getString("RequirementsDialog.2"))); //$NON-NLS-1$
+		buttonsPanel.add(okButton = new JButton(Languages.getString("RequirementsDialog.3"))); //$NON-NLS-1$
+		buttonsPanel.add(cancelButton = new JButton(Languages.getString("RequirementsDialog.4"))); //$NON-NLS-1$
+		buttonsPanel.add(resetButton = new JButton(Languages.getString("RequirementsDialog.5"))); //$NON-NLS-1$
 
 		sb = new StatusBar();
 		sb.addLabel(RequirementStrings.MESSAGE);
 
 		// --- options panel (middle) ---
-		optionsPanel = new JPanel(new GridLayout(reqs.size(), 1, 0, 15));
-		for (AbstractRequirement req : reqs) {
-			AbstractRequirementGraphic<?> graphic = req.constructAndGetGraphic();
+		optionsPanel = new JPanel(new GridLayout(requirements.size(), 1, 0, 15));
+		Utility.foreach(requirements, req -> {
+			final AbstractRequirementGraphic<?> graphic = req.constructAndGetGraphic();
 			map.put(req, graphic);
 			optionsPanel.add(graphic);
 			allReqsHaveGraphics &= req.hasGraphic();
 			runtimeGraphicError |= req.graphicError();
-		}
+		});
 
-		if (!allReqsHaveGraphics | runtimeGraphicError) {
+		if (!allReqsHaveGraphics || runtimeGraphicError) {
 			okButton.setEnabled(false);
 			resetButton.setEnabled(false);
 			sb.setLabelText(RequirementStrings.MESSAGE, MessageType.FAILURE,
-					Languages.getString("RequirementsDialog.3")); //$NON-NLS-1$
+			        Languages.getString("RequirementsDialog.6")); //$NON-NLS-1$
 		}
 
 		// --- scroll pane (for options panel) ---
@@ -162,15 +170,18 @@ public final class RequirementsDialog extends JDialog {
 
 		setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		pack();
-		setSize(new Dimension(Math.min(getWidth() + 30, parent.getWidth()),
-				Math.min(getHeight(), parent.getHeight())));
 		setLocationRelativeTo(parent);
+
+		// limit size to fit within parent frame, if it exists
+		if (parent != null)
+			setSize(new Dimension(Math.min(getWidth() + 30, parent.getWidth()),
+			        Math.min(getHeight(), parent.getHeight())));
 	}
 
 	/**
-	 * Attempts to fulfil the {@code Requirements} in this collection with the
-	 * values the user provided. Returns whether or not every {@code Requirement} is
-	 * fulfilled.
+	 * Attempts to fulfil every non-finalised {@code Requirement} in this dialog's
+	 * collection with the values the user provided. Returns whether or not every
+	 * {@code Requirement} is fulfilled.
 	 *
 	 * @return {@code true} if every Requirement is fulfilled, {@code false}
 	 *         otherwise
@@ -178,28 +189,28 @@ public final class RequirementsDialog extends JDialog {
 	 * @see AbstractRequirement#fulfilled()
 	 */
 	private boolean validateInput() {
-		Utility.foreach(reqs, r -> {
-			final AbstractRequirementGraphic<?> g = map.get(r);
+		Utility.foreach(requirements, req -> {
+			final AbstractRequirementGraphic<?> g = map.get(req);
 
-			if (!r.finalised())
+			if (!req.finalised())
 				g.fulfilRequirement();
 
-			if (!r.fulfilled())
+			if (!req.fulfilled())
 				g.onNotFulfilled();
 		});
 
-		final boolean fulfilled = reqs.fulfilled();
+		final boolean fulfilled = requirements.fulfilled();
 
 		if (!fulfilled) {
-			sb.setLabelText("message", Languages.getString("RequirementsDialog.5")); //$NON-NLS-1$ //$NON-NLS-2$
+			sb.setLabelText(RequirementStrings.MESSAGE,
+			        Languages.getString("RequirementsDialog.7")); //$NON-NLS-1$
 
 			// give focus to the first non-fulfilled Requirement
-			for (final AbstractRequirement req : reqs) {
+			for (final AbstractRequirement req : requirements)
 				if (!req.fulfilled()) {
 					map.get(req).requestFocus();
 					break;
 				}
-			}
 		}
 
 		return fulfilled;
@@ -225,7 +236,7 @@ public final class RequirementsDialog extends JDialog {
 		final Action pressReset = new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				Utility.foreach(reqs, AbstractRequirement::reset);
+				Utility.foreach(requirements, AbstractRequirement::reset);
 			}
 		};
 
@@ -233,18 +244,18 @@ public final class RequirementsDialog extends JDialog {
 		cancelButton.addActionListener(pressCancel);
 		resetButton.addActionListener(pressReset);
 
-		getRootPane().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
-		.put(KeyStroke.getKeyStroke("ENTER"), "pressOK"); //$NON-NLS-1$ //$NON-NLS-2$
-		getRootPane().getActionMap().put("pressOK", pressOK); //$NON-NLS-1$
+		final InputMap  inputMap  = getRootPane()
+		        .getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+		final ActionMap actionMap = getRootPane().getActionMap();
 
-		getRootPane().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
-		.put(KeyStroke.getKeyStroke("ESCAPE"), "pressCancel"); //$NON-NLS-1$ //$NON-NLS-2$
-		getRootPane().getActionMap().put("pressCancel", pressCancel); //$NON-NLS-1$
+		inputMap.put(KeyStroke.getKeyStroke("ENTER"), "pressOK"); //$NON-NLS-1$ //$NON-NLS-2$
+		actionMap.put("pressOK", pressOK); //$NON-NLS-1$
 
-		getRootPane().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
-		.put(KeyStroke.getKeyStroke("control R"), "pressReset"); //$NON-NLS-1$ //$NON-NLS-2$
-		getRootPane().getActionMap().put("pressReset", pressReset); //$NON-NLS-1$
+		inputMap.put(KeyStroke.getKeyStroke("ESCAPE"), "pressCancel"); //$NON-NLS-1$ //$NON-NLS-2$
+		actionMap.put("pressCancel", pressCancel); //$NON-NLS-1$
 
+		inputMap.put(KeyStroke.getKeyStroke("control R"), "pressReset"); //$NON-NLS-1$ //$NON-NLS-2$
+		actionMap.put("pressReset", pressReset); //$NON-NLS-1$
 
 		addWindowListener(new WindowAdapter() {
 			@Override
@@ -257,12 +268,11 @@ public final class RequirementsDialog extends JDialog {
 			@Override
 			public void windowGainedFocus(WindowEvent e) {
 				// give focus to the first non-fulfilled Requirement...
-				for (final AbstractRequirement r : reqs) {
+				for (final AbstractRequirement r : requirements)
 					if (!r.fulfilled()) {
 						r.getCachedGraphic().requestFocus();
 						return;
 					}
-				}
 
 				// ... or the ok button if none exist
 				okButton.requestFocus();
