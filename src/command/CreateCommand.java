@@ -53,8 +53,8 @@ class CreateCommand extends Command {
 			        new ArrayList<>(), Policy.INPUT);
 			final ComponentRequirement outName = new ComponentRequirement(CommandStrings.OUT_NAME,
 			        new ArrayList<>(), Policy.OUTPUT);
-			inName.setCaseOfNullGraphic(false, "There are no Components to act as Input");
-			outName.setCaseOfNullGraphic(false, "There are no Components to act as Output");
+			inName.setCaseOfNullGraphic(false, Languages.getString("CreateCommand.2")); //$NON-NLS-1$
+			outName.setCaseOfNullGraphic(false, Languages.getString("CreateCommand.3")); //$NON-NLS-1$
 
 			requirements.add(inName);
 			requirements.add(CommandStrings.IN_INDEX, StringType.NON_NEG_INTEGER);
