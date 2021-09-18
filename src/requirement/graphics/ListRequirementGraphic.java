@@ -3,6 +3,7 @@ package requirement.graphics;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.util.NoSuchElementException;
 import java.util.Vector;
 
 import javax.swing.DefaultComboBoxModel;
@@ -46,30 +47,37 @@ public class ListRequirementGraphic<T> extends AbstractRequirementGraphic<ListRe
 		optionBox.setMaximumSize(new Dimension(200, 30));
 		AutoCompletion.enable(optionBox);
 
-		add(new JLabel(String.format(Languages.getString("ListRequirementGraphic.0"), req.key()))); //$NON-NLS-1$
+		add(new JLabel(String.format(Languages.getString("ListRequirementGraphic.0"), requirement.key()))); //$NON-NLS-1$
 		add(optionBox);
 	}
 
 	@Override
 	public void update() {
-		final Vector<T> newOptions = new Vector<>(req.getOptions());
+		final Vector<T> newOptions = new Vector<>(requirement.getOptions());
 
-		if (!newOptions.equals(currentOptions))
+		if (!newOptions.equals(currentOptions)) {
+			currentOptions = newOptions;
+			if (currentOptions.isEmpty())
+				throw new NoSuchElementException(
+				        String.format("No options for ListRequirement with key '%s'", //$NON-NLS-1$
+				                requirement.key()));
+
 			optionBox.setModel(new DefaultComboBoxModel<>(currentOptions = newOptions));
+		}
 
-		if (req.finalised())
+		if (requirement.finalised())
 			optionBox.setEnabled(false);
 	}
 
 	@Override
 	public void reset() {
-		optionBox.setSelectedItem(req.defaultValue());
+		optionBox.setSelectedItem(requirement.defaultValue());
 		border.setColor(Color.BLUE);
 	}
 
 	@Override
 	public void fulfilRequirement() {
-		req.fulfil(optionBox.getSelectedItem());
+		requirement.fulfil(optionBox.getSelectedItem());
 		border.setColor(Color.BLUE);
 	}
 
