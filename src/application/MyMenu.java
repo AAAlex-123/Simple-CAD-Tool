@@ -322,7 +322,7 @@ final class MyMenu extends JMenuBar {
 			final Requirements reqs = new Requirements();
 			final ComponentRequirement req  = new ComponentRequirement(CommandStrings.NAME,
 			        activeEditor.getComponents_(), Policy.INPUT_PIN);
-			req.setCaseOfNullGraphic(false, "There are no Input Pins to activate");
+			req.setCaseOfNullGraphic(false, Languages.getString("MyMenu.2")); //$NON-NLS-1$
 			reqs.add(req);
 			reqs.add(ACTIVE, Arrays.asList(RequirementStrings.ON, RequirementStrings.OFF));
 			reqs.fulfillWithDialog(context.getFrame(), Languages.getString("MyMenu.34")); //$NON-NLS-1$
@@ -350,7 +350,7 @@ final class MyMenu extends JMenuBar {
 			final Requirements reqs = new Requirements();
 			final ComponentRequirement req  = new ComponentRequirement(CommandStrings.NAME,
 			        activeEditor.getComponents_(), Policy.NONBRANCH);
-			req.setCaseOfNullGraphic(false, "There are no Components to focus");
+			req.setCaseOfNullGraphic(false, Languages.getString("MyMenu.3")); //$NON-NLS-1$
 			reqs.add(req);
 			reqs.fulfillWithDialog(context.getFrame(), Languages.getString("MyMenu.41")); //$NON-NLS-1$
 
