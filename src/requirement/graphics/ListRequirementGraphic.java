@@ -47,7 +47,8 @@ public class ListRequirementGraphic<T> extends AbstractRequirementGraphic<ListRe
 		optionBox.setMaximumSize(new Dimension(200, 30));
 		AutoCompletion.enable(optionBox);
 
-		add(new JLabel(String.format(Languages.getString("ListRequirementGraphic.0"), requirement.key()))); //$NON-NLS-1$
+		final String promptString = Languages.getString("ListRequirementGraphic.0"); //$NON-NLS-1$
+		add(new JLabel(String.format(promptString, requirement.key())));
 		add(optionBox);
 	}
 
