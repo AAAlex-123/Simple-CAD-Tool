@@ -9,6 +9,7 @@ import application.editor.MissingComponentException;
 import component.components.Component;
 import component.components.ComponentFactory;
 import localisation.CommandStrings;
+import localisation.Languages;
 import myUtil.Utility;
 import requirement.requirements.ComponentRequirement;
 import requirement.requirements.ComponentRequirement.Policy;
@@ -39,7 +40,7 @@ class DeleteCommand extends Command {
 	public void constructRequirements() {
 		final ComponentRequirement req = new ComponentRequirement(CommandStrings.NAME,
 		        new ArrayList<>(), Policy.ANY);
-		req.setCaseOfNullGraphic(false, "There are no Components to delete");
+		req.setCaseOfNullGraphic(false, Languages.getString("DeleteCommand.0")); //$NON-NLS-1$
 		requirements.add(req);
 	}
 
