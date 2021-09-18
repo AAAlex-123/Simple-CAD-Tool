@@ -266,7 +266,7 @@ public enum Actions implements HasRequirements {
 			ListRequirement<String> filenameReq = (ListRequirement<String>) reqs
 			        .get(EditorStrings.FILENAME);
 			filenameReq.setOptions(files);
-			filenameReq.setCaseOfNullGraphic(false, "No files found in directory %s", dir);
+			filenameReq.setCaseOfNullGraphic(false, Languages.getString("Actions.0"), dir); //$NON-NLS-1$
 		}
 	},
 
