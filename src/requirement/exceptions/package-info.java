@@ -1,10 +1,7 @@
 /**
- * Defines a set of exceptions regarding the
- * {@link requirement.requirements.AbstractRequirement Requirement} and the
- * {@link requirement.graphics.AbstractRequirementGraphic Graphic} class
- * hierarchies located in the {@link requirement.requirements} and
- * {@link requirement.graphics} packages.
+ * Defines Exceptions regarding the {@link requirement.requirements} and
+ * {@link requirement.graphics} packages and the class hierarchies in them.
  *
- * @author alexm
+ * @author Alex Mandelias
  */
 package requirement.exceptions;
