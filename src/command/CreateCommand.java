@@ -4,6 +4,7 @@ import static component.ComponentType.BRANCH;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 import application.editor.Editor;
 import application.editor.MissingComponentException;
@@ -48,9 +49,16 @@ class CreateCommand extends Command {
 	public void constructRequirements() {
 		switch (componentType) {
 		case BRANCH:
-			requirements.add(CommandStrings.IN_NAME, new ArrayList<>(), Policy.INPUT);
+			final ComponentRequirement inName = new ComponentRequirement(CommandStrings.IN_NAME,
+			        new ArrayList<>(), Policy.INPUT);
+			final ComponentRequirement outName = new ComponentRequirement(CommandStrings.OUT_NAME,
+			        new ArrayList<>(), Policy.OUTPUT);
+			inName.setCaseOfNullGraphic(false, Languages.getString("CreateCommand.2")); //$NON-NLS-1$
+			outName.setCaseOfNullGraphic(false, Languages.getString("CreateCommand.3")); //$NON-NLS-1$
+
+			requirements.add(inName);
 			requirements.add(CommandStrings.IN_INDEX, StringType.NON_NEG_INTEGER);
-			requirements.add(CommandStrings.OUT_NAME, new ArrayList<>(), Policy.OUTPUT);
+			requirements.add(outName);
 			requirements.add(CommandStrings.OUT_INDEX, StringType.NON_NEG_INTEGER);
 			break;
 		case GATE:
@@ -95,6 +103,9 @@ class CreateCommand extends Command {
 			context.addComponent(associatedComponent);
 			ComponentFactory.restoreDeletedComponent(associatedComponent);
 		} else {
+
+			final Function<Object, Integer> toInt = (o -> Integer.parseInt(o.toString()));
+
 			switch (componentType) {
 			case INPUT_PIN:
 				associatedComponent = ComponentFactory.createInputPin();
@@ -103,15 +114,15 @@ class CreateCommand extends Command {
 				associatedComponent = ComponentFactory.createOutputPin();
 				break;
 			case BRANCH:
-				final Component in = context
-				        .getComponent_((String) requirements.getValue(CommandStrings.IN_NAME));
-				final int inIndex = Integer
-				        .parseInt((String) requirements.getValue(CommandStrings.IN_INDEX));
 
+				final Class<String> str = String.class;
+
+				final Component in = context
+				        .getComponent_(requirements.getValue(CommandStrings.IN_NAME, str));
+				final int inIndex = requirements.getValue(CommandStrings.IN_INDEX, toInt);
 				final Component out = context
-				        .getComponent_((String) requirements.getValue(CommandStrings.OUT_NAME));
-				final int outIndex = Integer
-				        .parseInt((String) requirements.getValue(CommandStrings.OUT_INDEX));
+				        .getComponent_(requirements.getValue(CommandStrings.OUT_NAME, str));
+				final int outIndex = requirements.getValue(CommandStrings.OUT_INDEX, toInt);
 
 				associatedComponent = ComponentFactory.connectComponents(in, inIndex, out,
 				        outIndex);
@@ -120,15 +131,15 @@ class CreateCommand extends Command {
 			case GATEOR:
 			case GATENOT:
 			case GATEXOR:
-				associatedComponent = ComponentFactory.createPrimitiveGate(componentType,
-				        Integer.parseInt((String) requirements.getValue(CommandStrings.IN_COUNT)));
+				final int inCount = requirements.getValue(CommandStrings.IN_COUNT, toInt);
+				associatedComponent = ComponentFactory.createPrimitiveGate(componentType, inCount);
 				break;
 			case GATE:
 			default:
 				break;
 			}
 
-			associatedComponent.setID((String) requirements.getValue(CommandStrings.NAME));
+			associatedComponent.setID(requirements.getValue(CommandStrings.NAME, String.class));
 			context.addComponent(associatedComponent);
 		}
 

@@ -8,21 +8,20 @@ import component.ComponentType;
 import component.components.Component;
 
 /**
- * A {@link ListRequirement} that handles {@link component.components.Component
- * Components}, utilises their {@code IDs} and can perform filtering using a
- * {@link Policy} taking into account the state and purpose of different
- * {@code Components}.
+ * A {@link ListRequirement} for the {@link Component} class, utilises their
+ * {@code IDs} and can perform filtering using a {@link Policy} taking into
+ * account the state and purpose of different {@code Components}.
  *
  * @author dimits
  */
-public class ComponentRequirement extends ListRequirement<String> {
+public final class ComponentRequirement extends ListRequirement<String> {
 
 	private final Policy policy;
 
 	/**
 	 * Constructs a ComponentRequirement with a given {@code Policy}.
 	 *
-	 * @param key    the key
+	 * @param key    the new Requirement's key
 	 * @param policy the Policy used to filter out unnecessary components
 	 */
 	public ComponentRequirement(String key, Policy policy) {
@@ -33,7 +32,7 @@ public class ComponentRequirement extends ListRequirement<String> {
 	 * Constructs a ComponentRequirement that will filter a
 	 * {@code list of components} according to the given {@code Policy}.
 	 *
-	 * @param key     the key
+	 * @param key     the new Requirement's key
 	 * @param options the list with the components
 	 * @param policy  the Policy used to filter out unnecessary components
 	 */
@@ -72,6 +71,9 @@ public class ComponentRequirement extends ListRequirement<String> {
 			if ((policy == Policy.OUTPUT) && (comp.type() == ComponentType.INPUT_PIN))
 				continue; //don't suggest connecting an input pin as output
 
+			if ((policy == Policy.INPUT_PIN) && (comp.type() != ComponentType.INPUT_PIN))
+				continue; //don't suggest anything other than input pin for the INPUT_PIN type
+
 			if ((policy != Policy.ANY) && (comp.type() == ComponentType.BRANCH))
 				continue; //in the 2 above cases don't suggest directly connecting branches
 
@@ -90,6 +92,8 @@ public class ComponentRequirement extends ListRequirement<String> {
 	public enum Policy {
 		/** Get a list of components available for input. */
 		INPUT,
+		/** Get a list of components that are Input Pins. */
+		INPUT_PIN,
 		/** Get a list of components available for output. */
 		OUTPUT,
 		/** Get a list of all non-branch components */

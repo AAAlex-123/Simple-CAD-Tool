@@ -10,60 +10,59 @@ import requirement.requirements.StringRequirement;
 
 /**
  * Graphic for a {@link StringRequirement}. It consists of a JLabel to display
- * the key and a JTextField where the user types the value.
+ * the key and a JTextField where the user types the Requirement's value.
  *
- * @author alexm
+ * @author Alex Mandelias
  */
 public final class StringRequirementGraphic extends AbstractRequirementGraphic<StringRequirement> {
 
 	private final JLabel     label;
-	private final JTextField textArea;
+	private final JTextField textField;
 
 	/**
-	 * Constructs the Graphic using the {@code StringRequirement} associated with
-	 * it.
+	 * Constructs a Graphic using a {@code StringRequirement}.
 	 *
-	 * @param requirement the Requirement
+	 * @param requirement the Requirement that will be associated with this Graphic
 	 */
 	public StringRequirementGraphic(StringRequirement requirement) {
 		super(requirement);
 		setLayout(new GridLayout(1, 2, 15, 0));
 
-		label = new JLabel(req.key());
-		textArea = new JTextField(10);
+		label = new JLabel(requirement.key());
+		textField = new JTextField(10);
 
 		label.setHorizontalAlignment(SwingConstants.RIGHT);
-		textArea.setMaximumSize(textArea.getPreferredSize());
+		textField.setMaximumSize(textField.getPreferredSize());
 
 		add(label);
-		add(textArea);
+		add(textField);
 	}
 
 	@Override
 	public void update() {
-		if (req.finalised())
-			textArea.setEnabled(false);
+		if (requirement.finalised())
+			textField.setEnabled(false);
 	}
 
 	@Override
 	public void reset() {
-		textArea.setText((String) req.defaultValue());
+		textField.setText((String) requirement.defaultValue());
 	}
 
 	@Override
 	public void fulfilRequirement() {
-		req.fulfil(textArea.getText());
+		requirement.fulfil(textField.getText());
 	}
 
 	@Override
 	public void onNotFulfilled() {
-		textArea.setText(req.stringType.getDescription());
+		textField.setText(requirement.stringType.getDescription());
 	}
 
 	@Override
 	protected void onFocusGained() {
-		textArea.requestFocus();
-		textArea.setSelectionStart(0);
-		textArea.setSelectionEnd(textArea.getText().length());
+		textField.requestFocusInWindow();
+		textField.setSelectionStart(0);
+		textField.setSelectionEnd(textField.getText().length());
 	}
 }

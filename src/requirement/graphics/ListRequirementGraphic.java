@@ -10,6 +10,7 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 
+import localisation.Languages;
 import myUtil.MutableColorBorder;
 import requirement.requirements.ListRequirement;
 
@@ -46,36 +47,38 @@ public class ListRequirementGraphic<T> extends AbstractRequirementGraphic<ListRe
 		optionBox.setMaximumSize(new Dimension(200, 30));
 		AutoCompletion.enable(optionBox);
 
-		add(new JLabel(String.format("Choose an option for %s:", req.key())));
+		final String promptString = Languages.getString("ListRequirementGraphic.0"); //$NON-NLS-1$
+		add(new JLabel(String.format(promptString, requirement.key())));
 		add(optionBox);
 	}
 
 	@Override
 	public void update() {
-		final Vector<T> newOptions = new Vector<>(req.getOptions());
+		final Vector<T> newOptions = new Vector<>(requirement.getOptions());
 
 		if (!newOptions.equals(currentOptions)) {
 			currentOptions = newOptions;
 			if (currentOptions.isEmpty())
 				throw new NoSuchElementException(
-				        String.format("No options for ListRequirement with key '%s'", req.key()));
+				        String.format("No options for ListRequirement with key '%s'", //$NON-NLS-1$
+				                requirement.key()));
 
-			optionBox.setModel(new DefaultComboBoxModel<>(currentOptions));
+			optionBox.setModel(new DefaultComboBoxModel<>(currentOptions = newOptions));
 		}
 
-		if (req.finalised())
+		if (requirement.finalised())
 			optionBox.setEnabled(false);
 	}
 
 	@Override
 	public void reset() {
-		optionBox.setSelectedItem(req.defaultValue());
+		optionBox.setSelectedItem(requirement.defaultValue());
 		border.setColor(Color.BLUE);
 	}
 
 	@Override
 	public void fulfilRequirement() {
-		req.fulfil(optionBox.getSelectedItem());
+		requirement.fulfil(optionBox.getSelectedItem());
 		border.setColor(Color.BLUE);
 	}
 

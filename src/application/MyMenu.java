@@ -26,6 +26,7 @@ import localisation.EditorStrings;
 import localisation.Languages;
 import localisation.RequirementStrings;
 import myUtil.StringGenerator;
+import requirement.requirements.ComponentRequirement;
 import requirement.requirements.ComponentRequirement.Policy;
 import requirement.requirements.Requirements;
 
@@ -319,12 +320,15 @@ final class MyMenu extends JMenuBar {
 			final String ACTIVE = Languages.getString("MyMenu.0"); //$NON-NLS-1$
 
 			final Requirements reqs = new Requirements();
-			reqs.add(CommandStrings.NAME, activeEditor.getComponents_(), Policy.ANY);
+			final ComponentRequirement req  = new ComponentRequirement(CommandStrings.NAME,
+			        activeEditor.getComponents_(), Policy.INPUT_PIN);
+			req.setCaseOfNullGraphic(false, Languages.getString("MyMenu.2")); //$NON-NLS-1$
+			reqs.add(req);
 			reqs.add(ACTIVE, Arrays.asList(RequirementStrings.ON, RequirementStrings.OFF));
 			reqs.fulfillWithDialog(context.getFrame(), Languages.getString("MyMenu.34")); //$NON-NLS-1$
 
 			if (reqs.fulfilled()) {
-				final String id = (String) reqs.getValue(CommandStrings.NAME);
+				final String id = reqs.getValue(CommandStrings.NAME, String.class);
 				// because of the ComponentRequirement this component for sure exists
 				final Component component = activeEditor.getComponentOrNull(id);
 
@@ -344,11 +348,14 @@ final class MyMenu extends JMenuBar {
 			final Editor activeEditor = context.getActiveEditor();
 
 			final Requirements reqs = new Requirements();
-			reqs.add(CommandStrings.NAME, activeEditor.getComponents_(), Policy.NONBRANCH);
+			final ComponentRequirement req  = new ComponentRequirement(CommandStrings.NAME,
+			        activeEditor.getComponents_(), Policy.NONBRANCH);
+			req.setCaseOfNullGraphic(false, Languages.getString("MyMenu.3")); //$NON-NLS-1$
+			reqs.add(req);
 			reqs.fulfillWithDialog(context.getFrame(), Languages.getString("MyMenu.41")); //$NON-NLS-1$
 
 			if (reqs.fulfilled()) {
-				final String id = (String) reqs.getValue(CommandStrings.NAME);
+				final String id = reqs.getValue(CommandStrings.NAME, String.class);
 				// because of the ComponentRequirement this component for sure exists
 				final Component component = activeEditor.getComponentOrNull(id);
 

@@ -146,8 +146,6 @@ public abstract class Command implements HasRequirements, Undoable, Serializable
 	 *
 	 * @param parentFrame the parent frame of the dialog
 	 * @param newContext  the Command's context
-	 *
-	 * @throws NullPointerException if the {@code parentFrame} is {@code null}
 	 */
 	public final void fillRequirements(Frame parentFrame, Editor newContext) {
 		context(newContext);

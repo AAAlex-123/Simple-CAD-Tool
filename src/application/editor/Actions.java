@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -60,7 +61,7 @@ public enum Actions implements HasRequirements {
 			if (!reqs.fulfilled())
 				throw new RuntimeException("Execute CREATE without requirements"); //$NON-NLS-1$
 
-			final Command commandToExecute = (Command) reqs.getValue(EditorStrings.COMMAND);
+			final Command commandToExecute = reqs.getValue(EditorStrings.COMMAND, Command.class);
 
 			try {
 				if (!commandToExecute.canExecute()) {
@@ -96,7 +97,7 @@ public enum Actions implements HasRequirements {
 			if (!reqs.fulfilled())
 				throw new RuntimeException("Execute DELETE without requirements"); //$NON-NLS-1$
 
-			final Command commandToExecute = (Command) reqs.getValue(EditorStrings.COMMAND);
+			final Command commandToExecute = reqs.getValue(EditorStrings.COMMAND, Command.class);
 
 			try {
 				if (!commandToExecute.canExecute()) {
@@ -129,7 +130,7 @@ public enum Actions implements HasRequirements {
 		@Override
 		public void execute() {
 
-			final String fileToSave = (String) reqs.getValue(EditorStrings.FILENAME);
+			final String fileToSave = reqs.getValue(EditorStrings.FILENAME, String.class);
 
 			try {
 				if (!reqs.fulfilled()) {
@@ -166,8 +167,8 @@ public enum Actions implements HasRequirements {
 		@Override
 		public void execute() {
 
-			final String fileToRead       = (String) reqs.getValue(EditorStrings.FILENAME);
-			final String typeOfFileToRead = (String) reqs.getValue(EditorStrings.FILETYPE);
+			final String fileToRead       = reqs.getValue(EditorStrings.FILENAME, String.class);
+			final String typeOfFileToRead = reqs.getValue(EditorStrings.FILETYPE, String.class);
 
 			final List<Component> components = new ArrayList<>();
 			final List<Command>   commands   = new ArrayList<>();
@@ -204,7 +205,7 @@ public enum Actions implements HasRequirements {
 				} else if (typeOfFileToRead.equals(EditorStrings.COMPONENT)) {
 
 					final Command createCompositeGateCommand = Command.create(commands,
-					        (String) reqs.getValue(EditorStrings.GATENAME));
+					        reqs.getValue(EditorStrings.GATENAME, String.class));
 					context.context().addCreateCommand(createCompositeGateCommand);
 					context.status(Languages.getString("Actions.13"), fileToRead); //$NON-NLS-1$
 
@@ -231,8 +232,9 @@ public enum Actions implements HasRequirements {
 		@Override
 		public void constructRequirements() {
 			reqs.add(EditorStrings.FILENAME, new ArrayList<String>());
-			reqs.add(EditorStrings.FILETYPE, StringType.FILETYPE);
-			reqs.add(EditorStrings.GATENAME, StringType.ANY);
+			reqs.add(EditorStrings.FILETYPE,
+			        Arrays.asList(EditorStrings.CIRCUIT, EditorStrings.COMPONENT));
+			reqs.add(EditorStrings.GATENAME, StringType.NON_EMPTY);
 		}
 
 		@SuppressWarnings("unchecked") //yes this is safe
@@ -261,7 +263,10 @@ public enum Actions implements HasRequirements {
 				throw new UncheckedIOException(e);
 			}
 
-			((ListRequirement<String>) reqs.get(EditorStrings.FILENAME)).setOptions(files);
+			ListRequirement<String> filenameReq = (ListRequirement<String>) reqs
+			        .get(EditorStrings.FILENAME);
+			filenameReq.setOptions(files);
+			filenameReq.setCaseOfNullGraphic(false, Languages.getString("Actions.0"), dir); //$NON-NLS-1$
 		}
 	},
 

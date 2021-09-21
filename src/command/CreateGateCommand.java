@@ -75,7 +75,7 @@ class CreateGateCommand extends CreateCommand {
 			// create the composite Gate and add it to the real context
 			associatedComponent = ComponentFactory.createGate(inputPinArray, outputPinArray,
 			        description);
-			associatedComponent.setID((String) requirements.getValue(CommandStrings.NAME));
+			associatedComponent.setID(requirements.getValue(CommandStrings.NAME, String.class));
 			context.addComponent(associatedComponent);
 		}
 	}

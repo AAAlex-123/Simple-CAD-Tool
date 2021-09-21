@@ -4,12 +4,14 @@ package requirement.exceptions;
  * Thrown when no {@code Requirement} with a specific {@code key} can be found
  * within a collection of Requirements.
  *
- * @author alexm
+ * @author Alex Mandelias
+ *
+ * @see requirement.requirements.Requirements Requirements
  */
 public class MissingRequirementException extends RuntimeException {
 
 	/**
-	 * Constructs the Exception with information about the {@code key}.
+	 * Constructs the Exception with a {@code key}.
 	 *
 	 * @param key the key for which no Requirement exists
 	 */

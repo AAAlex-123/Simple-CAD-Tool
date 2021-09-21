@@ -2,36 +2,32 @@ package requirement.requirements;
 
 import java.util.regex.Pattern;
 
-import localisation.EditorStrings;
 import localisation.Languages;
 
 /**
- * A wrapper for a regular expression that a String must match. Used by
- * {@link StringRequirement}.
+ * A wrapper for a regular expression that a String must match.
  *
- * @author alexm
+ * @author Alex Mandelias
  */
 public enum StringType {
 
 	/** Type for non-negative integers */
-	NON_NEG_INTEGER("[0-9]+", Languages.getString("StringType.0")),   //$NON-NLS-1$ //$NON-NLS-2$
+	NON_NEG_INTEGER("[0-9]+", Languages.getString("StringType.1")), //$NON-NLS-1$ //$NON-NLS-2$
 
 	/** Type for positive integers */
-	POS_INTEGER("[1-9][0-9]*", Languages.getString("StringType.3")),   //$NON-NLS-1$ //$NON-NLS-2$
+	POS_INTEGER("[1-9][0-9]*", Languages.getString("StringType.3")), //$NON-NLS-1$ //$NON-NLS-2$
 
 	/** Type for valid file names */
-	FILENAME("^[^\\\\/:*?\"<>|]*$", Languages.getString("StringType.5")),   //$NON-NLS-1$ //$NON-NLS-2$
-
-	/** Type for valid file types */
-	FILETYPE(String.format("%s|%s", EditorStrings.COMPONENT, EditorStrings.CIRCUIT),  //$NON-NLS-1$
-	        String.format(Languages.getString("StringType.7"), EditorStrings.COMPONENT,  //$NON-NLS-1$
-	                EditorStrings.CIRCUIT)),
+	FILENAME("^[^\\\\/:*?\"<>|]*$", Languages.getString("StringType.5")), //$NON-NLS-1$ //$NON-NLS-2$
 
 	/** Type for any non-empty string */
-	ANY(".+", Languages.getString("StringType.9")),   //$NON-NLS-1$ //$NON-NLS-2$
+	NON_EMPTY(".+", Languages.getString("StringType.7")), //$NON-NLS-1$ //$NON-NLS-2$
 
-	/** Type for custom regex. Defaults to any string (including the empty one). */
-	CUSTOM(".*", Languages.getString("StringType.11")) {   //$NON-NLS-1$ //$NON-NLS-2$
+	/** Type for any non-empty string */
+	ANY(".*", Languages.getString("StringType.9")), //$NON-NLS-1$ //$NON-NLS-2$
+
+	/** Type for custom regex. Defaults to {@link #ANY}. */
+	CUSTOM(".*", Languages.getString("StringType.11")) { //$NON-NLS-1$ //$NON-NLS-2$
 		@Override
 		public StringType alter(String regex, String desc) {
 			p = Pattern.compile(regex);
@@ -41,7 +37,7 @@ public enum StringType {
 	};
 
 	/** A Pattern for the regex of this Type */
-	Pattern p;
+	protected Pattern p;
 
 	/** A human-readable description for the regex of this Type */
 	protected String description;
@@ -52,8 +48,9 @@ public enum StringType {
 	}
 
 	/**
-	 * Allows some Types to define a custom {@code regex} and {@code description} at
-	 * runtime.
+	 * Allows Types to alter their {@code regex} and {@code description} at runtime.
+	 * <p>
+	 * Currently only the {@link #CUSTOM} Type may call this method.
 	 *
 	 * @param regex the new regex for this Type
 	 * @param desc  the new description for this Type
@@ -63,11 +60,11 @@ public enum StringType {
 	@SuppressWarnings("unused")
 	public StringType alter(String regex, String desc) {
 		throw new UnsupportedOperationException(
-		        String.format("Type %s does not support custom regex and description", this));  //$NON-NLS-1$
+		        String.format("Type %s does not support custom regex and description", this)); //$NON-NLS-1$
 	}
 
 	/**
-	 * Checks whether or not the String {@code s} matches the regex of this Type.
+	 * Checks whether or not a String matches the regex of this Type.
 	 *
 	 * @param s the String to check
 	 *
@@ -78,11 +75,12 @@ public enum StringType {
 	}
 
 	/**
-	 * Returns the {@link StringType#description description}.
+	 * Returns this Type's {@code description}, a human-readable String that
+	 * describes the restrictions of the regex of this Type.
 	 *
 	 * @return the description
 	 */
-	public String getDescription() {
+	public final String getDescription() {
 		return description;
 	}
 }

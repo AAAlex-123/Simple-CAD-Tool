@@ -8,28 +8,36 @@ import requirement.graphics.AbstractRequirementGraphic;
 import requirement.graphics.NullRequirementGraphic;
 
 /**
- * A class encapsulating the process where:
+ * A class which encapsulates the process where:
  * <ul>
  * <li>object A needs object B in order to carry out an operation
- * <li>object C has access to / can construct object B
+ * <li>object C has access to or can construct object B
  * <li>object C provides B to A thereby fulfilling A's requirement
  * <li>object A receives object B and can carry out its operation
  * </ul>
  * <p>
- * An {@code AbstractRequirement} ({@code Requirement}) encapsulates this
- * behaviour (and extends it to some extent) providing the means for object A to
- * create the Requirement that object C will fulfil with object B, which A will
- * then retrieve.
+ * An {@code AbstractRequirement} (or simply {@code Requirement}) encapsulates
+ * and extends this behaviour providing the means for object A to {@code create}
+ * the Requirement that object C will {@code fulfil} using object B, which A
+ * will then {@code retrieve}.
  * <p>
- * A Requirement may optionally be accompanied by a
- * {@link requirement.graphics.AbstractRequirementGraphic
- * AbstractRequirementGraphic} object which is responsible for providing a GUI
- * with which the user fulfils the Requirement. If such Graphic object isn't
- * defined, requesting the Graphic object returns a
- * {@link requirement.graphics.NullRequirementGraphic NullGraphic} and
- * subsequent calls to {@link #hasGraphic()} return {@code false}.
+ * To manage a collection of Requirements a {@link Requirements} object may be
+ * used. It can create, store, manage and give access to individual Requirements
+ * and also perform most of the operations defined in this class on them.
+ * <p>
+ * Requirements are by design very loosely coupled with the objects that use
+ * them and as a result writing structured code that can be easily read and
+ * maintain can be rather difficult. To mitigate some of the problems, classes
+ * that use Requirements may implement the {@link HasRequirements} interface
+ * which acts as a marker interface for the methods which act on Requirements.
+ * <p>
+ * A Requirement may be accompanied by a {@link AbstractRequirementGraphic}
+ * object which is responsible for providing a GUI with which the user fulfils
+ * the Requirement. If such Graphic object isn't defined, requesting the Graphic
+ * object returns a {@link NullRequirementGraphic} and subsequent calls to
+ * {@link #hasGraphic()} return {@code false}.
  *
- * @author alexm
+ * @author Alex Mandelias
  */
 public abstract class AbstractRequirement implements Serializable, Cloneable {
 
@@ -37,55 +45,64 @@ public abstract class AbstractRequirement implements Serializable, Cloneable {
 
 	/**
 	 * A short and descriptive name for the Requirement which may be displayed in a
-	 * Graphic object and is used in a {@link requirement.requirements.Requirements
-	 * Requirements} object to identify it.
+	 * Graphic object and is used in a {@link Requirements} object to identify it.
 	 */
 	protected final String key;
 
 	/**
 	 * The required object, the object that will be set when the Requirement is
-	 * fulfilled and will later be retrieved by another object to be used to carry
-	 * out another operation.
+	 * fulfilled. This object will later be retrieved by another object in order to
+	 * be used to carry out an operation. It has type {@code Object} since it is not
+	 * possible to use generics to store the value and then retrieve it from a
+	 * collection of Requirements in a type-safe manner.
 	 */
 	protected Object value;
 
 	/**
-	 * The default value of the Requirement. This (optional) value is used to when
-	 * resetting the Requirement and may also be the preset option in a Graphic
-	 * object.
+	 * The (optional) default value of the Requirement. It is used to when resetting
+	 * the Requirement and may also be the preset option in a Graphic object.
 	 */
 	protected Object defaultValue;
 
 	/**
 	 * Indicates whether or not a valid value for this Requirement has been
-	 * provided. If the Requirement is fulfilled, the object that created the
-	 * Requirement may retrieve its value and use it.
+	 * provided. If the Requirement is {@code fulfilled}, the object that created
+	 * the Requirement may retrieve its value and use it.
 	 */
 	protected boolean fulfilled;
 
 	/**
 	 * Indicates whether or not the value for this Requirement is final, meaning it
-	 * cannot be altered. A Graphic object may use this information to alter its
+	 * cannot be altered. Attempting to fulfil a finalised Requirement throws a
+	 * Runtime Exception.A Graphic object may use this information to alter its
 	 * appearance if the Requirement is finalised.
 	 */
 	protected boolean finalised;
 
-	/** The Graphic associated with this Requirement */
+	/** The {@code Graphic} associated with this Requirement */
 	private transient AbstractRequirementGraphic<?> g;
 
 	/**
-	 * {@code true} if and only if the Graphic is not a {@code NullGraphic}, meaning
-	 * that this Requirement supports a Graphic. This variable can only be expected
-	 * to have the correct value if a Graphic has previously been constructed.
+	 * {@code true} if and only if the Graphic is <i>not</i> a {@code NullGraphic},
+	 * meaning that this Requirement does support a Graphic. This variable has the
+	 * correct value only if a Graphic has previously been constructed.
 	 */
-	protected transient boolean hasGraphic;
+	private transient boolean hasGraphic;
 
 	/**
-	 * Constructs this Requirement with the given {@code key}.
-	 *
-	 * @param key the key of this Requirement
+	 * {@code true} if and only if the Graphic is a {@code NullGraphic} and
+	 * additionally the presence of the {@code NullGraphic} is the result of a
+	 * programming error. This variable has the correct value if a Graphic has
+	 * previously been constructed.
 	 */
-	public AbstractRequirement(String key) {
+	private transient boolean graphicError;
+
+	/**
+	 * Constructs a new Requirement.
+	 *
+	 * @param key the key of the new Requirement
+	 */
+	protected AbstractRequirement(String key) {
 		this.key = key;
 		value = defaultValue = null;
 		fulfilled = finalised = false;
@@ -108,7 +125,7 @@ public abstract class AbstractRequirement implements Serializable, Cloneable {
 	 * This method should be used when no changes have been made to the Requirement
 	 * that would require a different Graphic object.
 	 *
-	 * @return the Graphic
+	 * @return the cached Graphic
 	 */
 	public final AbstractRequirementGraphic<?> getCachedGraphic() {
 		if (g == null)
@@ -121,7 +138,7 @@ public abstract class AbstractRequirement implements Serializable, Cloneable {
 	 * the Graphic is constructed, it will always be the correct type of Graphic,
 	 * regardless of the state of the Requirement.
 	 *
-	 * @return the Graphic
+	 * @return the constructed Graphic
 	 */
 	public final AbstractRequirementGraphic<?> constructAndGetGraphic() {
 		g = constructGraphic();
@@ -131,53 +148,100 @@ public abstract class AbstractRequirement implements Serializable, Cloneable {
 	}
 
 	/**
-	 * Returns whether or not this Requirement supports a Graphic. This method
-	 * requires that a Graphic has been constructed in order to return the correct
-	 * value. {@code true} is returned if and only if the Graphic is <b>not</b> a
-	 * {@code NullGraphic}.
+	 * Returns whether or not this Requirement supports a Graphic. {@code true} is
+	 * returned if and only if the Graphic is <b>not</b> a {@code NullGraphic}. For
+	 * example, when the current state of this Requirement doesn't allow for a
+	 * Graphic to fulfil it, a {@code NullGraphic} corresponding to an application
+	 * error is returned when a Graphic is requested.
+	 * <p>
+	 * This method requires that a Graphic has been constructed in order to return
+	 * the correct value.
 	 *
-	 * @return {@code true} if this Requirement supports a Graphic
+	 * @return {@code true} if this Requirement supports a Graphic, meaning it can
+	 *         be used in order to fulfil this Requirement, {@code false} otherwise
+	 *
+	 * @see NullRequirementGraphic
+	 * @see #hasGraphic
 	 */
 	public final boolean hasGraphic() {
 		return hasGraphic;
 	}
 
 	/**
-	 * Returns the Graphic for this Requirement. {@link #hasGraphic} is set to
-	 * {@code true} and the subclass-specific creation of the Graphic
-	 * ({@link #constructGraphicOfSubclass()}) may set it to {@code false} if a
-	 * {@code NullGraphic} is created.
+	 * Returns whether or not the request for this Requirement's Graphic was the
+	 * result of a programming error. {@code true} is returned if and only if the
+	 * Graphic is a {@code NullGraphic} and it should have never been requested. For
+	 * example, when no Graphic is not suitable to fulfil this Requirement, a
+	 * {@code NullGraphic} corresponding to a programmer error is returned when a
+	 * Graphic is requested.
+	 * <p>
+	 * This method requires that a Graphic has been constructed in order to return
+	 * the correct value.
 	 *
-	 * @return the Graphic
+	 * @return {@code true} if this Requirement does not support a Graphic and the
+	 *         request for it was a programming error, {@code false} otherwise
+	 *
+	 * @see NullRequirementGraphic
+	 * @see #graphicError
+	 */
+	public final boolean graphicError() {
+		return graphicError;
+	}
+
+	/**
+	 * Constructs and returns a Graphic for this Requirement. The {@code hasGraphic}
+	 * and {@code graphicError} fields are set to {@code true} and {@code false}
+	 * respectively, but subclasses are free to construct a {@code NullGraphic} if
+	 * they deem necessary to do so. The {@code NullGraphic} must be constructed by
+	 * calling the {@link #constructNullGraphic(String, boolean)} method, otherwise
+	 * the above fields will not be updated.
+	 *
+	 * @return the Graphic for this Requirement
+	 *
+	 * @see NullRequirementGraphic
+	 * @see #hasGraphic
+	 * @see #graphicError
 	 */
 	protected final AbstractRequirementGraphic<?> constructGraphic() {
 		hasGraphic = true;
+		graphicError = false;
 		return constructGraphicOfSubclass();
 	}
 
 	/**
-	 * Each subclass returns its own Graphic. Implementations are responsible for
-	 * setting {@link #hasGraphic} to {@code false} if the Graphic constructed is a
-	 * {@code NullGrahpic}.
+	 * Each subclass creates and returns its own Graphic. If a subclass deems that
+	 * no Graphic is suitable it, the {@link #constructNullGraphic(String, boolean)}
+	 * method must be called with the appropriate arguments in order to correctly
+	 * update the {@code hasGraphic} and {@code graphicError} fields of this class.
 	 *
-	 * @return the Graphic
+	 * @return the Graphic for this Requirement
 	 */
 	protected abstract AbstractRequirementGraphic<?> constructGraphicOfSubclass();
 
 	/**
-	 * Returns a {@code NullGraphic}.
+	 * Creates and returns a {@code NullGraphic}. Subclasses should call this method
+	 * when a Graphic is requested but no Graphic is suitable.
 	 *
-	 * @param cause the cause for the NullGrahpic
+	 * @param cause the cause for the NullGrahpic, the reason that this Requirement
+	 *              does not support a Graphic
+	 * @param error {@code true} if this Requirement does not support a Graphic and
+	 *              the request for it was programming error, {@code false} if it
+	 *              this Requirement normally supports a Graphic but in this case no
+	 *              Graphic was suitable for it
 	 *
-	 * @return the NullGraphic
+	 * @return the NullGraphic for this Requirement
+	 *
+	 * @see NullRequirementGraphic
 	 */
-	protected final AbstractRequirementGraphic<?> constructNullGraphic(String cause) {
+	protected final AbstractRequirementGraphic<?> constructNullGraphic(String cause,
+	        boolean error) {
 		hasGraphic = false;
-		return new NullRequirementGraphic(this, cause);
+		graphicError = error;
+		return new NullRequirementGraphic(this, cause, error);
 	}
 
 	/**
-	 * Returns the {@link #key}
+	 * Returns this Requirement's {@link #key}.
 	 *
 	 * @return the key
 	 */
@@ -186,7 +250,7 @@ public abstract class AbstractRequirement implements Serializable, Cloneable {
 	}
 
 	/**
-	 * Returns the {@link #value}
+	 * Returns this Requirement's {@link #value}.
 	 *
 	 * @return the value
 	 */
@@ -195,7 +259,7 @@ public abstract class AbstractRequirement implements Serializable, Cloneable {
 	}
 
 	/**
-	 * Returns the {@link #defaultValue}
+	 * Returns this Requirement's {@link #defaultValue}.
 	 *
 	 * @return the defaultValue
 	 */
@@ -204,9 +268,11 @@ public abstract class AbstractRequirement implements Serializable, Cloneable {
 	}
 
 	/**
-	 * Checks if {@code v} is a valid {@code value} for this Requirement.
+	 * Checks if {@code v} is a valid {@code value} for this Requirement. A
+	 * Requirement may be fulfilled with a value that is valid according to whatever
+	 * constraints each subclass defines.
 	 *
-	 * @param v the value
+	 * @param v the value to check
 	 *
 	 * @return {@code true} if {@code v} is valid, {@code false} otherwise
 	 */
@@ -214,91 +280,120 @@ public abstract class AbstractRequirement implements Serializable, Cloneable {
 
 	/**
 	 * Attempts to set the {@code defaultValue} of this Requirement <i>without</i>
-	 * marking it as {@code fulfilled}. If the {@code v} isn't valid, this method
-	 * does nothing.
+	 * marking it as {@code fulfilled}. If {@code v} isn't valid, this method does
+	 * nothing.
 	 * <p>
 	 * This method is intended for offering a default value which must then be
 	 * explicitly set in order for the Requirement to be marked as fulfilled.
 	 *
 	 * @param v the default value of the required object
+	 *
+	 * @return {@code true} if {@code v} is valid and the method successfully set
+	 *         the default, {@code false} otherwise
+	 *
+	 * @throws LockedRequirementException if this Requirement is finalised
 	 */
-	public final void offer(Object v) {
+	public final boolean offer(Object v) {
 		if (finalised)
 			throw new LockedRequirementException(this);
 
 		if (!isValidValue(v))
-			return;
+			return false;
 
 		defaultValue = v;
+		return true;
 	}
 
 	/**
-	 * Calls {@link #offer(Object) offer(Object)} and additionally sets the
-	 * {@code value} of this Requirement, marking is as {@code fulfilled}.
+	 * Calls {@link #offer(Object)} and additionally sets the {@code value} of this
+	 * Requirement, marking is as {@code fulfilled}. If {@code v} is not valid, this
+	 * method does nothing.
 	 * <p>
 	 * This method is intended for normal use, to specify that a value for this
-	 * Requirement exists and may be retrieved.
+	 * Requirement exists and can later be retrieved to be used
 	 *
 	 * @param v the value of the required object
+	 *
+	 * @return {@code true} if {@code v} is valid and the method successfully set
+	 *         the value, {@code false} otherwise
+	 *
+	 * @throws LockedRequirementException if this Requirement is finalised
 	 */
-	public final void fulfil(Object v) {
-		offer(v);
-
-		if (!isValidValue(v))
-			return;
+	public final boolean fulfil(Object v) {
+		if (!offer(v))
+			return false;
 
 		value = v;
-		fulfilled = isValidValue(v);
+		fulfilled = true;
+		return true;
 	}
 
 	/**
-	 * Calls {@link #fulfil(Object) fulfil(Object)} and additionally marks this
-	 * Requirement as {@code finalised}.
+	 * Calls {@link #fulfil(Object)} and additionally marks this Requirement as
+	 * {@code finalised}. If {@code v} is not valid, this method does nothing.
 	 * <p>
 	 * This method is intended for providing a strict default or for ensuring the
 	 * value cannot be altered in the future.
 	 *
 	 * @param v the value of the required object
+	 *
+	 * @return {@code true} if {@code v} is valid and the method successfully set
+	 *         the value as final, {@code false} otherwise
+	 *
+	 * @throws LockedRequirementException if this Requirement is finalised
 	 */
-	public final void finalise(Object v) {
-		fulfil(v);
-
-		if (!isValidValue(v))
-			return;
+	public final boolean finalise(Object v) {
+		if (!fulfil(v))
+			return false;
 
 		finalised = true;
+		return true;
 	}
 
-	/** Clears this Requirement and its {@code value}, resetting its state */
-	public void clear() {
+	/**
+	 * Clears this Requirement. After this call every field apart from its
+	 * {@code defaultValue} have their original values.
+	 */
+	public final void clear() {
 		value = null;
 		fulfilled = false;
 		finalised = false;
 	}
 
-	/** Resets the value of the Requirement */
-	protected abstract void resetValue();
-
-	/** Clears this Requirement and resets its {@code value} to the default */
+	/**
+	 * Clears this Requirement and additionally resets its {@code value} and its
+	 * Graphic, if it exists.
+	 */
 	public final void reset() {
 		clear();
 		resetValue();
-		g.reset();
+		if (g != null)
+			g.reset();
 	}
 
 	/**
-	 * Returns the value of {@link #fulfilled fulfilled}
+	 * Resets the value of this Requirement to its default. The default can be the
+	 * {@code defaultValue} or some other value determined by the subclass.
+	 */
+	protected abstract void resetValue();
+
+	/**
+	 * Returns whether or not this Requirement is fulfilled.
 	 *
-	 * @return {@code fulfilled}
+	 * @return {@code true} if there exists a value for it, {@code false} otherwise
+	 *
+	 * @see #fulfilled
 	 */
 	public final boolean fulfilled() {
 		return fulfilled;
 	}
 
 	/**
-	 * Returns the value of {@link #finalised finalised}
+	 * Returns whether or not this Requirement is finalised.
 	 *
-	 * @return {@code finalised}
+	 * @return {@code true} if its value cannot be altered, {@code false} otherwise
+	 *
+	 * @see #finalised
 	 */
 	public final boolean finalised() {
 		return finalised;
@@ -306,13 +401,20 @@ public abstract class AbstractRequirement implements Serializable, Cloneable {
 
 	@Override
 	public final String toString() {
-		final StringBuilder sb = new StringBuilder(
-		        String.format(
-		                "%s: %s%n\tDefault:   %s%n\tValue:     %s%n\tFulfilled: %s%n\tFinalised: %s%n", //$NON-NLS-1$
-		                this.getClass().getSimpleName(),
-		                key, defaultValue, value,
-		                fulfilled() ? RequirementStrings.YES : RequirementStrings.NO,
-		                finalised() ? RequirementStrings.YES : RequirementStrings.NO));
+		final StringBuilder sb = new StringBuilder(this.getClass().getSimpleName());
+
+		sb.append(String.format(": %s%n", key)) //$NON-NLS-1$
+		        .append(String.format("\tDefault    %s%n", defaultValue)) //$NON-NLS-1$
+		        .append(String.format("\tValue:     %s%n", value)) //$NON-NLS-1$
+		        .append(String.format("\tFulfilled: %s%n", //$NON-NLS-1$
+		                AbstractRequirement.yesIfTrueNoOtherwise(fulfilled())))
+		        .append(String.format("\tFinalised: %s%n", //$NON-NLS-1$
+		                AbstractRequirement.yesIfTrueNoOtherwise(finalised())));
+
 		return sb.toString();
+	}
+
+	private static String yesIfTrueNoOtherwise(boolean b) {
+		return b ? RequirementStrings.YES : RequirementStrings.NO;
 	}
 }

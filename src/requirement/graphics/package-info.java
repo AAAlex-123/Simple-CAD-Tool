@@ -1,10 +1,7 @@
 /**
- * Declares different types of
- * {@link requirement.graphics.AbstractRequirementGraphic Graphics} as well as a
- * {@link requirement.graphics.RequirementsDialog Dialog} used to fulfil a
- * {@link requirement.requirements.Requirements collection} of
- * {@code Requirements}.
+ * Defines the {@link requirement.graphics.AbstractRequirementGraphic Graphic}
+ * hierarchy as well as other utility types to aid working with Graphics.
  *
- * @author alexm
+ * @author Alex Mandelias
  */
 package requirement.graphics;

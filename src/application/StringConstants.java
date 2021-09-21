@@ -194,8 +194,7 @@ public final class StringConstants {
 	 *
 	 * @return {@code true} if they were altered, {@code false} otherwise
 	 *
-	 * @throws NullPointerException if {@code frame == null}
-	 * @throws IOException          if an error occurred while writing to file
+	 * @throws IOException if an error occurred while writing to file
 	 */
 	public static boolean editAndWriteToFile(Frame frame) throws IOException {
 		reqs.clear();

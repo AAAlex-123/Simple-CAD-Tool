@@ -20,6 +20,9 @@ public final class RequirementStrings {
 	/** The literal word "{@code no}" */
 	public static final String NO = Languages.getString("RequirementStrings.3"); //$NON-NLS-1$
 
+	/** Key of a {@code label} of the {@code RequirementsDialog} */
+	public static final String MESSAGE = Languages.getString("RequirementStrings.4"); //$NON-NLS-1$
+
 	/* Don't let anyone initialise this class */
 	private RequirementStrings() {}
 }
