@@ -75,7 +75,7 @@ final class Branch extends Component {
 		// repaint and propagate signal only if it's different
 		if (active != newActive) {
 			active = newActive;
-			getGraphics().repaint();
+			repaintGraphicIfExists();
 			out.wake_up(active, indexOut, hidden());
 		}
 	}
