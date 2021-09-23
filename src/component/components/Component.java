@@ -54,7 +54,7 @@ public abstract class Component implements Identifiable<String>, Serializable {
 	protected boolean toBeRemoved;
 
 	/** {@code Graphic} for this Component, created lazily, on-demand */
-	private transient ComponentGraphic g;
+	private ComponentGraphic g;
 
 	// 6 core methods
 
@@ -237,7 +237,12 @@ public abstract class Component implements Identifiable<String>, Serializable {
 	/** Each Component specifies how it is restored after destruction */
 	protected abstract void restoreDeletedSelf();
 
-	/** Restores the state of the Component after it was deserialised */
+	/**
+	 * Restores the state of the Component after it was deserialised
+	 *
+	 * @implNote the {@code readObject(ObjectInputStream)} cannot be used since a
+	 *           Component must be fully read before its graphic can be restored.
+	 */
 	protected final void restoreSerialised() {
 		if (g != null)
 			g.restoreSerialised();
@@ -391,9 +396,9 @@ public abstract class Component implements Identifiable<String>, Serializable {
 		wake_up(newActive, 0, hidden());
 	}
 
-	// toString
-
 	/**
+	 * @return {@code "<type.description>: <inCount>-<outCount>, UID: <ID>, hidden: <hidden>"}
+	 *
 	 * @implNote this implementation is more like a debug String. For a
 	 *           user-friendly description of this Component
 	 *           {@code type().description()} should be used.
