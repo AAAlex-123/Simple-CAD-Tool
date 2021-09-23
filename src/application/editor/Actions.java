@@ -16,6 +16,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -29,6 +31,7 @@ import component.components.Component;
 import component.exceptions.MalformedBranchException;
 import localisation.EditorStrings;
 import localisation.Languages;
+import myUtil.StringGenerator;
 import requirement.requirements.AbstractRequirement;
 import requirement.requirements.HasRequirements;
 import requirement.requirements.ListRequirement;
@@ -69,7 +72,7 @@ public enum Actions implements HasRequirements {
 
 				context.execute(commandToExecute);
 				context.status(Languages.getString("Actions.2"), commandToExecute); //$NON-NLS-1$
-				context.getFileInfo().markUnsaved();
+				context.fileInfo.markUnsaved();
 			} catch (MissingComponentException | MalformedBranchException e) {
 				context.error(e);
 			} catch (final Exception e) {
@@ -105,7 +108,7 @@ public enum Actions implements HasRequirements {
 
 				context.execute(commandToExecute);
 				context.status(Languages.getString("Actions.5")); //$NON-NLS-1$
-				context.getFileInfo().markUnsaved();
+				context.fileInfo.markUnsaved();
 			} catch (final MissingComponentException e) {
 				context.error(e);
 			} catch (final Exception e) {
@@ -136,11 +139,11 @@ public enum Actions implements HasRequirements {
 					return;
 				}
 
-				Actions.writeToFile(fileToSave, context.getPastCommands());
+				Actions.writeToFile(fileToSave, context.getPastCommands(), context.componentManager);
 
 				context.status(Languages.getString("Actions.7"), fileToSave); //$NON-NLS-1$
-				context.getFileInfo().markSaved();
-				context.getFileInfo().setFile(fileToSave);
+				context.fileInfo.markSaved();
+				context.fileInfo.setFile(fileToSave);
 
 			} catch (final IOException e) {
 				context.error(
@@ -178,7 +181,7 @@ public enum Actions implements HasRequirements {
 					return;
 				}
 
-				Actions.readFromFile(fileToRead, commands);
+				Actions.readFromFile(fileToRead, commands, context.componentManager);
 
 				if (typeOfFileToRead.equals(EditorStrings.CIRCUIT)) {
 
@@ -189,8 +192,8 @@ public enum Actions implements HasRequirements {
 						context.execute(command);
 					}
 
-					context.getFileInfo().markSaved();
-					context.getFileInfo().setFile(fileToRead);
+					context.fileInfo.markSaved();
+					context.fileInfo.setFile(fileToRead);
 					context.status(Languages.getString("Actions.12"), fileToRead); //$NON-NLS-1$
 
 				} else if (typeOfFileToRead.equals(EditorStrings.COMPONENT)) {
@@ -267,7 +270,7 @@ public enum Actions implements HasRequirements {
 		public void execute() {
 			context.clear();
 			context.status(Languages.getString("Actions.17")); //$NON-NLS-1$
-			context.getFileInfo().markUnsaved();
+			context.fileInfo.markUnsaved();
 			context = null;
 		}
 	},
@@ -278,7 +281,7 @@ public enum Actions implements HasRequirements {
 		public void execute() {
 			context.undo();
 			context.status(Languages.getString("Actions.18")); //$NON-NLS-1$
-			context.getFileInfo().markUnsaved();
+			context.fileInfo.markUnsaved();
 			context = null;
 		}
 	},
@@ -289,7 +292,7 @@ public enum Actions implements HasRequirements {
 		public void execute() {
 			context.redo();
 			context.status(Languages.getString("Actions.19")); //$NON-NLS-1$
-			context.getFileInfo().markUnsaved();
+			context.fileInfo.markUnsaved();
 			context = null;
 		}
 	},
@@ -349,7 +352,7 @@ public enum Actions implements HasRequirements {
 
 	// increment whenever the protocol that is used to store user data is altered
 	// ensures that the data is never read in a way different than that it was stored
-	private static final Integer storeProtocolVersion = 1;
+	private static final Integer storeProtocolVersion = 2;
 
 	// bytes to mark the start and end of a file (should never change, used to check for corruption)
 	private static final Byte startOfFile = 10, endOfFile = 42;
@@ -502,16 +505,16 @@ public enum Actions implements HasRequirements {
 	/**
 	 * Writes the contents of Lists of Components and Commands to a file.
 	 *
-	 * @param filename the filename
-	 * @param commands the list of Commands to write to the file
+	 * @param filename    the filename
+	 * @param commands    the list of Commands to write to the file
+	 * @param itemManager the manager whose generators to write to the file
 	 *
 	 * @throws IOException if an IOExcetpion occurred
 	 *
-	 * @see #readFromFile(String, List)
+	 * @see #readFromFile(String, List, ItemManager)
 	 */
-	protected static void writeToFile(String filename, List<Command> commands)
-	        throws IOException {
-
+	protected static void writeToFile(String filename, List<Command> commands,
+	        ItemManager<Component> itemManager) throws IOException {
 		final File dir = Paths.get(StringConstants.USER_DATA).toFile();
 
 		if (!dir.isDirectory()) {
@@ -538,6 +541,14 @@ public enum Actions implements HasRequirements {
 			for (final Command command : commands)
 				oos.writeObject(command);
 
+			// write generators
+			final Map<String, StringGenerator> generators = itemManager.idGenerators;
+			oos.writeInt(generators.size());
+			for (Entry<String, StringGenerator> generatorEntry : generators.entrySet()) {
+				oos.writeObject(generatorEntry.getKey());
+				oos.writeObject(generatorEntry.getValue());
+			}
+
 			// write eof
 			oos.writeByte(Actions.endOfFile);
 		}
@@ -546,8 +557,9 @@ public enum Actions implements HasRequirements {
 	/**
 	 * Fills the Lists with the Components and Commands from the file.
 	 *
-	 * @param filename the filename
-	 * @param commands the list that will be filled with Commands
+	 * @param filename    the filename
+	 * @param commands    the list that will be filled with Commands
+	 * @param itemManager the manager whose generators will be read from the file
 	 *
 	 * @throws IOException               if an IOException occurred
 	 * @throws FileNotFoundException     if the file couldn't be found
@@ -555,11 +567,11 @@ public enum Actions implements HasRequirements {
 	 * @throws IncompatibleFileException if the file data corresponds to a different
 	 *                                   version of the program
 	 *
-	 * @see #writeToFile(String, List)
+	 * @see #writeToFile(String, List, ItemManager)
 	 */
-	protected static void readFromFile(String filename, List<Command> commands)
-	        throws FileNotFoundException, IOException, Actions.FileCorruptedException,
-	        Actions.IncompatibleFileException {
+	protected static void readFromFile(String filename, List<Command> commands,
+	        ItemManager<Component> itemManager) throws FileNotFoundException, IOException,
+	        Actions.FileCorruptedException, Actions.IncompatibleFileException {
 
 		final String inputFile = String.format("%s%s%s", StringConstants.USER_DATA, //$NON-NLS-1$
 		        System.getProperty("file.separator"), filename); //$NON-NLS-1$
@@ -576,9 +588,18 @@ public enum Actions implements HasRequirements {
 				throw new IncompatibleFileException(filename, versionRead);
 
 			// read commands
-			final int count = ois.readInt();
+			int count = ois.readInt();
 			for (int i = 0; i < count; ++i)
 				commands.add((Command) ois.readObject());
+
+			// read generators
+			final Map<String, StringGenerator> generators = itemManager.idGenerators;
+			count = ois.readInt();
+			for (int i = 0; i < count; ++i) {
+				final String          key   = (String) ois.readObject();
+				final StringGenerator value = (StringGenerator) ois.readObject();
+				generators.put(key, value);
+			}
 
 			// read eof
 			if (ois.readByte() != Actions.endOfFile)
