@@ -114,7 +114,7 @@ class Gate extends Component {
 		if (prevHidden)
 			hideComponent();
 
-		getGraphics().repaint();
+		repaintGraphicIfExists();
 
 		// only propagate signal if all InputPins are connected to a Branch
 		if (checkBranches())
