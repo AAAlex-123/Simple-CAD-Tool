@@ -98,9 +98,11 @@ public final class Editor extends JComponent implements EditorInterface {
 	public boolean close() {
 		int res = JOptionPane.YES_OPTION;
 		if (getFileInfo().isDirty()) {
+			final String messageString = Languages.getString("Editor.2"); //$NON-NLS-1$
+			final String titleString   = Languages.getString("Editor.3"); //$NON-NLS-1$
 			res = JOptionPane.showConfirmDialog(context().getFrame(),
-			        Languages.getString("Editor.2"), //$NON-NLS-1$
-			        Languages.getString("Editor.3") + getFileInfo().getFile(), //$NON-NLS-1$
+			        messageString,
+			        String.format("%s %s", titleString, getFileInfo().getFile()), //$NON-NLS-1$
 			        JOptionPane.YES_NO_CANCEL_OPTION,
 			        JOptionPane.WARNING_MESSAGE);
 
