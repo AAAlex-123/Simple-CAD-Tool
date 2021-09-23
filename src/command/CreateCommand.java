@@ -175,7 +175,7 @@ class CreateCommand extends Command {
 	@Override
 	public void unexecute() {
 		// restore the previously deleted Branches
-		if (componentType == BRANCH) {
+		if ((componentType == BRANCH) && (deleteCommand != null)) {
 			deleteCommand.unexecute();
 			deleteCommand = null;
 		}
