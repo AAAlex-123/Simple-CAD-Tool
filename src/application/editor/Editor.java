@@ -48,10 +48,13 @@ public final class Editor extends JComponent implements EditorInterface {
 
 	private final Application app;
 	private final UI          editorUI;
-	private final FileInfo    fileInfo;
 	private final StatusBar   statusBar;
 
-	private final ItemManager<Component>   components;
+	/** Encapsulates information about the File this Editor edits */
+	final FileInfo            fileInfo;
+
+	/** Encapsulates information about the Components of this Editor */
+	final ItemManager<Component>           componentManager;
 	private final UndoableHistory<Command> undoableHistory;
 
 	/**
@@ -62,16 +65,14 @@ public final class Editor extends JComponent implements EditorInterface {
 	 */
 	public Editor(Application application, String initialFilename) {
 		app = application;
-
 		editorUI = new UI();
+		statusBar = new StatusBar();
 
 		fileInfo = new FileInfo();
 		fileInfo.markSaved();
 		fileInfo.setFile(initialFilename);
 
-		statusBar = new StatusBar();
-
-		components = new ItemManager<>();
+		componentManager = new ItemManager<>();
 		undoableHistory = new UndoableHistory<>();
 
 		// configure the components of the editor
@@ -84,14 +85,14 @@ public final class Editor extends JComponent implements EditorInterface {
 		add(editorUI, BorderLayout.CENTER);
 		add(statusBar, BorderLayout.SOUTH);
 
-		components.addGenerator(INPUT_PIN.description(), StringConstants.G_INPUT_PIN);
-		components.addGenerator(OUTPUT_PIN.description(), StringConstants.G_OUTPUT_PIN);
-		components.addGenerator(BRANCH.description(), StringConstants.G_BRANCH);
-		components.addGenerator(GATE.description(), StringConstants.G_GATE);
-		components.addGenerator(GATEAND.description(), StringConstants.G_GATEAND);
-		components.addGenerator(GATEOR.description(), StringConstants.G_GATEOR);
-		components.addGenerator(GATENOT.description(), StringConstants.G_GATENOT);
-		components.addGenerator(GATEXOR.description(), StringConstants.G_GATEXOR);
+		componentManager.addGenerator(INPUT_PIN.description(), StringConstants.G_INPUT_PIN);
+		componentManager.addGenerator(OUTPUT_PIN.description(), StringConstants.G_OUTPUT_PIN);
+		componentManager.addGenerator(BRANCH.description(), StringConstants.G_BRANCH);
+		componentManager.addGenerator(GATE.description(), StringConstants.G_GATE);
+		componentManager.addGenerator(GATEAND.description(), StringConstants.G_GATEAND);
+		componentManager.addGenerator(GATEOR.description(), StringConstants.G_GATEOR);
+		componentManager.addGenerator(GATENOT.description(), StringConstants.G_GATENOT);
+		componentManager.addGenerator(GATEXOR.description(), StringConstants.G_GATEXOR);
 	}
 
 	@Override
@@ -130,10 +131,10 @@ public final class Editor extends JComponent implements EditorInterface {
 	 * @param component the Component
 	 */
 	public void addComponent(Component component) {
-		components.add(component);
+		componentManager.add(component);
 		editorUI.addComponent(component);
 		statusBar.setLabelText(EditorStrings.COUNT, Languages.getString("Editor.6"), //$NON-NLS-1$
-		        components.size());
+		        componentManager.size());
 	}
 
 	/**
@@ -142,10 +143,10 @@ public final class Editor extends JComponent implements EditorInterface {
 	 * @param component the Component
 	 */
 	public void removeComponent(Component component) {
-		components.remove(component);
+		componentManager.remove(component);
 		editorUI.removeComponent(component);
 		statusBar.setLabelText(EditorStrings.COUNT, Languages.getString("Editor.8"), //$NON-NLS-1$
-		        components.size());
+		        componentManager.size());
 	}
 
 	/**
@@ -158,7 +159,7 @@ public final class Editor extends JComponent implements EditorInterface {
 	 * @throws MissingComponentException if no Component with the ID exists
 	 */
 	public Component getComponent_(String ID) throws MissingComponentException {
-		return components.get(ID);
+		return componentManager.get(ID);
 	}
 
 	/**
@@ -188,7 +189,7 @@ public final class Editor extends JComponent implements EditorInterface {
 	 * @return the list
 	 */
 	public List<Component> getComponents_() {
-		return components.getall();
+		return componentManager.getall();
 	}
 
 	/**
@@ -200,7 +201,7 @@ public final class Editor extends JComponent implements EditorInterface {
 	 * @return the list
 	 */
 	public List<Component> getDeletedComponents() {
-		return components.getall(ComponentFactory::toRemove);
+		return componentManager.getall(ComponentFactory::toRemove);
 	}
 
 	/**
@@ -213,7 +214,7 @@ public final class Editor extends JComponent implements EditorInterface {
 	 * @see ComponentType
 	 */
 	public String getNextID(ComponentType type) {
-		return components.getNextID(type.description());
+		return componentManager.getNextID(type.description());
 	}
 
 	/** Clears the Editor resetting it to its original state */
@@ -242,15 +243,6 @@ public final class Editor extends JComponent implements EditorInterface {
 	/** Re-does the most recently undone {@code Command} */
 	void redo() {
 		undoableHistory.redo();
-	}
-
-	/**
-	 * Adds a {@code Command} to the history without executing it.
-	 *
-	 * @param command the Command
-	 */
-	void addToHistory(Command command) {
-		undoableHistory.add(command);
 	}
 
 	/**
