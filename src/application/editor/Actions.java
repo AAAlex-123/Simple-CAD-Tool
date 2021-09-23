@@ -26,11 +26,9 @@ import javax.swing.JOptionPane;
 import application.StringConstants;
 import command.Command;
 import component.components.Component;
-import component.components.ComponentFactory;
 import component.exceptions.MalformedBranchException;
 import localisation.EditorStrings;
 import localisation.Languages;
-import myUtil.Utility;
 import requirement.requirements.AbstractRequirement;
 import requirement.requirements.HasRequirements;
 import requirement.requirements.ListRequirement;
@@ -138,8 +136,7 @@ public enum Actions implements HasRequirements {
 					return;
 				}
 
-				Actions.writeToFile(fileToSave, context.getComponents_(),
-				        context.getPastCommands());
+				Actions.writeToFile(fileToSave, context.getPastCommands());
 
 				context.status(Languages.getString("Actions.7"), fileToSave); //$NON-NLS-1$
 				context.getFileInfo().markSaved();
@@ -170,8 +167,7 @@ public enum Actions implements HasRequirements {
 			final String fileToRead       = reqs.getValue(EditorStrings.FILENAME, String.class);
 			final String typeOfFileToRead = reqs.getValue(EditorStrings.FILETYPE, String.class);
 
-			final List<Component> components = new ArrayList<>();
-			final List<Command>   commands   = new ArrayList<>();
+			final List<Command> commands = new ArrayList<>();
 
 			try {
 				if (!reqs.fulfilled()) {
@@ -182,21 +178,16 @@ public enum Actions implements HasRequirements {
 					return;
 				}
 
-				Actions.readFromFile(fileToRead, components, commands);
+				Actions.readFromFile(fileToRead, commands);
 
 				if (typeOfFileToRead.equals(EditorStrings.CIRCUIT)) {
 
 					context.clear();
 
-					Utility.foreach(components, component -> {
-						ComponentFactory.restoreSerialisedComponent(component);
-						context.addComponent(component);
-					});
-
-					Utility.foreach(commands, command -> {
+					for (final Command command : commands) {
 						command.context(context);
-						context.addToHistory(command);
-					});
+						context.execute(command);
+					}
 
 					context.getFileInfo().markSaved();
 					context.getFileInfo().setFile(fileToRead);
@@ -263,7 +254,7 @@ public enum Actions implements HasRequirements {
 				throw new UncheckedIOException(e);
 			}
 
-			ListRequirement<String> filenameReq = (ListRequirement<String>) reqs
+			final ListRequirement<String> filenameReq = (ListRequirement<String>) reqs
 			        .get(EditorStrings.FILENAME);
 			filenameReq.setOptions(files);
 			filenameReq.setCaseOfNullGraphic(false, Languages.getString("Actions.0"), dir); //$NON-NLS-1$
@@ -343,25 +334,25 @@ public enum Actions implements HasRequirements {
 				throw new RuntimeException(
 				        "Number of help titles doesn't match number of messages"); //$NON-NLS-1$
 
-			// yes=0, no=1, cancel=2, x=-1 (+1 to adjust for array index)
-			final int[] res = { 0, 0, 0, 0 };
-
 			final Frame frame = context.context().getFrame();
 
 			for (int i = 0, count = messages.length; i < count; i++)
-				++res[1 + msg(frame, messages[i], titles[i])];
+				msg(frame, messages[i], titles[i]);
 
 			context = null;
 		}
 
-		private int msg(Frame frame, String message, String title) {
-			return JOptionPane.showConfirmDialog(frame, message, title,
-			        JOptionPane.YES_NO_CANCEL_OPTION);
+		private void msg(Frame frame, String message, String title) {
+			JOptionPane.showConfirmDialog(frame, message, title, JOptionPane.YES_NO_CANCEL_OPTION);
 		}
 	};
 
-	// bytes at the start and end of file
-	private static final Integer start = 10, eof = 42;
+	// increment whenever the protocol that is used to store user data is altered
+	// ensures that the data is never read in a way different than that it was stored
+	private static final Integer storeProtocolVersion = 1;
+
+	// bytes to mark the start and end of a file (should never change, used to check for corruption)
+	private static final Byte startOfFile = 10, endOfFile = 42;
 
 	/** The Requirements of the Action */
 	protected final Requirements reqs;
@@ -433,7 +424,11 @@ public enum Actions implements HasRequirements {
 		return this;
 	}
 
-	/** Thrown when a File is corrupted and can't be read */
+	/**
+	 * Thrown when a File is corrupted and can't be read.
+	 *
+	 * @author Alex Mandelias
+	 */
 	protected final static class FileCorruptedException extends Exception {
 
 		/**
@@ -447,50 +442,74 @@ public enum Actions implements HasRequirements {
 		}
 	}
 
-	/** Thrown when a File's data are incompatible with current program version */
+	/**
+	 * Thrown when a File's data are incompatible with the current program version.
+	 *
+	 * @author Alex Mandelias
+	 */
 	protected final static class IncompatibleFileException extends Exception {
 
 		/**
-		 * Constructs the Exception with a {@code filename}.
+		 * Constructs the Exception with a {@code filename} and a {@code version}.
 		 *
-		 * @param filename the name of the file with incompatible data
+		 * @param filename          the name of the file which contains data written
+		 *                          using a different store protocol version
+		 * @param versionReadInFile the store protocol version read in the file
+		 */
+		public IncompatibleFileException(String filename, int versionReadInFile) {
+			super(IncompatibleFileException.formatVersionMessage(filename, versionReadInFile,
+			        Actions.storeProtocolVersion));
+		}
+
+		/**
+		 * Constructs the Exception with a {@code filename} and an
+		 * {@code InvalidClassException}.
+		 *
+		 * @param filename the name of the file which contains data
 		 * @param e        the InvalidClassException that triggered this Exception
 		 */
 		public IncompatibleFileException(String filename, InvalidClassException e) {
-			super(IncompatibleFileException.formatMessage(filename, e));
+			super(IncompatibleFileException.formatMessageFromException(filename, e));
 		}
 
-		private static String formatMessage(String filename, InvalidClassException e) {
+		private static final Pattern invalidClassExceptionPattern = Pattern
+		        .compile(".*? serialVersionUID = (\\d+), .*? serialVersionUID = (\\d+)");//$NON-NLS-1$;
+
+		private static String formatVersionMessage(String filename, int versionInFile,
+		        int versionInCode) {
+
+			final String actionString = "Actions." + (versionInFile > versionInCode ? "52" : "53"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+
+			return String.format(Languages.getString("Actions.51"), //$NON-NLS-1$
+			        filename, Languages.getString(actionString));
+		}
+
+		private static String formatMessageFromException(String filename, InvalidClassException e) {
+
 			// extract version information from exception message
-			final Pattern p = Pattern
-			        .compile(".*? serialVersionUID = (\\d+), .*? serialVersionUID = (\\d+)"); //$NON-NLS-1$
-			final Matcher m = p.matcher(e.getMessage());
+			final Matcher m = IncompatibleFileException.invalidClassExceptionPattern
+			        .matcher(e.getMessage());
 
 			if (!m.matches())
 				throw new RuntimeException("Invalid regex in IncompatibleFileException"); //$NON-NLS-1$
 
 			final int idInFile  = Integer.parseInt(m.group(1));
 			final int idInClass = Integer.parseInt(m.group(2));
-
-			return String.format(Languages.getString("Actions.51"), //$NON-NLS-1$
-			        filename, idInFile > idInClass ? Languages.getString("Actions.52") //$NON-NLS-1$
-			                : Languages.getString("Actions.53")); //$NON-NLS-1$
+			return IncompatibleFileException.formatVersionMessage(filename, idInFile, idInClass);
 		}
 	}
 
 	/**
 	 * Writes the contents of Lists of Components and Commands to a file.
 	 *
-	 * @param filename   the filename
-	 * @param components the list of Components to write to the file
-	 * @param commands   the list of Commands to write to the file
+	 * @param filename the filename
+	 * @param commands the list of Commands to write to the file
 	 *
 	 * @throws IOException if an IOExcetpion occurred
 	 *
-	 * @see #readFromFile(String, List, List)
+	 * @see #readFromFile(String, List)
 	 */
-	protected static void writeToFile(String filename, List<Component> components,
-	        List<Command> commands)
+	protected static void writeToFile(String filename, List<Command> commands)
 	        throws IOException {
 
 		final File dir = Paths.get(StringConstants.USER_DATA).toFile();
@@ -507,37 +526,38 @@ public enum Actions implements HasRequirements {
 		        System.getProperty("file.separator"), filename); //$NON-NLS-1$
 
 		try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(outputFile))) {
-			oos.writeByte(Actions.start);
 
-			oos.writeInt(components.size());
-			for (final Component component : components)
-				oos.writeObject(component);
+			// write start
+			oos.writeByte(Actions.startOfFile);
 
+			// write version
+			oos.writeByte(Actions.storeProtocolVersion);
+
+			// write commands
 			oos.writeInt(commands.size());
 			for (final Command command : commands)
 				oos.writeObject(command);
 
-			oos.writeByte(Actions.eof);
+			// write eof
+			oos.writeByte(Actions.endOfFile);
 		}
 	}
 
 	/**
 	 * Fills the Lists with the Components and Commands from the file.
 	 *
-	 * @param filename   the filename
-	 * @param components the list that will be filled with Components
-	 * @param commands   the list that will be filled with Commands
+	 * @param filename the filename
+	 * @param commands the list that will be filled with Commands
 	 *
 	 * @throws IOException               if an IOException occurred
 	 * @throws FileNotFoundException     if the file couldn't be found
 	 * @throws FileCorruptedException    if the contents of the file are corrupted
-	 * @throws IncompatibleFileException if the file data corresponds to a previous
+	 * @throws IncompatibleFileException if the file data corresponds to a different
 	 *                                   version of the program
 	 *
-	 * @see #writeToFile(String, List, List)
+	 * @see #writeToFile(String, List)
 	 */
-	protected static void readFromFile(String filename, List<Component> components,
-	        List<Command> commands)
+	protected static void readFromFile(String filename, List<Command> commands)
 	        throws FileNotFoundException, IOException, Actions.FileCorruptedException,
 	        Actions.IncompatibleFileException {
 
@@ -547,20 +567,21 @@ public enum Actions implements HasRequirements {
 		try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(inputFile))) {
 
 			// read start
-			if (ois.readByte() != Actions.start)
+			if (ois.readByte() != Actions.startOfFile)
 				throw new FileCorruptedException(filename);
 
-			// read commands
-			int count = ois.readInt();
-			for (int i = 0; i < count; i++)
-				components.add((Component) ois.readObject());
+			// read version
+			final int versionRead = ois.readByte();
+			if (versionRead != Actions.storeProtocolVersion)
+				throw new IncompatibleFileException(filename, versionRead);
 
-			count = ois.readInt();
+			// read commands
+			final int count = ois.readInt();
 			for (int i = 0; i < count; ++i)
 				commands.add((Command) ois.readObject());
 
 			// read eof
-			if (ois.readByte() != Actions.eof)
+			if (ois.readByte() != Actions.endOfFile)
 				throw new FileCorruptedException(filename);
 
 		} catch (final ClassNotFoundException e) {

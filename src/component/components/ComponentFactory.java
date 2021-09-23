@@ -208,6 +208,8 @@ public final class ComponentFactory {
 	 * Restores the state of a serialised {@code Component} so that it can function.
 	 *
 	 * @param component the Component
+	 *
+	 * @implNote {@link Component#restoreSerialised()}
 	 */
 	public static void restoreSerialisedComponent(Component component) {
 		component.restoreSerialised();
