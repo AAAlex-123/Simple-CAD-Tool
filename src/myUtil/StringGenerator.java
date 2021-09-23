@@ -1,5 +1,6 @@
 package myUtil;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.function.Supplier;
@@ -23,7 +24,8 @@ import java.util.function.Supplier;
  *
  * @author alexm
  */
-public final class StringGenerator implements Supplier<String>, Iterator<String>, Iterable<String> {
+public final class StringGenerator
+        implements Supplier<String>, Iterator<String>, Iterable<String>, Serializable {
 
 	private final String text;
 	private final int start, end;
