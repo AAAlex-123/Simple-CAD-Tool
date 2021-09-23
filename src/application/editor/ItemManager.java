@@ -23,12 +23,14 @@ import myUtil.Utility;
  */
 class ItemManager<T extends Identifiable<String>> {
 
-	private final Map<String, T>               map;
-	private final Map<String, StringGenerator> idGenerators;
+	private final Map<String, T>       itemMap;
+
+	/** A key-Generator map that creates IDs for new items in this manager */
+	final Map<String, StringGenerator> idGenerators;
 
 	/** Constructs the ItemManager */
 	public ItemManager() {
-		map = new HashMap<>();
+		itemMap = new HashMap<>();
 		idGenerators = new HashMap<>();
 	}
 
@@ -43,10 +45,10 @@ class ItemManager<T extends Identifiable<String>> {
 	 */
 	public void add(T item) {
 		final String id = item.getID();
-		if (map.containsKey(id))
+		if (itemMap.containsKey(id))
 			throw new DuplicateIdException(id);
 
-		map.put(id, item);
+		itemMap.put(id, item);
 	}
 
 	/**
@@ -57,7 +59,7 @@ class ItemManager<T extends Identifiable<String>> {
 	 * @throws NullPointerException if {@code item == null}
 	 */
 	public void remove(T item) {
-		map.remove(item.getID());
+		itemMap.remove(item.getID());
 	}
 
 	/**
@@ -70,7 +72,7 @@ class ItemManager<T extends Identifiable<String>> {
 	 * @throws MissingComponentException if no Item with the ID exists
 	 */
 	public T get(String id) throws MissingComponentException {
-		final T item = map.get(id);
+		final T item = itemMap.get(id);
 		if (item == null)
 			throw new MissingComponentException(id);
 
@@ -83,7 +85,7 @@ class ItemManager<T extends Identifiable<String>> {
 	 * @return the number of items
 	 */
 	public int size() {
-		return map.size();
+		return itemMap.size();
 	}
 
 	/**
@@ -95,7 +97,7 @@ class ItemManager<T extends Identifiable<String>> {
 	 * @return a List with the Items
 	 */
 	public List<T> getall() {
-		return getall(c -> true);
+		return getall(item -> true);
 	}
 
 	/**
@@ -110,7 +112,7 @@ class ItemManager<T extends Identifiable<String>> {
 	 */
 	public List<T> getall(Predicate<T> predicate) {
 		final List<T> list = new ArrayList<>(size());
-		Utility.foreach(map.values(), item -> {
+		Utility.foreach(itemMap.values(), item -> {
 			if (predicate.test(item))
 				list.add(item);
 		});
@@ -132,17 +134,19 @@ class ItemManager<T extends Identifiable<String>> {
 	}
 
 	/**
-	 * Creates a Generator.
+	 * Creates a Generator. If a Generator with the same ID already exists, it will
+	 * be replaced with the new one.
 	 *
 	 * @param generatorID the Generator's ID
 	 * @param text        the text that will be formatted
 	 */
 	public void addGenerator(String generatorID, String text) {
-		addGenerator(generatorID, text, 0);
+		idGenerators.put(generatorID, new StringGenerator(text));
 	}
 
 	/**
-	 * Creates a generator.
+	 * Creates a Generator. If a Generator with the same ID already exists, it will
+	 * be replaced with the new one.
 	 *
 	 * @param generatorID the Generator's ID
 	 * @param text        the text that will be formatted
@@ -150,6 +154,40 @@ class ItemManager<T extends Identifiable<String>> {
 	 */
 	public void addGenerator(String generatorID, String text, int start) {
 		idGenerators.put(generatorID, new StringGenerator(text, start));
+	}
+
+	/**
+	 * Creates a Generator. If a Generator with the same ID already exists, it will
+	 * be replaced with the new one.
+	 *
+	 * @param generatorID the Generator's ID
+	 * @param text        the text that will be formatted
+	 * @param start       the initial counter value
+	 * @param end         the final counter value
+	 */
+	public void addGenerator(String generatorID, String text, int start, int end) {
+		idGenerators.put(generatorID, new StringGenerator(text, start, end));
+	}
+
+	/**
+	 * Removes a Generator.
+	 *
+	 * @param generatorID the Generator's ID
+	 *
+	 * @return {@code true} if a Generator with that ID was removed successfully
+	 *         {@code false} if no such generator exists
+	 */
+	public boolean removeGenerator(String generatorID) {
+		return idGenerators.remove(generatorID) != null;
+	}
+
+	/**
+	 * Returns a copy of the Generators.
+	 *
+	 * @return a copy of the Generators
+	 */
+	public Map<String, StringGenerator> getGenerators() {
+		return new HashMap<>(idGenerators);
 	}
 
 	/**
@@ -165,7 +203,7 @@ class ItemManager<T extends Identifiable<String>> {
 		 * @param id the duplicate id
 		 */
 		public DuplicateIdException(String id) {
-			super(String.format("Another Item associated with ID %s", id)); //$NON-NLS-1$
+			super(String.format("Another Item associated with ID '%s'", id)); //$NON-NLS-1$
 		}
 	}
 }
