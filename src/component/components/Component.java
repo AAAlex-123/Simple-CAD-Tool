@@ -119,6 +119,16 @@ public abstract class Component implements Identifiable<String>, Serializable {
 	}
 
 	/**
+	 * Repaints the {@code Graphic} object of this Component only if it exists. This
+	 * method, unlike the previous {@code getGraphics().repaint()} statement, avoids
+	 * creating a {@code Graphic} object to repaint if it doesn't exist.
+	 */
+	protected final void repaintGraphicIfExists() {
+		if (g != null)
+			g.repaint();
+	}
+
+	/**
 	 * The core of the library: all Components are able to propagate a received
 	 * signal to other components.
 	 * <p>
