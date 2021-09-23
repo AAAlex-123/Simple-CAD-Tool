@@ -47,7 +47,7 @@ final class InputPin extends Component {
 		// propagate signal only if it's different
 		if (active != newActive) {
 			active = newActive;
-			getGraphics().repaint();
+			repaintGraphicIfExists();
 			Utility.foreach(outputBranches, b -> b.wake_up(active, hidden()));
 		}
 	}
