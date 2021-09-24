@@ -6,6 +6,8 @@ import localisation.RequirementStrings;
 import requirement.exceptions.LockedRequirementException;
 import requirement.graphics.AbstractRequirementGraphic;
 import requirement.graphics.NullRequirementGraphic;
+import requirement.util.HasRequirements;
+import requirement.util.Requirements;
 
 /**
  * A class which encapsulates the process where:
