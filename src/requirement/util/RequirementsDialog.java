@@ -1,4 +1,4 @@
-package requirement.graphics;
+package requirement.util;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
