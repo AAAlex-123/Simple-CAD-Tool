@@ -6,7 +6,7 @@ package requirement.exceptions;
  *
  * @author Alex Mandelias
  *
- * @see requirement.requirements.Requirements Requirements
+ * @see requirement.util.Requirements Requirements
  */
 public class MissingRequirementException extends RuntimeException {
 
