@@ -1,7 +1,8 @@
 /**
- * Defines the {@link requirement.graphics.AbstractRequirementGraphic Graphic}
- * hierarchy as well as other utility types to aid working with Graphics.
+ * Defines the {@code Graphic} hierarchy.
  *
  * @author Alex Mandelias
+ *
+ * @see requirement.graphics.AbstractRequirementGraphic Graphic
  */
 package requirement.graphics;
