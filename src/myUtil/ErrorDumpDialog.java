@@ -30,6 +30,7 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.UIManager;
 
 import application.StringConstants;
+import localisation.Languages;
 
 /**
  * A convenient way to display an unexpected error message to the user providing
@@ -40,10 +41,10 @@ import application.StringConstants;
  */
 public final class ErrorDumpDialog extends JDialog {
 
-	private static final String titleString           = "Unexpected Error";
-	private static final String messageString         = "Please forward the following text to the developer<br>Press the button to copy it to the clipboard and close this dialog";
-	private static final String clipboardButtonString = "Copy to Clipboard";
-	private static final String logButtonString       = "Log to File";
+	private static final String titleString           = Languages.getString("ErrorDumpDialog.0"); //$NON-NLS-1$
+	private static final String messageString         = Languages.getString("ErrorDumpDialog.1"); //$NON-NLS-1$
+	private static final String clipboardButtonString = Languages.getString("ErrorDumpDialog.2"); //$NON-NLS-1$
+	private static final String logButtonString       = Languages.getString("ErrorDumpDialog.3"); //$NON-NLS-1$
 
 	/**
 	 * Constructs and shows a Dialog for an Exception.
@@ -52,9 +53,9 @@ public final class ErrorDumpDialog extends JDialog {
 	 * @param e     the Exception whose Stack Trace will be dumped
 	 */
 	public static void showDialog(Frame frame, Exception e) {
-		StringWriter sw = new StringWriter();
+		final StringWriter sw = new StringWriter();
 		e.printStackTrace(new PrintWriter(sw));
-		showDialog(frame, sw.toString());
+		ErrorDumpDialog.showDialog(frame, sw.toString());
 	}
 
 	/**
@@ -81,8 +82,8 @@ public final class ErrorDumpDialog extends JDialog {
 
 		messageLabel = new JLabel(
 		        String.format("<html><center>%s</center></html>", ErrorDumpDialog.messageString)); //$NON-NLS-1$
-		copyButton = new JButton(clipboardButtonString);
-		logButton = new JButton(logButtonString);
+		copyButton = new JButton(ErrorDumpDialog.clipboardButtonString);
+		logButton = new JButton(ErrorDumpDialog.logButtonString);
 
 		topPanel.add(new JLabel(UIManager.getIcon("OptionPane.errorIcon"))); //$NON-NLS-1$
 		topPanel.add(messageLabel);
@@ -151,16 +152,17 @@ public final class ErrorDumpDialog extends JDialog {
 
 				ErrorDumpDialog.this.dispose();
 
-			} catch (Exception e1) {
+			} catch (final Exception e1) {
 				error(e);
 			}
 		});
 	}
 
 	private void error(ActionEvent e) {
-		final String message     = e.getActionCommand() + " failed";
-		final String title       = "Error";
-		final int    messageType = JOptionPane.ERROR_MESSAGE;
+		final String popupMsgString = Languages.getString("ErrorDumpDialog.4");                     //$NON-NLS-1$
+		final String message        = String.format("%s %s", e.getActionCommand(), popupMsgString); //$NON-NLS-1$
+		final String title          = Languages.getString("ErrorDumpDialog.5");                     //$NON-NLS-1$
+		final int    messageType    = JOptionPane.ERROR_MESSAGE;
 
 		JOptionPane.showMessageDialog(this, message, title, messageType);
 	}
