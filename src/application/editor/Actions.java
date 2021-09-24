@@ -33,10 +33,10 @@ import localisation.Languages;
 import myUtil.ErrorDumpDialog;
 import myUtil.StringGenerator;
 import requirement.requirements.AbstractRequirement;
-import requirement.requirements.HasRequirements;
 import requirement.requirements.ListRequirement;
-import requirement.requirements.Requirements;
 import requirement.requirements.StringType;
+import requirement.util.HasRequirements;
+import requirement.util.Requirements;
 
 /**
  * An enum-strategy for the different Actions the Editor may take. Actions have
