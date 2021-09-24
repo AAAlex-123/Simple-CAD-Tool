@@ -36,6 +36,12 @@ public final class StringConstants {
 	/** Directory of the Menu Icons */
 	public static final String MENU_ICON_PATH;
 
+	/** Directory of the Log Files */
+	public static final String LOG_PATH;
+
+	/** Name for the Log Files. Should contain "{date}" */
+	public static final String LOG_FILE_NAME;
+
 	/** Directory of the user-created .scad files */
 	public static final String USER_DATA;
 
@@ -152,6 +158,8 @@ public final class StringConstants {
 
 		COMPONENT_ICON_PATH = properties.getProperty("Component_Icon_Directory"); //$NON-NLS-1$
 		MENU_ICON_PATH = properties.getProperty("Menu_Icon_Directory"); //$NON-NLS-1$
+		LOG_PATH = properties.getProperty("Log_Directory"); //$NON-NLS-1$
+		LOG_FILE_NAME = properties.getProperty("Log_File_Name"); //$NON-NLS-1$
 		USER_DATA = properties.getProperty("User_Directory"); //$NON-NLS-1$
 		M_FILE_MNEMONIC = properties.getProperty("File_Mnemonic").charAt(0); //$NON-NLS-1$
 		M_EDIT_MNEMONIC = properties.getProperty("Edit_Mnemonic").charAt(0); //$NON-NLS-1$
