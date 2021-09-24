@@ -1,4 +1,4 @@
-package requirement.requirements;
+package requirement.util;
 
 import java.awt.Frame;
 import java.io.Serializable;
@@ -12,7 +12,12 @@ import component.components.Component;
 import localisation.RequirementStrings;
 import myUtil.Utility;
 import requirement.exceptions.MissingRequirementException;
-import requirement.graphics.RequirementsDialog;
+import requirement.requirements.AbstractRequirement;
+import requirement.requirements.ComponentRequirement;
+import requirement.requirements.ListRequirement;
+import requirement.requirements.ObjectRequirement;
+import requirement.requirements.StringRequirement;
+import requirement.requirements.StringType;
 import requirement.requirements.ComponentRequirement.Policy;
 
 /**

@@ -6,6 +6,7 @@ import java.awt.event.FocusEvent;
 import javax.swing.JPanel;
 
 import requirement.requirements.AbstractRequirement;
+import requirement.util.RequirementsDialog;
 
 /**
  * A GUI that can be used to fulfil an {@link AbstractRequirement}. The Graphic

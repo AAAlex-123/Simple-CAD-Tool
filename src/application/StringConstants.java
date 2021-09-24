@@ -12,8 +12,8 @@ import java.util.Properties;
 import localisation.Languages;
 import myUtil.OrderedProperties;
 import myUtil.Utility;
-import requirement.requirements.Requirements;
 import requirement.requirements.StringType;
+import requirement.util.Requirements;
 
 /**
  * Defines many String and char constants that are used as settings throughout

@@ -1,4 +1,6 @@
-package requirement.requirements;
+package requirement.util;
+
+import requirement.requirements.AbstractRequirement;
 
 /**
  * An Interface for classes that use {@link AbstractRequirement Requirements}.

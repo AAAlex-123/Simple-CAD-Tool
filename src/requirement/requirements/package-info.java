@@ -1,7 +1,8 @@
 /**
- * Defines the {@link requirement.requirements.AbstractRequirement Requirement}
- * hierarchy as well as other utility types to aid working with Requirements.
+ * Defines the {@code Requirement} hierarchy.
  *
  * @author Alex Mandelias
+ *
+ * @see requirement.requirements.AbstractRequirement Requirement
  */
 package requirement.requirements;
