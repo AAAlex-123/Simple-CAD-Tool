@@ -1,4 +1,4 @@
-package requirement.requirements;
+package requirement.util;
 
 import java.awt.Frame;
 import java.io.Serializable;
