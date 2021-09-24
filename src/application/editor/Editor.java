@@ -11,6 +11,7 @@ import static component.ComponentType.OUTPUT_PIN;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Frame;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,7 +47,9 @@ import myUtil.Utility;
  */
 public final class Editor extends JComponent implements EditorInterface {
 
-	private final Application app;
+	/** The Editor's context, the Application in which it exists */
+	final Application       app;
+
 	private final UI          editorUI;
 	private final StatusBar   statusBar;
 
@@ -101,7 +104,7 @@ public final class Editor extends JComponent implements EditorInterface {
 		if (getFileInfo().isDirty()) {
 			final String messageString = Languages.getString("Editor.2"); //$NON-NLS-1$
 			final String titleString   = Languages.getString("Editor.3"); //$NON-NLS-1$
-			res = JOptionPane.showConfirmDialog(context().getFrame(),
+			res = JOptionPane.showConfirmDialog(getFrame(),
 			        messageString,
 			        String.format("%s %s", titleString, getFileInfo().getFile()), //$NON-NLS-1$
 			        JOptionPane.YES_NO_CANCEL_OPTION,
@@ -117,12 +120,13 @@ public final class Editor extends JComponent implements EditorInterface {
 	}
 
 	/**
-	 * Returns the Editor's context, the Application in which it exists.
+	 * Returns the {@code Frame} of the Editor's Application, the window that is
+	 * displayed on the user's screen.
 	 *
-	 * @return the Editor's context
+	 * @return the Frame where this Editor is displayed
 	 */
-	Application context() {
-		return app;
+	Frame getFrame() {
+		return app.getFrame();
 	}
 
 	/**
