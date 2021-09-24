@@ -13,8 +13,8 @@ import component.components.Component;
 import component.components.ComponentFactory;
 import localisation.Languages;
 import requirement.requirements.AbstractRequirement;
-import requirement.requirements.HasRequirements;
-import requirement.requirements.Requirements;
+import requirement.util.HasRequirements;
+import requirement.util.Requirements;
 
 /**
  * An implementation of the {@link Undoable} interface, specific to this
