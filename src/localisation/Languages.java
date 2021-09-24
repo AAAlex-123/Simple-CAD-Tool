@@ -22,7 +22,7 @@ import javax.swing.JOptionPane;
 
 import myUtil.OrderedProperties;
 import myUtil.Utility;
-import requirement.requirements.Requirements;
+import requirement.util.Requirements;
 
 /**
  * Wrapper for a {@code ResourceBundle} that additionally provides a way to
