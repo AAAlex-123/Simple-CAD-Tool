@@ -32,8 +32,9 @@ import application.editor.StatusBar.MessageType;
 import localisation.Languages;
 import localisation.RequirementStrings;
 import myUtil.Utility;
+import requirement.graphics.AbstractRequirementGraphic;
+import requirement.graphics.NullRequirementGraphic;
 import requirement.requirements.AbstractRequirement;
-import requirement.requirements.Requirements;
 
 /**
  * A dialog with which the user fulfils a {@link Requirements} object. Calling
