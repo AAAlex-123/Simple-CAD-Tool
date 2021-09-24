@@ -14,6 +14,7 @@ import application.editor.Editor;
 import command.Command;
 import component.ComponentType;
 import localisation.Languages;
+import myUtil.ErrorDumpDialog;
 import myUtil.StringGenerator;
 
 /**
@@ -153,9 +154,9 @@ public final class Application {
 				try {
 					final boolean settingsChanged = StringConstants.editAndWriteToFile(frame);
 					if (settingsChanged)
-						Actions.message(frame, file, true);
+						Actions.message(frame, file, null);
 				} catch (final IOException e) {
-					Actions.message(frame, file, false);
+					Actions.message(frame, file, e);
 				}
 				context = null;
 			}
@@ -171,9 +172,9 @@ public final class Application {
 				try {
 					final boolean languageChanged = Languages.editAndWriteToFile(frame);
 					if (languageChanged)
-						Actions.message(frame, file, true);
+						Actions.message(frame, file, null);
 				} catch (final IOException e) {
-					Actions.message(frame, file, false);
+					Actions.message(frame, file, e);
 				}
 				context = null;
 			}
@@ -209,24 +210,23 @@ public final class Application {
 
 		/**
 		 * Displays a pop-up window informing the user about the success or failure of a
-		 * save operation to a file.
+		 * save operation to a file. In case of an error, an ErrorDumpDialog is used.
 		 *
-		 * @param frame   the parent frame for the pop-up
-		 * @param file    the file where the settings were saved
-		 * @param success {@code true} if the operation was successful, {@code false}
-		 *                otherwise
+		 * @param frame the parent frame for the pop-up
+		 * @param file  the file where the settings were saved
+		 * @param e     the Exception that may have been caused
+		 *
+		 * @see ErrorDumpDialog
 		 */
-		private static void message(Frame frame, String file, boolean success) {
-			if (success)
-				JOptionPane.showMessageDialog(frame, String.format(
-				        Languages.getString("Application.3"), file), //$NON-NLS-1$
-				        Languages.getString("Application.4"), //$NON-NLS-1$
-				        JOptionPane.INFORMATION_MESSAGE);
-			else
-				JOptionPane.showMessageDialog(frame, String.format(
-				        Languages.getString("Application.5"), file), //$NON-NLS-1$
-				        Languages.getString("Application.6"), //$NON-NLS-1$
-				        JOptionPane.ERROR_MESSAGE);
+		private static void message(Frame frame, String file, Exception e) {
+			if (e == null) {
+				final String messageString = Languages.getString("Application.3");//$NON-NLS-1$
+				final String titleString   = Languages.getString("Application.4"); //$NON-NLS-1$
+
+				JOptionPane.showMessageDialog(frame, String.format(messageString, file),
+				        titleString, JOptionPane.INFORMATION_MESSAGE);
+			} else
+				ErrorDumpDialog.showDialog(frame, e);
 		}
 	}
 }
