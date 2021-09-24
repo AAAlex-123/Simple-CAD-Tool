@@ -28,7 +28,7 @@ import localisation.RequirementStrings;
 import myUtil.StringGenerator;
 import requirement.requirements.ComponentRequirement;
 import requirement.requirements.ComponentRequirement.Policy;
-import requirement.requirements.Requirements;
+import requirement.util.Requirements;
 
 /**
  * Menu bar for an {@code Application}. This class also handles the mnemonics
