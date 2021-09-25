@@ -61,10 +61,10 @@ final class MyMenu extends JMenuBar {
 
 	{
 		builtin_command_gen = new StringGenerator(
-		        String.format("%s %%d", StringConstants.BUILTIN_COMMAND_ACCEL_PREFIX), 1, 10); //$NON-NLS-1$
+		        String.format("%s %%d", StringConstants.BUILTIN_COMMAND_ACCEL_PREFIX), 1, 9); //$NON-NLS-1$
 
 		custom_command_gen = new StringGenerator(
-		        String.format("%s %%d", StringConstants.USER_COMMAND_ACCEL_PREFIX), 1, 10); //$NON-NLS-1$
+		        String.format("%s %%d", StringConstants.USER_COMMAND_ACCEL_PREFIX), 1, 9); //$NON-NLS-1$
 
 		// --- Application Actions ---
 
