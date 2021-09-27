@@ -1,8 +1,8 @@
 package application.editor;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
-import java.util.Vector;
 
 /**
  * A wrapper for implementing undo and redo functionality.
@@ -17,14 +17,14 @@ final class UndoableHistory<T extends Undoable> {
 
 	private final Stack<T> past, future;
 
-	/** Initialises the UndoableHistory */
+	/** Constructs an empty UndoableHistory object */
 	public UndoableHistory() {
 		past = new Stack<>();
 		future = new Stack<>();
 	}
 
 	/**
-	 * Adds the given {@code Undoable} to the history <i>without</i> executing it.
+	 * Adds an {@code Undoable} to the history without executing it.
 	 *
 	 * @param undoable the undoable
 	 */
@@ -36,37 +36,31 @@ final class UndoableHistory<T extends Undoable> {
 			future.clear();
 	}
 
-	/**
-	 * Undoes the last {@code Undoable}. If there are no {@code Undoables} to be
-	 * undone this method does nothing.
-	 */
+	/** Undoes the most recently executed {@code Undoable}, if one exists */
 	public void undo() {
 		if (canUndo()) {
-			T last = past.pop();
+			final T last = past.pop();
 			last.unexecute();
 			future.push(last);
 		}
 	}
 
-	/**
-	 * Re-does the last {@code Undoable}. If there are no {@code Undoables} to be
-	 * re-done this method does nothing
-	 */
+	/** Re-does the most recently undone {@code Undoable}, if one exists */
 	public void redo() {
 		if (canRedo()) {
-			T first = future.pop();
+			final T first = future.pop();
 
 			// this Undoable has executed successfully before; this statement can't throw
 			try {
 				first.execute();
-			} catch (Exception e) {
+			} catch (final Exception e) {
 				throw new RuntimeException(e);
 			}
 			past.push(first);
 		}
 	}
 
-	/** Clears the past and future parts of this UndoableHistory */
+	/** Empties this UndoableHistory */
 	public void clear() {
 		past.clear();
 		future.clear();
@@ -91,20 +85,20 @@ final class UndoableHistory<T extends Undoable> {
 	}
 
 	/**
-	 * Returns a <i>copy</i> of the past part of this history.
+	 * Returns the past part of this history.
 	 *
 	 * @return a List with the previously executed Undoables
 	 */
 	public List<T> getPast() {
-		return new Vector<>(past);
+		return new ArrayList<>(past);
 	}
 
 	/**
-	 * Returns a <i>copy</i> of the future part of this history.
+	 * Returns the future part of this history.
 	 *
 	 * @return a List with the previously un-executed Undoables
 	 */
 	public List<T> getFuture() {
-		return new Vector<>(future);
+		return new ArrayList<>(future);
 	}
 }
