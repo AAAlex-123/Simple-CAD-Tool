@@ -40,40 +40,40 @@ import myUtil.Utility;
  * The creation and deletion of Components is accomplished using {@link Command}
  * objects, which are managed using a {@link UndoableHistory}.
  * <p>
- * Every Action the Editor takes is encapsulated in an {@link Actions Action}
- * instance.
+ * Every Action the Editor takes is encapsulated in an {@link Actions} constant.
  *
  * @author Alex Mandelias
  */
 public final class Editor extends JComponent implements EditorInterface {
 
-	/** The Editor's context, the Application in which it exists */
-	final Application       app;
+	/** This Editor's context, the Application in which it exists */
+	final Application app;
 
-	private final UI          editorUI;
-	private final StatusBar   statusBar;
+	private final UI        editorUI;
+	private final StatusBar statusBar;
 
 	/** Encapsulates information about the File this Editor edits */
-	final FileInfo            fileInfo;
+	final FileInfo fileInfo;
 
 	/** Encapsulates information about the Components of this Editor */
 	final ItemManager<Component>           componentManager;
 	private final UndoableHistory<Command> undoableHistory;
 
 	/**
-	 * Constructs an Editor with the given context.
+	 * Constructs an Editor.
 	 *
-	 * @param application     the Editor's context
-	 * @param initialFilename the initial file name
+	 * @param application this Editor's context
+	 * @param filename    the name of the (potentially nonexistent) file this Editor
+	 *                    edits
 	 */
-	public Editor(Application application, String initialFilename) {
+	public Editor(Application application, String filename) {
 		app = application;
 		editorUI = new UI();
 		statusBar = new StatusBar();
 
 		fileInfo = new FileInfo();
 		fileInfo.markSaved();
-		fileInfo.setFile(initialFilename);
+		fileInfo.setFile(filename);
 
 		componentManager = new ItemManager<>();
 		undoableHistory = new UndoableHistory<>();
@@ -120,19 +120,21 @@ public final class Editor extends JComponent implements EditorInterface {
 	}
 
 	/**
-	 * Returns the {@code Frame} of the Editor's Application, the window that is
+	 * Returns the {@code Frame} of this Editor's Application, the window that is
 	 * displayed on the user's screen.
 	 *
 	 * @return the Frame where this Editor is displayed
+	 *
+	 * @see #app
 	 */
 	Frame getFrame() {
 		return app.getFrame();
 	}
 
 	/**
-	 * Adds a {@code Component} to the Editor.
+	 * Adds a {@code Component} to this Editor.
 	 *
-	 * @param component the Component
+	 * @param component the Component to add
 	 */
 	public void addComponent(Component component) {
 		componentManager.add(component);
@@ -142,9 +144,9 @@ public final class Editor extends JComponent implements EditorInterface {
 	}
 
 	/**
-	 * Removes a {@code Component} from the Editor.
+	 * Removes a {@code Component} from this Editor.
 	 *
-	 * @param component the Component
+	 * @param component the Component to remove
 	 */
 	public void removeComponent(Component component) {
 		componentManager.remove(component);
@@ -160,7 +162,7 @@ public final class Editor extends JComponent implements EditorInterface {
 	 *
 	 * @return the Component with that ID
 	 *
-	 * @throws MissingComponentException if no Component with the ID exists
+	 * @throws MissingComponentException if no Component with that ID exists
 	 */
 	public Component getComponent_(String ID) throws MissingComponentException {
 		return componentManager.get(ID);
@@ -185,31 +187,31 @@ public final class Editor extends JComponent implements EditorInterface {
 	}
 
 	/**
-	 * Returns a list of the Editor's {@code Components}.
+	 * Returns every {@code Component} of this Editor.
 	 * <p>
-	 * <b>Note</b> that this does <i>not</i> return a copy of the items. Any changes
-	 * to the Components will be reflected in the Editor.
+	 * <b>Note:</b> this method does <i>not</i> return a copy of each Component. Any
+	 * changes to them will be reflected in this Editor.
 	 *
-	 * @return the list
+	 * @return a List with the Components of this Editor
 	 */
 	public List<Component> getComponents_() {
 		return componentManager.getall();
 	}
 
 	/**
-	 * Returns a list of the Editor's deleted {@code Components}.
+	 * Returns every deleted {@code Component} of this Editor.
 	 * <p>
-	 * <b>Note</b> that this does <i>not</i> return a copy of the items. Any changes
-	 * to the Components will be reflected in the Editor.
+	 * <b>Note:</b> this method does <i>not</i> return a copy of each Component. Any
+	 * changes to them will be reflected in this Editor.
 	 *
-	 * @return the list
+	 * @return a List with the deleted Components of this Editor
 	 */
 	public List<Component> getDeletedComponents() {
 		return componentManager.getall(ComponentFactory::toRemove);
 	}
 
 	/**
-	 * Returns the next generated ID for the given {@code ComponentType}.
+	 * Returns the next generated ID for a {@code ComponentType}.
 	 *
 	 * @param type the type of the Component
 	 *
@@ -221,7 +223,7 @@ public final class Editor extends JComponent implements EditorInterface {
 		return componentManager.getNextID(type.description());
 	}
 
-	/** Clears the Editor resetting it to its original state */
+	/** Clears this Editor resetting it to its original state */
 	void clear() {
 		Utility.foreach(new ArrayList<>(getComponents_()), this::removeComponent);
 		undoableHistory.clear();
@@ -237,22 +239,25 @@ public final class Editor extends JComponent implements EditorInterface {
 	void execute(Command command) throws Exception {
 		command.execute();
 		undoableHistory.add(command);
+		System.out.println(undoableHistory);
 	}
 
 	/** Undoes the most recently executed {@code Command} */
 	void undo() {
 		undoableHistory.undo();
+		System.out.println(undoableHistory);
 	}
 
 	/** Re-does the most recently undone {@code Command} */
 	void redo() {
 		undoableHistory.redo();
+		System.out.println(undoableHistory);
 	}
 
 	/**
-	 * Returns a list with a copy of the {@code Commands} previously executed.
+	 * Returns a copy of the {@code Commands} previously executed.
 	 *
-	 * @return the list
+	 * @return the list of Commands
 	 */
 	public List<Command> getPastCommands() {
 		return new ArrayList<>(undoableHistory.getPast());
@@ -286,7 +291,7 @@ public final class Editor extends JComponent implements EditorInterface {
 	}
 
 	/**
-	 * Updates the 'message' label with the message of an {@code exception}.
+	 * Updates the 'message' label with the error message of an Exception.
 	 *
 	 * @param exception the Exception
 	 */

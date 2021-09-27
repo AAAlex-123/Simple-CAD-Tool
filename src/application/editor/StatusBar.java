@@ -12,15 +12,16 @@ import javax.swing.SwingConstants;
 
 /**
  * Convenient way to display multiple messages in JLabels. The labels may be
- * formatted according to a {@link MessageType} and are displayed horizontally
- * across this JPanel.
+ * formatted according the {@code Type} of the message they display and are
+ * displayed horizontally across this JPanel.
  * <p>
  * All methods that access a specific Label throw a RuntimeException if the
  * Label is not found.
  *
- * @see MissingLabelException
- *
  * @author Alex Mandelias
+ *
+ * @see MessageType
+ * @see MissingLabelException
  */
 public final class StatusBar extends JPanel {
 
@@ -58,9 +59,9 @@ public final class StatusBar extends JPanel {
 		};
 
 		/**
-		 * Formats the text on the {@code label} according to this {@code MessageType}.
+		 * Formats a {@code label} according to this {@code MessageType}.
 		 *
-		 * @param label the label
+		 * @param label the label to format
 		 */
 		protected abstract void format(JLabel label);
 	}
@@ -72,19 +73,21 @@ public final class StatusBar extends JPanel {
 	}
 
 	/**
-	 * Adds a new Label to the StatusBar with default {@code message type}.
+	 * Adds a new Label to the StatusBar with default message {@code type}.
 	 *
-	 * @param labelID the Label's ID
+	 * @param labelID the new Label's ID
+	 *
+	 * @see MessageType
 	 */
 	public void addLabel(String labelID) {
 		addLabel(labelID, MessageType.DEFAULT);
 	}
 
 	/**
-	 * Adds a new Label to the StatusBar with the given {@code message type}.
+	 * Adds a new Label to the StatusBar with a message {@code type}.
 	 *
-	 * @param labelID the Label's ID
-	 * @param type    the Label's text type
+	 * @param labelID the new Label's ID
+	 * @param type    the type according to which the new Label will be formatted
 	 *
 	 * @see MessageType
 	 */
@@ -115,24 +118,22 @@ public final class StatusBar extends JPanel {
 	}
 
 	/**
-	 * Sets the text that the Label with the {@code labelID} displays without
-	 * changing its appearance. The {@code text} is formatted as if
-	 * {@code String.format} was called with parameter {@code args}.
+	 * Sets the text that the Label displays without changing its appearance. The
+	 * {@code format} is formatted with {@code String.format(format, args)} before
+	 * being set as the Label's text.
 	 *
 	 * @param labelID the ID of the Label
 	 * @param format  the format
 	 * @param args    the format arguments
 	 */
 	public void setLabelText(String labelID, String format, Object... args) {
-		final JLabel label = getLabel(labelID);
-		label.setText(String.format(format, args));
+		getLabel(labelID).setText(String.format(format, args));
 	}
 
 	/**
-	 * Sets the text that the Label with the {@code labelID} displays and changes
-	 * its appearance according to the {@code type} of the message. The {@code text}
-	 * is formatted as if {@code String.format} was called with parameter
-	 * {@code args}.
+	 * Sets the text that the Label displays and changes its appearance according to
+	 * the {@code type} of the message. The {@code format} is formatted with
+	 * {@code String.format(format, args)} before being set as the Label's text.
 	 *
 	 * @param labelID the ID of the Label
 	 * @param type    the type of the text
@@ -145,15 +146,6 @@ public final class StatusBar extends JPanel {
 		final JLabel label = getLabel(labelID);
 		type.format(label);
 		label.setText(String.format(format, args));
-	}
-
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		for (Entry<String, JLabel> e : map.entrySet())
-			sb.append(String.format("'%s':'%s', ", e.getKey(), e.getValue().getText())); //$NON-NLS-1$
-		sb.setLength(sb.length() - 2);
-		return sb.toString();
 	}
 
 	/**

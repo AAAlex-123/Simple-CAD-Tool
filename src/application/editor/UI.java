@@ -8,8 +8,8 @@ import javax.swing.JPanel;
 import component.components.Component;
 
 /**
- * A JPanel to display {@code Components} that repaints itself when a
- * {@code Component} is added or removed.
+ * A JPanel to display {@code Components} that repaints itself when a Component
+ * is added or removed.
  *
  * @author Alex Mandelias
  *
@@ -24,9 +24,9 @@ final class UI extends JPanel {
 	}
 
 	/**
-	 * Adds a {@code Component} to the UI and repaints.
+	 * Adds a {@code Component} to the JPanel and repaints.
 	 *
-	 * @param component the Component
+	 * @param component the Component to add
 	 */
 	public void addComponent(Component component) {
 		add(component.getGraphics());
@@ -34,9 +34,9 @@ final class UI extends JPanel {
 	}
 
 	/**
-	 * Removes a {@code Component} from the UI and repaints.
+	 * Removes a {@code Component} from the JPanel and repaints.
 	 *
-	 * @param component the Component
+	 * @param component the Component and remove
 	 */
 	public void removeComponent(Component component) {
 		remove(component.getGraphics());
