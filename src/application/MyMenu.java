@@ -269,7 +269,7 @@ final class MyMenu extends JMenuBar {
 		final String  patternString = String.format("^(%s|%s).*", CommandStrings.CREATE_STR,              //$NON-NLS-1$
 		        CommandStrings.DELETE_STR);
 		final Pattern pattern       = Pattern.compile(patternString);
-		final String  description   = command.toString();
+		final String  description   = command.description();
 		final Matcher matcher       = pattern.matcher(description);
 
 		if (matcher.find()) {
