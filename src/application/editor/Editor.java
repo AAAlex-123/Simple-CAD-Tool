@@ -298,4 +298,10 @@ public final class Editor extends JComponent implements EditorInterface {
 	public void error(Exception exception) {
 		error("%s", exception.getMessage()); //$NON-NLS-1$
 	}
+
+	@Override
+	public String toString() {
+		return String.format("{%s, %s, %s, %s, %s}", fileInfo, app, componentManager, //$NON-NLS-1$
+		        undoableHistory, statusBar);
+	}
 }
