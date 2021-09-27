@@ -33,7 +33,7 @@ public class FileInfo {
 
 	/**
 	 * Returns a Graphic for this FileInfo object that accurately represents it. It
-	 * consists of a JLabel whose text is effectively formed by calling:
+	 * consists of a JLabel whose text is formed by calling:
 	 *
 	 * <pre>
 	 * String.format("%s%s", dirty ? "*" : "", filename)
@@ -60,17 +60,17 @@ public class FileInfo {
 	}
 
 	/**
-	 * Returns the dirty state of the File. A {@code dirty} file has unsaved changes
-	 * while a {@code non-dirty} one doesn't.
+	 * Returns the dirty state of this File. A {@code dirty} file has unsaved
+	 * changes while a {@code non-dirty} one doesn't.
 	 *
-	 * @return {@code true} if the file is dirty, {@code false} otherwise
+	 * @return {@code true} if this file is dirty, {@code false} otherwise
 	 */
 	public boolean isDirty() {
 		return dirty;
 	}
 
 	/**
-	 * Updates the name of the File.
+	 * Updates the name of this File.
 	 *
 	 * @param newFilename the new name of the File.
 	 */
@@ -78,12 +78,12 @@ public class FileInfo {
 		updateState(newFilename, dirty);
 	}
 
-	/** Marks the File as having unsaved changes */
+	/** Marks this File as having unsaved changes */
 	public void markUnsaved() {
 		updateState(filename, true);
 	}
 
-	/** Marks the File as saved */
+	/** Marks this File as saved */
 	public void markSaved() {
 		updateState(filename, false);
 	}
