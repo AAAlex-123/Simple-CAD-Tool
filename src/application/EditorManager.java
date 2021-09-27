@@ -23,11 +23,13 @@ import javax.swing.SwingConstants;
  *
  * @see EditorInterface
  */
-class EditorManager<T extends Component & EditorInterface> {
+final class EditorManager<T extends Component & EditorInterface> {
+
+	/** The set of Editors in this Manager */
+	final Set<T> editorSet;
 
 	private final JPanel      mainPanel;
 	private final JTabbedPane editorTabbedPane;
-	private final Set<T>      editorSet;
 
 	/** Constructs the EditorManager and its graphical components */
 	public EditorManager() {
@@ -130,5 +132,10 @@ class EditorManager<T extends Component & EditorInterface> {
 	public void removeAllEditors() {
 		new LinkedHashSet<>(editorSet).forEach(this::removeEditor);
 		editorSet.clear();
+	}
+
+	@Override
+	public String toString() {
+		return String.format("Manages: %s", editorSet.toString()); //$NON-NLS-1$
 	}
 }
