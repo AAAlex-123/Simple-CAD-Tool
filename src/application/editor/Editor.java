@@ -239,19 +239,16 @@ public final class Editor extends JComponent implements EditorInterface {
 	void execute(Command command) throws Exception {
 		command.execute();
 		undoableHistory.add(command);
-		System.out.println(undoableHistory);
 	}
 
 	/** Undoes the most recently executed {@code Command} */
 	void undo() {
 		undoableHistory.undo();
-		System.out.println(undoableHistory);
 	}
 
 	/** Re-does the most recently undone {@code Command} */
 	void redo() {
 		undoableHistory.redo();
-		System.out.println(undoableHistory);
 	}
 
 	/**
