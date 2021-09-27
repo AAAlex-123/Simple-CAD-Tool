@@ -62,6 +62,11 @@ public final class StringGenerator
 	}
 
 	@Override
+	public String toString() {
+		return String.format("'%s': %d-%d, %d", format, start, end, current); //$NON-NLS-1$
+	}
+
+	@Override
 	public String get() {
 		return canProduceMore() ? String.format(format, current++) : ""; //$NON-NLS-1$
 	}

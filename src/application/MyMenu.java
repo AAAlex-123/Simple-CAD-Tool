@@ -39,7 +39,9 @@ import requirement.util.Requirements;
  * @author Alex Mandelias
  *
  * @see Application
+ * @see Application.Actions
  * @see Editor
+ * @see Actions
  */
 final class MyMenu extends JMenuBar {
 
@@ -177,7 +179,7 @@ final class MyMenu extends JMenuBar {
 	}
 
 	/**
-	 * Constructs the Menu with the given {@code Application}.
+	 * Constructs a Menu.
 	 *
 	 * @param application the context of this Menu
 	 */
@@ -246,7 +248,7 @@ final class MyMenu extends JMenuBar {
 		m_help.add(h_help);
 		add(m_help);
 
-		// Make Menus Usable
+		// make menus usable
 		mnemonics();
 		listeners();
 		editMenuListeners();
@@ -257,7 +259,7 @@ final class MyMenu extends JMenuBar {
 	/**
 	 * Adds a {@code Command} that creates a {@code Component} to the Menu.
 	 *
-	 * @param command the Command
+	 * @param command the Command to add
 	 */
 	void addCreateCommand(Command command) {
 
@@ -267,7 +269,7 @@ final class MyMenu extends JMenuBar {
 		final String  patternString = String.format("^(%s|%s).*", CommandStrings.CREATE_STR,              //$NON-NLS-1$
 		        CommandStrings.DELETE_STR);
 		final Pattern pattern       = Pattern.compile(patternString);
-		final String  description   = command.toString();
+		final String  description   = command.description();
 		final Matcher matcher       = pattern.matcher(description);
 
 		if (matcher.find()) {
@@ -319,7 +321,7 @@ final class MyMenu extends JMenuBar {
 
 			final String ACTIVE = Languages.getString("MyMenu.0"); //$NON-NLS-1$
 
-			final Requirements reqs = new Requirements();
+			final Requirements         reqs = new Requirements();
 			final ComponentRequirement req  = new ComponentRequirement(CommandStrings.NAME,
 			        activeEditor.getComponents_(), Policy.INPUT_PIN);
 			req.setCaseOfNullGraphic(false, Languages.getString("MyMenu.2")); //$NON-NLS-1$
@@ -347,7 +349,7 @@ final class MyMenu extends JMenuBar {
 		e_focus.addActionListener(e -> {
 			final Editor activeEditor = context.getActiveEditor();
 
-			final Requirements reqs = new Requirements();
+			final Requirements         reqs = new Requirements();
 			final ComponentRequirement req  = new ComponentRequirement(CommandStrings.NAME,
 			        activeEditor.getComponents_(), Policy.NONBRANCH);
 			req.setCaseOfNullGraphic(false, Languages.getString("MyMenu.3")); //$NON-NLS-1$

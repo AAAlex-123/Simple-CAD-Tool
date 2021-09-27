@@ -1,8 +1,5 @@
 package command;
 
-import static component.ComponentType.INPUT_PIN;
-import static component.ComponentType.OUTPUT_PIN;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,10 +60,16 @@ class CreateGateCommand extends CreateCommand {
 			// get arrays of the InputPins and the OutputPins from the temporary context
 			final List<Component> inputPins = new ArrayList<>(), outputPins = new ArrayList<>();
 			Utility.foreach(tempContext.getComponents_(), component -> {
-				if (component.type() == INPUT_PIN)
+				switch (component.type()) {
+				case INPUT_PIN:
 					inputPins.add(component);
-				else if (component.type() == OUTPUT_PIN)
+					break;
+				case OUTPUT_PIN:
 					outputPins.add(component);
+					break;
+				default:
+					break;
+				}
 			});
 
 			final Component[] inputPinArray  = inputPins.toArray(new Component[0]);
@@ -87,7 +90,13 @@ class CreateGateCommand extends CreateCommand {
 	}
 
 	@Override
-	public String toString() {
+	public String description() {
 		return description;
+	}
+
+	@Override
+	public String toString() {
+		return String.format("%s%ndescription: %s%ninstructions: %s", super.toString(), //$NON-NLS-1$
+		        description, commands);
 	}
 }

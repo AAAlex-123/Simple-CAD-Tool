@@ -109,4 +109,9 @@ public abstract class AbstractRequirementGraphic<T extends AbstractRequirement> 
 	 *           user input shall be the focused one in this JPanel
 	 */
 	protected abstract void onFocusGained();
+
+	@Override
+	public final String toString() {
+		return String.format("Graphic for Requirement: %s", requirement); //$NON-NLS-1$
+	}
 }

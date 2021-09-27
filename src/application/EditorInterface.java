@@ -3,10 +3,10 @@ package application;
 import application.editor.FileInfo;
 
 /**
- * Interface for an Editor that edits a File, which will be used in the context
- * of an {@code EditorManager}. Editors need to be able to {@code close} and
- * provide information about the file they edit in order for the
- * {@code EditorManager} to accurately represent them.
+ * Interface for an Editor that edits a File. The Editor will be used with an
+ * {@code EditorManager}. Editors need to be able to {@code close} and provide
+ * information about the file they edit so that the {@code EditorManager} can
+ * accurately represent them.
  *
  * @author Alex Mandelias
  *

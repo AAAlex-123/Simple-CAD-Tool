@@ -6,7 +6,7 @@ package application;
  *
  * @author Alex Mandelias
  */
-class MissingEditorException extends RuntimeException {
+final class MissingEditorException extends RuntimeException {
 
 	/**
 	 * Constructs the Exception with an {@code EditorInterface} object.

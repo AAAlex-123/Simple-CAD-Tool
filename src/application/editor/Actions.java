@@ -66,12 +66,12 @@ public enum Actions implements HasRequirements {
 
 			try {
 				if (!commandToExecute.canExecute()) {
-					context.status(Languages.getString("Actions.1"), commandToExecute); //$NON-NLS-1$
+					context.status(Languages.getString("Actions.1"), commandToExecute.description()); //$NON-NLS-1$
 					return;
 				}
 
 				context.execute(commandToExecute);
-				context.status(Languages.getString("Actions.2"), commandToExecute); //$NON-NLS-1$
+				context.status(Languages.getString("Actions.2"), commandToExecute.description()); //$NON-NLS-1$
 				context.fileInfo.markUnsaved();
 			} catch (MissingComponentException | MalformedBranchException e) {
 				context.error(e);

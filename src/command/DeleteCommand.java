@@ -96,7 +96,12 @@ class DeleteCommand extends Command {
 	}
 
 	@Override
-	public String toString() {
+	public String description() {
 		return CommandStrings.DELETE_STR;
+	}
+
+	@Override
+	public String toString() {
+		return String.format("%s%ndelete commands: %s", super.toString(), deleteCommands); //$NON-NLS-1$
 	}
 }

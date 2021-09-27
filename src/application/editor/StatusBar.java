@@ -148,6 +148,17 @@ public final class StatusBar extends JPanel {
 		label.setText(String.format(format, args));
 	}
 
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append("["); //$NON-NLS-1$
+		for (final Entry<String, JLabel> e : map.entrySet())
+			sb.append(String.format("'%s':'%s', ", e.getKey(), e.getValue().getText())); //$NON-NLS-1$
+		sb.setLength(sb.length() - 2);
+		sb.append("]"); //$NON-NLS-1$
+		return sb.toString();
+	}
+
 	/**
 	 * Thrown when no Label with the {@code labelID} exists
 	 *

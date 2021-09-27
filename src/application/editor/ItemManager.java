@@ -199,6 +199,11 @@ final class ItemManager<T extends Identifiable<String>> {
 		return new HashMap<>(idGenerators);
 	}
 
+	@Override
+	public String toString() {
+		return String.format("{%s, %s}", itemMap, idGenerators); //$NON-NLS-1$
+	}
+
 	/**
 	 * Thrown when another Item is already associated with an {@code ID}.
 	 *

@@ -26,6 +26,8 @@ import myUtil.StringGenerator;
  */
 public final class Application {
 
+	private static final String WINDOW_TITLE = Languages.getString("Application.1"); //$NON-NLS-1$
+
 	private final JFrame window;
 	private final MyMenu menuBar;
 
@@ -45,7 +47,7 @@ public final class Application {
 
 		// configure the frame
 		window.setLayout(new BorderLayout());
-		window.setTitle(Languages.getString("Application.1")); //$NON-NLS-1$
+		window.setTitle(Application.WINDOW_TITLE);
 		window.setSize(1000, 600);
 		window.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		window.addWindowListener(new WindowAdapter() {
@@ -78,6 +80,12 @@ public final class Application {
 	 */
 	public JFrame getFrame() {
 		return window;
+	}
+
+	@Override
+	public String toString() {
+		return String.format("Application '%s' manages: %s", Application.WINDOW_TITLE, //$NON-NLS-1$
+		        editorManager.editorSet);
 	}
 
 	/**
@@ -220,7 +228,7 @@ public final class Application {
 		 */
 		private static void message(Frame frame, String file, Exception e) {
 			if (e == null) {
-				final String messageString = Languages.getString("Application.3");//$NON-NLS-1$
+				final String messageString = Languages.getString("Application.3"); //$NON-NLS-1$
 				final String titleString   = Languages.getString("Application.4"); //$NON-NLS-1$
 
 				JOptionPane.showMessageDialog(frame, String.format(messageString, file),

@@ -101,4 +101,9 @@ final class UndoableHistory<T extends Undoable> {
 	public List<T> getFuture() {
 		return new ArrayList<>(future);
 	}
+
+	@Override
+	public String toString() {
+		return String.format("{%s, %s}", past, future); //$NON-NLS-1$
+	}
 }

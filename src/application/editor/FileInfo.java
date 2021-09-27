@@ -88,6 +88,11 @@ public class FileInfo {
 		updateState(filename, false);
 	}
 
+	@Override
+	public String toString() {
+		return getLabelText();
+	}
+
 	private void updateState(String newFilename, boolean newDirty) {
 		filename = newFilename;
 		dirty = newDirty;
