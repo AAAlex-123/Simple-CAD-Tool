@@ -2,6 +2,7 @@ package application.editor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -21,23 +22,24 @@ import myUtil.Utility;
  * @see Identifiable
  * @see StringGenerator
  */
-class ItemManager<T extends Identifiable<String>> {
+final class ItemManager<T extends Identifiable<String>> {
 
-	private final Map<String, T>       itemMap;
+	private final Map<String, T> itemMap;
 
 	/** A key-Generator map that creates IDs for new items in this manager */
 	final Map<String, StringGenerator> idGenerators;
 
 	/** Constructs the ItemManager */
 	public ItemManager() {
-		itemMap = new HashMap<>();
+		// linked to retain the order of the items inserted
+		itemMap = new LinkedHashMap<>();
 		idGenerators = new HashMap<>();
 	}
 
 	/**
-	 * Adds an {@code Item} to the Manager.
+	 * Adds an {@code Item} to this Manager.
 	 *
-	 * @param item the Item
+	 * @param item the Item to add
 	 *
 	 * @throws NullPointerException if {@code item == null}
 	 * @throws DuplicateIdException if an Item with the same ID already exists in
@@ -52,9 +54,9 @@ class ItemManager<T extends Identifiable<String>> {
 	}
 
 	/**
-	 * Removes an {@code Item} from the Manager.
+	 * Removes an {@code Item} from this Manager.
 	 *
-	 * @param item the Item
+	 * @param item the Item to remove
 	 *
 	 * @throws NullPointerException if {@code item == null}
 	 */
@@ -63,9 +65,9 @@ class ItemManager<T extends Identifiable<String>> {
 	}
 
 	/**
-	 * Returns the {@code Item} with the given ID.
+	 * Returns the unique {@code Item} with the given ID.
 	 *
-	 * @param id the ID
+	 * @param id the ID of the Item
 	 *
 	 * @return the Item with that ID
 	 *
@@ -82,7 +84,7 @@ class ItemManager<T extends Identifiable<String>> {
 	/**
 	 * Returns the number of {@code Items} in this Manager.
 	 *
-	 * @return the number of items
+	 * @return the number of Items
 	 */
 	public int size() {
 		return itemMap.size();
@@ -101,7 +103,7 @@ class ItemManager<T extends Identifiable<String>> {
 	}
 
 	/**
-	 * Returns the Items for which the {@code predicate} evaluates to {@code true}.
+	 * Returns the Items for which a {@code predicate} evaluates to {@code true}.
 	 * <p>
 	 * <b>Note</b> that this does <i>not</i> return a copy of the items. Any changes
 	 * to the Items will be reflected in this ItemManager object.
@@ -135,25 +137,25 @@ class ItemManager<T extends Identifiable<String>> {
 
 	/**
 	 * Creates a Generator. If a Generator with the same ID already exists, it will
-	 * be replaced with the new one.
+	 * be replaced with a new one.
 	 *
 	 * @param generatorID the Generator's ID
 	 * @param text        the text that will be formatted
 	 */
 	public void addGenerator(String generatorID, String text) {
-		idGenerators.put(generatorID, new StringGenerator(text));
+		addGenerator(generatorID, new StringGenerator(text));
 	}
 
 	/**
 	 * Creates a Generator. If a Generator with the same ID already exists, it will
-	 * be replaced with the new one.
+	 * be replaced with a new one.
 	 *
 	 * @param generatorID the Generator's ID
 	 * @param text        the text that will be formatted
 	 * @param start       the initial counter value
 	 */
 	public void addGenerator(String generatorID, String text, int start) {
-		idGenerators.put(generatorID, new StringGenerator(text, start));
+		addGenerator(generatorID, new StringGenerator(text, start));
 	}
 
 	/**
@@ -166,7 +168,11 @@ class ItemManager<T extends Identifiable<String>> {
 	 * @param end         the final counter value
 	 */
 	public void addGenerator(String generatorID, String text, int start, int end) {
-		idGenerators.put(generatorID, new StringGenerator(text, start, end));
+		addGenerator(generatorID, new StringGenerator(text, start, end));
+	}
+
+	private void addGenerator(String generatorID, StringGenerator generator) {
+		idGenerators.put(generatorID, generator);
 	}
 
 	/**
@@ -182,9 +188,12 @@ class ItemManager<T extends Identifiable<String>> {
 	}
 
 	/**
-	 * Returns a copy of the Generators.
+	 * Returns the Generators in this Manager.
+	 * <p>
+	 * <b>Note</b> that this does <i>not</i> return a copy of the Generators. Any
+	 * changes to them will be reflected in this Manager.
 	 *
-	 * @return a copy of the Generators
+	 * @return a Map containing the Generators and their IDs
 	 */
 	public Map<String, StringGenerator> getGenerators() {
 		return new HashMap<>(idGenerators);
@@ -200,7 +209,7 @@ class ItemManager<T extends Identifiable<String>> {
 		/**
 		 * Constructs the Exception with an {@code ID}.
 		 *
-		 * @param id the duplicate id
+		 * @param id the duplicate ID for which an Item already exists
 		 */
 		public DuplicateIdException(String id) {
 			super(String.format("Another Item associated with ID '%s'", id)); //$NON-NLS-1$
