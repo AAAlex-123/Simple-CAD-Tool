@@ -6,14 +6,14 @@ import java.util.Properties;
 import java.util.Set;
 
 /**
- * Properties subclass that modifies functionality by:
+ * A very poorly implemented {@link Properties} subclass which:
  * <ol>
- * <li>Retaining the order with which the properties are added</li>
- * <li>Printing an error message when a property doesn't exist for a given
+ * <li>Retains the order in which the properties are added</li>
+ * <li>Prints an error message when a property doesn't exist for a given
  * key</li>
  * </ol>
  *
- * @author alexm
+ * @author Alex Mandelias
  */
 public final class OrderedProperties extends Properties {
 
@@ -21,12 +21,12 @@ public final class OrderedProperties extends Properties {
 
 	@Override
 	public String getProperty(String key) {
-		String superVal = super.getProperty(key);
-		if (superVal == null) {
-			System.err.printf("No value found for key %s%n", key); //$NON-NLS-1$
-		}
+		final String property = super.getProperty(key);
 
-		return superVal;
+		if (property == null)
+			System.err.printf("No value found for key %s%n", key); //$NON-NLS-1$
+
+		return property;
 	}
 
 	@Override
