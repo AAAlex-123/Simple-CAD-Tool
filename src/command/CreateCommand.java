@@ -185,8 +185,14 @@ class CreateCommand extends Command {
 	}
 
 	@Override
-	public String toString() {
+	public String description() {
 		return String.format("%s %s", CommandStrings.CREATE_STR, componentType.description()); //$NON-NLS-1$
+	}
+
+	@Override
+	public String toString() {
+		return String.format("%s%ntype: %s%ndelete command: %s", super.toString(), //$NON-NLS-1$
+		        componentType, deleteCommand);
 	}
 
 	private String constructRegex() {
