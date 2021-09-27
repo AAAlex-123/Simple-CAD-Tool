@@ -127,7 +127,8 @@ public enum Actions implements HasRequirements {
 					return;
 				}
 
-				Actions.writeToFile(fileToSave, context.getPastCommands(), context.componentManager);
+				Actions.writeToFile(fileToSave, context.getPastCommands(),
+				        context.componentManager);
 
 				context.status(Languages.getString("Actions.7"), fileToSave); //$NON-NLS-1$
 				context.fileInfo.markSaved();
@@ -145,7 +146,7 @@ public enum Actions implements HasRequirements {
 		}
 	},
 
-	/** An Action that reads the contents of a File to an {@code Editor} */
+	/** Action for reading the contents of a File to an {@code Editor} */
 	OPEN {
 		@Override
 		public void executeAction() throws Exception {
@@ -241,7 +242,7 @@ public enum Actions implements HasRequirements {
 		}
 	},
 
-	/** An action for resetting an {@code Editor} */
+	/** Action for resetting an {@code Editor} */
 	CLEAR {
 		@Override
 		public void executeAction() throws Exception {
@@ -251,7 +252,7 @@ public enum Actions implements HasRequirements {
 		}
 	},
 
-	/** An Action for undoing a {@code Command} */
+	/** Action for undoing a {@code Command} */
 	UNDO {
 		@Override
 		public void executeAction() throws Exception {
@@ -261,7 +262,7 @@ public enum Actions implements HasRequirements {
 		}
 	},
 
-	/** An Action for redoing a {@code Command} */
+	/** Action for redoing a {@code Command} */
 	REDO {
 		@Override
 		public void executeAction() throws Exception {
@@ -271,7 +272,7 @@ public enum Actions implements HasRequirements {
 		}
 	},
 
-	/** An Action for showing Help */
+	/** Action for showing Help */
 	HELP {
 		@Override
 		public void executeAction() throws Exception {
@@ -329,10 +330,10 @@ public enum Actions implements HasRequirements {
 	// bytes to mark the start and end of a file (should never change, used to check for corruption)
 	private static final Byte startOfFile = 10, endOfFile = 42;
 
-	/** The Requirements of the Action */
+	/** The Requirements of this Action */
 	protected final Requirements reqs;
 
-	/** The context of the Action, the Editor whose state it changes */
+	/** The context of this Action, the Editor whose state it changes */
 	protected Editor context;
 
 	Actions() {
@@ -341,8 +342,8 @@ public enum Actions implements HasRequirements {
 	}
 
 	/**
-	 * Defines a template for executing Actions. After execution, the Action's
-	 * context is cleared. If an unexpected Exception occurs, a Dialog is shown
+	 * Defines a template for executing Actions. After execution, this Action's
+	 * context is cleared. If an unexpected Exception occurs, a pop-up is shown
 	 * informing the user about it.
 	 *
 	 * @throws NullPointerException if its {@code context} has not been set prior to
@@ -357,7 +358,7 @@ public enum Actions implements HasRequirements {
 
 		try {
 			executeAction();
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			ErrorDumpDialog.showDialog(context.getFrame(), e);
 		}
 
@@ -368,7 +369,8 @@ public enum Actions implements HasRequirements {
 	/**
 	 * Defines how this Action should execute.
 	 *
-	 * @throws Exception if anything unexpected occurs
+	 * @throws Exception if anything unexpected occurs from which this Action cannot
+	 *                   recover. The user must be informed with a stack trace dump.
 	 */
 	protected abstract void executeAction() throws Exception;
 
@@ -379,10 +381,10 @@ public enum Actions implements HasRequirements {
 	public void adjustRequirements() {}
 
 	/**
-	 * Specifies the Action's context. This method must be called before every
-	 * Action execution.
+	 * Specifies the Action's context. This method must be called before executing
+	 * this Action.
 	 *
-	 * @param editor the context
+	 * @param editor the new context for this Action
 	 *
 	 * @return this (used for chaining)
 	 *
@@ -394,7 +396,7 @@ public enum Actions implements HasRequirements {
 	}
 
 	/**
-	 * Creates a pop-up dialog to let the user fulfil the Requirements.
+	 * Creates a pop-up dialog to let the user fulfil this Action's Requirements.
 	 *
 	 * @param editor the frame for the dialog
 	 *
@@ -407,17 +409,17 @@ public enum Actions implements HasRequirements {
 	}
 
 	/**
-	 * Specifies an Object to finalise a specific Requirement.
+	 * Specifies an Object to finalise a specific Requirement of this Action.
 	 *
-	 * @param requirement the Requirement
-	 * @param command     the Command
+	 * @param requirement the Requirement to finalise
+	 * @param value       the value with which to finalise the Requirement
 	 *
 	 * @return this (used for chaining)
 	 *
 	 * @see AbstractRequirement#finalise
 	 */
-	public final Actions specify(String requirement, Object command) {
-		reqs.finalise(requirement, command);
+	public final Actions specify(String requirement, Object value) {
+		reqs.finalise(requirement, value);
 		return this;
 	}
 
@@ -541,7 +543,7 @@ public enum Actions implements HasRequirements {
 			// write generators
 			final Map<String, StringGenerator> generators = itemManager.idGenerators;
 			oos.writeInt(generators.size());
-			for (Entry<String, StringGenerator> generatorEntry : generators.entrySet()) {
+			for (final Entry<String, StringGenerator> generatorEntry : generators.entrySet()) {
 				oos.writeObject(generatorEntry.getKey());
 				oos.writeObject(generatorEntry.getValue());
 			}
