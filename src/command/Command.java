@@ -150,7 +150,7 @@ public abstract class Command implements HasRequirements, Undoable, Serializable
 	public final void fillRequirements(Frame parentFrame, Editor newContext) {
 		context(newContext);
 		adjustRequirements();
-		requirements.fulfillWithDialog(parentFrame, toString());
+		requirements.fulfillWithDialog(parentFrame, description());
 	}
 
 	/**
@@ -177,6 +177,15 @@ public abstract class Command implements HasRequirements, Undoable, Serializable
 		ComponentFactory.restoreSerialisedComponent(associatedComponent);
 	}
 
+	/**
+	 * Returns a very short String describing the functionality of this Command.
+	 *
+	 * @return a very short description for this Command
+	 */
+	public abstract String description();
+
 	@Override
-	public abstract String toString();
+	public String toString() {
+		return String.format("component: %s%nrequirements: %s", associatedComponent, requirements); //$NON-NLS-1$
+	}
 }
