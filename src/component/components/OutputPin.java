@@ -47,7 +47,7 @@ final class OutputPin extends Component {
 		// propagate signal only if it's different
 		if (active != newActive) {
 			active = newActive;
-			getGraphics().repaint();
+			repaintGraphicIfExists();
 
 			// inform the enclosing Gate that an output has changed
 			if (outerGate != null)
@@ -143,9 +143,6 @@ final class OutputPin extends Component {
 
 	@Override
 	protected void restoreDeletedSelf() {}
-
-	@Override
-	protected void restoreSerialisedSelf() {}
 
 	@Override
 	protected List<Component> getInputs() {

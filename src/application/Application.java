@@ -5,53 +5,49 @@ import java.awt.Frame;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.JTabbedPane;
-import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 
 import application.editor.Editor;
 import command.Command;
 import component.ComponentType;
 import localisation.Languages;
+import myUtil.ErrorDumpDialog;
 import myUtil.StringGenerator;
-import myUtil.Utility;
 
 /**
- * A class representing an Application. It aggregates all of the individual
- * components and handles the communications between them. The client has to
- * create an {@code Application} object then call its {@code run} method to
- * start the program.
+ * Aggregates all of the individual components that comprise an Application and
+ * handles the communications between them. The client creates an instance of
+ * this class and then call its {@link #run()} method to start it.
  *
- * @author alexm
+ * @author Alex Mandelias
  */
-public class Application {
+public final class Application {
+
+	private static final String WINDOW_TITLE = Languages.getString("Application.1"); //$NON-NLS-1$
+
 	private final JFrame window;
-	private final MyMenu menu;
+	private final MyMenu menuBar;
 
-	private final JTabbedPane     editorPane;
-	private final List<Editor>    editors;
-	private final StringGenerator nameGenerator;
+	private final EditorManager<Editor> editorManager;
+	private final StringGenerator       editorNameGenerator;
 
-	/** Constructs the Application */
+	/** Constructs an Application */
 	public Application() {
 		window = new JFrame();
-		menu = new MyMenu(this);
-		editors = new ArrayList<>();
-		editorPane = new JTabbedPane(SwingConstants.TOP, JTabbedPane.SCROLL_TAB_LAYOUT);
-		nameGenerator = new StringGenerator(Languages.getString("Application.0")); //$NON-NLS-1$
+		menuBar = new MyMenu(this);
+		editorManager = new EditorManager<>();
+		editorNameGenerator = new StringGenerator(Languages.getString("Application.0")); //$NON-NLS-1$
 	}
 
-	/** Runs the application and configures the UI */
+	/** Configures the UI and launches the Application */
 	public void run() {
+
+		// configure the frame
 		window.setLayout(new BorderLayout());
-		window.add(editorPane, BorderLayout.CENTER);
-		window.setJMenuBar(menu);
-		window.setTitle(Languages.getString("Application.1")); //$NON-NLS-1$
+		window.setTitle(Application.WINDOW_TITLE);
 		window.setSize(1000, 600);
 		window.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		window.addWindowListener(new WindowAdapter() {
@@ -61,179 +57,184 @@ public class Application {
 			}
 		});
 
-		addEditor();
+		// add components to the frame
+		window.setJMenuBar(menuBar);
+		window.add(editorManager.getGraphics(), BorderLayout.CENTER);
 
-		editorPane.addChangeListener(l -> {
-			final Editor e = (Editor) editorPane.getSelectedComponent();
-			if (e != null)
-				setActiveEditor(e);
-		});
+		// add the first editor on start-up
+		editorManager.addEditor(new Editor(this, editorNameGenerator.get()));
 
-		addCreateCommand(Command.create(ComponentType.INPUT_PIN));
-		addCreateCommand(Command.create(ComponentType.OUTPUT_PIN));
-		addCreateCommand(Command.create(ComponentType.BRANCH));
-		addCreateCommand(Command.create(ComponentType.GATEAND));
-		addCreateCommand(Command.create(ComponentType.GATEOR));
-		addCreateCommand(Command.create(ComponentType.GATENOT));
-		addCreateCommand(Command.create(ComponentType.GATEXOR));
+		// add all of the Create Commands
+		for (final ComponentType type : ComponentType.values())
+			if (type != ComponentType.GATE)
+				addCreateCommand(Command.create(type));
 
 		window.setVisible(true);
 	}
 
-	/** Terminates the Application */
-	public void terminate() {
-		Utility.foreach(new ArrayList<>(editors), this::removeEditor);
-
-		if (getActiveEditor() == null)
-			window.dispose();
-	}
-
 	/**
-	 * Returns the Application's frame
+	 * Returns the Application's {@code Frame}, the window that is displayed on the
+	 * user's screen.
 	 *
-	 * @return the Application's frame
+	 * @return the Application's Frame
 	 */
 	public JFrame getFrame() {
 		return window;
 	}
 
-	/**
-	 * Returns the active Editor.
-	 *
-	 * @return the active Editor
-	 */
-	public Editor getActiveEditor() {
-		return (Editor) editorPane.getSelectedComponent();
+	@Override
+	public String toString() {
+		return String.format("Application '%s' manages: %s", Application.WINDOW_TITLE, //$NON-NLS-1$
+		        editorManager.editorSet);
 	}
 
 	/**
-	 * Sets the active Editor.
+	 * Adds a {@code Command} for creating {@code Components} to the Application.
 	 *
-	 * @param e the active Editor
+	 * @param command the Command
+	 *
+	 * @see Command
 	 */
-	public void setActiveEditor(Editor e) {
-		editorPane.setSelectedComponent(e);
-		window.add(e.getStatusBar(), BorderLayout.SOUTH);
-		window.repaint();
+	public void addCreateCommand(Command command) {
+		menuBar.addCreateCommand(command);
+	}
+
+	private void terminate() {
+		editorManager.removeAllEditors();
+
+		// dispose window if and only if all Editors are closed
+		if (getActiveEditor() == null)
+			window.dispose();
+	}
+
+	/**
+	 * Returns the Application's active {@code Editor}, the Editor the user is
+	 * currently working with, or {@code null} if there aren't any open Editors.
+	 *
+	 * @return the active Editor or {@code null}
+	 */
+	Editor getActiveEditor() {
+		return editorManager.getSelectedEditor();
 	}
 
 	private void addEditor() {
-		final Editor newEditor = new Editor(this, nameGenerator.get());
-		editors.add(newEditor);
-		editorPane.addTab("", newEditor); //$NON-NLS-1$
-		editorPane.setTabComponentAt(editorPane.getTabCount() - 1,
-		        newEditor.getFileLabel());
-		setActiveEditor(newEditor);
+		editorManager.addEditor(new Editor(this, editorNameGenerator.get()));
 	}
 
-	private void removeEditor(Editor e) {
-		if (e.close()) {
-			editors.remove(e);
-			editorPane.remove(e);
-		}
+	private void removeActiveEditor() {
+		editorManager.removeActiveEditor();
 	}
 
 	/**
-	 * Adds a Command for creating Components to the Application.
+	 * An enum-strategy for the different Actions the Application may take. Actions
+	 * have {@code context} that must be set using the {@link #context(Application)}
+	 * method before the Action can be executed.
 	 *
-	 * @param c the Command
+	 * @author Alex Mandelias
 	 */
-	public void addCreateCommand(Command c) {
-		menu.addCreateCommand(c);
-	}
-
-	/** An enum-strategy for the different Actions the Application may take */
 	enum Actions {
 
-		/** Action for creating an Editor */
+		/** Action for creating an {@code Editor} */
 		NEW {
 			@Override
-			void execute() {
+			protected void execute() {
 				context.addEditor();
+				context = null;
 			}
 		},
 
-		/** Action for closing an Editor */
+		/** Action for closing an {@code Editor} */
 		CLOSE {
 			@Override
-			void execute() {
-				context.removeEditor(context.getActiveEditor());
+			protected void execute() {
+				context.removeActiveEditor();
+				context = null;
 			}
 		},
 
-		/** Action for editing settings */
+		/** Action for editing non-language Settings */
 		EDIT_SETTINGS {
 			@Override
-			void execute() {
-				final String file  = StringConstants.FILE;
+			protected void execute() {
 				final Frame  frame = context.getFrame();
+				final String file  = StringConstants.FILE;
 
 				try {
 					final boolean settingsChanged = StringConstants.editAndWriteToFile(frame);
 					if (settingsChanged)
-						message(frame, file, true);
+						Actions.message(frame, file, null);
 				} catch (final IOException e) {
-					message(frame, file, false);
+					Actions.message(frame, file, e);
 				}
+				context = null;
 			}
 		},
 
-		/** Action for editing settings */
+		/** Action for editing language-related Settings */
 		EDIT_LANGUAGE {
 			@Override
-			void execute() {
-				final String file  = StringConstants.FILE;
+			protected void execute() {
 				final Frame  frame = context.getFrame();
+				final String file  = Languages.FILE;
 
 				try {
 					final boolean languageChanged = Languages.editAndWriteToFile(frame);
 					if (languageChanged)
-						message(frame, file, true);
+						Actions.message(frame, file, null);
 				} catch (final IOException e) {
-					message(frame, file, false);
+					Actions.message(frame, file, e);
 				}
+				context = null;
 			}
 		};
 
+		/** The context of the Action, the Application whose state it changes */
+		protected Application context;
+
 		/**
-		 * Displays a pop-up window informing the user about the success or failure of a
-		 * save operation to a file.
+		 * Executes the Action and clears its context.
 		 *
-		 * @param frame   the parent frame for the pop-up
-		 * @param file    the file where the settings were saved
-		 * @param success {@code true} if the operation was successful, {@code false}
-		 *                otherwise
+		 * @throws NullPointerException if its {@code context} has not been set prior to
+		 *                              execution
+		 *
+		 * @see #context
 		 */
-		protected void message(Frame frame, String file, boolean success) {
-			if (success) {
-				JOptionPane.showMessageDialog(frame, String.format(
-				        Languages.getString("Application.3"), file), //$NON-NLS-1$
-				        Languages.getString("Application.4"), //$NON-NLS-1$
-				        JOptionPane.INFORMATION_MESSAGE);
-			} else {
-				JOptionPane.showMessageDialog(frame, String.format(
-				        Languages.getString("Application.5"), file), //$NON-NLS-1$
-				        Languages.getString("Application.6"), //$NON-NLS-1$
-				        JOptionPane.ERROR_MESSAGE);
-			}
-		}
-
-		/** The context of the Action */
-		Application context;
-
-		/** Executes the Action */
-		abstract void execute();
+		protected abstract void execute();
 
 		/**
-		 * Specifies the Action's context.
+		 * Specifies the Action's context. This method must be called before every
+		 * Action execution.
 		 *
-		 * @param app the context
+		 * @param application the context
 		 *
 		 * @return this (used for chaining)
+		 *
+		 * @see #context
 		 */
-		final Actions context(Application app) {
-			context = app;
+		protected final Actions context(Application application) {
+			context = application;
 			return this;
+		}
+
+		/**
+		 * Displays a pop-up window informing the user about the success or failure of a
+		 * save operation to a file. In case of an error, an ErrorDumpDialog is used.
+		 *
+		 * @param frame the parent frame for the pop-up
+		 * @param file  the file where the settings were saved
+		 * @param e     the Exception that may have been caused
+		 *
+		 * @see ErrorDumpDialog
+		 */
+		private static void message(Frame frame, String file, Exception e) {
+			if (e == null) {
+				final String messageString = Languages.getString("Application.3"); //$NON-NLS-1$
+				final String titleString   = Languages.getString("Application.4"); //$NON-NLS-1$
+
+				JOptionPane.showMessageDialog(frame, String.format(messageString, file),
+				        titleString, JOptionPane.INFORMATION_MESSAGE);
+			} else
+				ErrorDumpDialog.showDialog(frame, e);
 		}
 	}
 }

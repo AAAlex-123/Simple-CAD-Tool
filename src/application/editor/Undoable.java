@@ -3,18 +3,18 @@ package application.editor;
 /**
  * An Interface for objects that can be executed and un-executed.
  *
- * @author alexm
+ * @author Alex Mandelias
  */
 @FunctionalInterface
 public interface Undoable {
 
 	/**
-	 * Executes the Undoable.
+	 * Executes this Undoable.
 	 *
-	 * @throws Exception when an exception occurred
+	 * @throws Exception if an exception occurred during execution
 	 */
 	void execute() throws Exception;
 
-	/** Un-does the Undoable */
+	/** Un-does this Undoable */
 	default void unexecute() {}
 }

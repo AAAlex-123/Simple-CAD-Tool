@@ -1,3 +1,0 @@
-menu_icon_path=assets\\menu_icons\\
-component_icon_path=assets\\component_icons\\
-user_data=user_data\\

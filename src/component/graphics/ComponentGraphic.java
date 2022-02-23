@@ -406,6 +406,11 @@ public abstract class ComponentGraphic extends JComponent {
 		addFunctions();
 	}
 
+	@Override
+	public String toString() {
+		return String.format("Graphic for Component: %s", component); //$NON-NLS-1$
+	}
+
 	// 5 function methods for pin locations
 
 	private void addFunctions() {

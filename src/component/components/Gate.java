@@ -114,7 +114,7 @@ class Gate extends Component {
 		if (prevHidden)
 			hideComponent();
 
-		getGraphics().repaint();
+		repaintGraphicIfExists();
 
 		// only propagate signal if all InputPins are connected to a Branch
 		if (checkBranches())
@@ -212,9 +212,6 @@ class Gate extends Component {
 		for (int i = 0, count = outputPins.length; i < count; ++i)
 			outputBranches.add(new ArrayList<>(1));
 	}
-
-	@Override
-	protected final void restoreSerialisedSelf() {}
 
 	/**
 	 * Checks if the Input Pin at the given index is connected to a Branch. Should

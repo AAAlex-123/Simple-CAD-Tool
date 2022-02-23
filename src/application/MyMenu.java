@@ -1,12 +1,10 @@
 package application;
 
-import static localisation.CommandStrings.CREATE_STR;
-import static localisation.CommandStrings.DELETE_STR;
-import static localisation.CommandStrings.ID;
-import static localisation.RequirementStrings.ON;
-
 import java.awt.event.ActionEvent;
+import java.util.Arrays;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -19,161 +17,177 @@ import javax.swing.KeyStroke;
 
 import application.editor.Actions;
 import application.editor.Editor;
-import application.editor.MissingComponentException;
 import command.Command;
 import component.components.Component;
 import component.components.ComponentFactory;
 import component.exceptions.InvalidComponentException;
+import localisation.CommandStrings;
 import localisation.EditorStrings;
 import localisation.Languages;
+import localisation.RequirementStrings;
 import myUtil.StringGenerator;
 import requirement.requirements.ComponentRequirement;
-import requirement.requirements.Requirements;
-import requirement.requirements.StringType;
+import requirement.requirements.ComponentRequirement.Policy;
+import requirement.util.Requirements;
 
 /**
- * Menu bar for the Application. This class also handles the mnemonics and
- * accelerators with which the user interacts with the menu. The Actions for the
- * listeners of each menu item are also defined in this class and they are the
- * ones that call the Actions of the Editor and the Application.
+ * Menu bar for an {@code Application}. This class also handles the mnemonics
+ * and accelerators with which the user interacts with the menu. The Actions for
+ * the listeners of each menu item are also defined in this class and they call
+ * the Actions of the {@code Editor} and the {@code Application}.
  *
- * @author alexm
+ * @author Alex Mandelias
+ *
+ * @see Application
+ * @see Application.Actions
+ * @see Editor
+ * @see Actions
  */
 final class MyMenu extends JMenuBar {
 
 	private final Application context;
 
-	private final JMenu     m_file, m_edit, m_create, m_delete, m_preferences, m_help;
-	private final JMenuItem f_new, f_close, f_save, f_save_as, f_open, f_clear, f_import, f_undo,
-	        f_redo, e_activate, e_focus, d_component, p_settings, p_language, h_help;
+	// prefixes:
+	// m : top-level menu
+	// f/e/d/p/h: file / edit / delete / preferences / help sub-menu
+	// a: action
 
-	private final Action a_new, a_close, a_undo, a_redo, a_save, a_save_as, a_open, a_clear,
-	        a_import, a_delete, a_settings, a_language, a_help;
+	private final JMenu     m_file, m_edit, m_create, m_delete, m_preferences, m_help;
+	private final JMenuItem f_new, f_close, f_save, f_save_as, f_open, f_clear, f_import,
+	        f_undo, f_redo, e_activate, e_focus, d_component, p_settings, p_language, h_help;
 
 	private final Supplier<String> builtin_command_gen, custom_command_gen;
 
+	private final Action a_new, a_close, a_undo, a_redo, a_save, a_save_as, a_open,
+	        a_clear, a_import, a_delete, a_settings, a_language, a_help;
+
+	{
+		builtin_command_gen = new StringGenerator(
+		        String.format("%s %%d", StringConstants.BUILTIN_COMMAND_ACCEL_PREFIX), 1, 9); //$NON-NLS-1$
+
+		custom_command_gen = new StringGenerator(
+		        String.format("%s %%d", StringConstants.USER_COMMAND_ACCEL_PREFIX), 1, 9); //$NON-NLS-1$
+
+		// --- Application Actions ---
+
+		a_new = new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Application.Actions.NEW.context(context).execute();
+			}
+		};
+
+		a_close = new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Application.Actions.CLOSE.context(context).execute();
+			}
+		};
+
+		a_settings = new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Application.Actions.EDIT_SETTINGS.context(context).execute();
+			}
+		};
+
+		a_language = new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Application.Actions.EDIT_LANGUAGE.context(context).execute();
+			}
+		};
+
+		// --- Editor Actions ---
+
+		a_undo = new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Actions.UNDO.context(context.getActiveEditor()).execute();
+			}
+		};
+
+		a_redo = new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Actions.REDO.context(context.getActiveEditor()).execute();
+			}
+		};
+
+		a_save = new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				final Editor activeEditor = context.getActiveEditor();
+				Actions.SAVE
+				        .specify(EditorStrings.FILENAME, activeEditor.getFileInfo().getFile())
+				        .context(activeEditor)
+				        .execute();
+			}
+		};
+
+		a_save_as = new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Actions.SAVE.specifyWithDialog(context.getActiveEditor())
+				        .context(context.getActiveEditor()).execute();
+			}
+		};
+
+		a_open = new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Actions.OPEN.specify(EditorStrings.GATENAME, EditorStrings.NA)
+				        .specify(EditorStrings.FILETYPE, EditorStrings.CIRCUIT)
+				        .specifyWithDialog(context.getActiveEditor())
+				        .context(context.getActiveEditor()).execute();
+			}
+		};
+
+		a_clear = new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Actions.CLEAR.context(context.getActiveEditor()).execute();
+			}
+		};
+
+		a_import = new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Actions.OPEN.specify(EditorStrings.FILETYPE, EditorStrings.COMPONENT)
+				        .specifyWithDialog(context.getActiveEditor())
+				        .context(context.getActiveEditor()).execute();
+			}
+		};
+
+		a_delete = new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				final Editor  activeEditor = context.getActiveEditor();
+				final Command command      = Command.delete();
+				command.fillRequirements(context.getFrame(), activeEditor);
+				Actions.DELETE.specify(EditorStrings.COMMAND, command).context(activeEditor)
+				        .execute();
+			}
+		};
+
+		a_help = new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Actions.HELP.context(context.getActiveEditor()).execute();
+			}
+		};
+	}
+
 	/**
-	 * Constructs the Menu with the given {@code Application}.
+	 * Constructs a Menu.
 	 *
 	 * @param application the context of this Menu
 	 */
 	MyMenu(Application application) {
 
 		context = application;
-		builtin_command_gen = new StringGenerator(
-		        String.format("%s %%d", StringConstants.BUILTIN_COMMAND_ACCEL_PREFIX), 1, 10); //$NON-NLS-1$
 
-		custom_command_gen = new StringGenerator(
-		        String.format("%s %%d", StringConstants.USER_COMMAND_ACCEL_PREFIX), 1, 10); //$NON-NLS-1$
-
-		// block of actions (they need context, therefore they must be placed inside the constructor)
-		{
-			// Application Actions
-			a_new = new AbstractAction() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					Application.Actions.NEW.context(context).execute();
-				}
-			};
-
-			a_close = new AbstractAction() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					Application.Actions.CLOSE.context(context).execute();
-				}
-			};
-
-			a_settings = new AbstractAction() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					Application.Actions.EDIT_SETTINGS.context(context).execute();
-				}
-			};
-
-			a_language = new AbstractAction() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					Application.Actions.EDIT_LANGUAGE.context(context).execute();
-				}
-			};
-
-			// Editor Actions
-			a_undo = new AbstractAction() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					Actions.UNDO.context(context.getActiveEditor()).execute();
-				}
-			};
-
-			a_redo = new AbstractAction() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					Actions.REDO.context(context.getActiveEditor()).execute();
-				}
-			};
-
-			a_save = new AbstractAction() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					final Editor activeEditor = context.getActiveEditor();
-					Actions.SAVE.specify(EditorStrings.FILENAME, activeEditor.getFile())
-					        .context(activeEditor)
-					        .execute();
-				}
-			};
-
-			a_save_as = new AbstractAction() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					Actions.SAVE.specifyWithDialog(context.getActiveEditor())
-					        .context(context.getActiveEditor()).execute();
-				}
-			};
-
-			a_open = new AbstractAction() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					Actions.OPEN.specify(EditorStrings.GATENAME, EditorStrings.NA)
-					        .specify(EditorStrings.FILETYPE, EditorStrings.CIRCUIT)
-					        .specifyWithDialog(context.getActiveEditor())
-					        .context(context.getActiveEditor()).execute();
-				}
-			};
-
-			a_clear = new AbstractAction() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					Actions.CLEAR.context(context.getActiveEditor()).execute();
-				}
-			};
-
-			a_import = new AbstractAction() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					Actions.OPEN.specify(EditorStrings.FILETYPE, EditorStrings.COMPONENT)
-					        .specifyWithDialog(context.getActiveEditor())
-					        .context(context.getActiveEditor()).execute();
-				}
-			};
-
-			a_delete = new AbstractAction() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					final Editor  activeEditor = context.getActiveEditor();
-					final Command c            = Command.delete();
-					c.fillRequirements(application.getFrame(), activeEditor);
-					Actions.DELETE.specify(EditorStrings.COMMAND, c).context(activeEditor)
-					        .execute();
-				}
-			};
-
-			a_help = new AbstractAction() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					Actions.HELP.context(context.getActiveEditor()).execute();
-				}
-			};
-		}
+		// Construct Menus
 
 		// --- file ---
 		m_file = new JMenu(Languages.getString("MyMenu.10")); //$NON-NLS-1$
@@ -210,7 +224,7 @@ final class MyMenu extends JMenuBar {
 		m_edit.add(e_focus);
 		add(m_edit);
 
-		// --- create ---
+		// --- create --- (populated by the addCreateCommand(Command) method)
 		m_create = new JMenu(Languages.getString("MyMenu.23")); //$NON-NLS-1$
 		add(m_create);
 
@@ -245,29 +259,35 @@ final class MyMenu extends JMenuBar {
 	/**
 	 * Adds a {@code Command} that creates a {@code Component} to the Menu.
 	 *
-	 * @param c the Command
+	 * @param command the Command to add
 	 */
-	void addCreateCommand(Command c) {
+	void addCreateCommand(Command command) {
 
-		final JMenuItem jmic = new JMenuItem();
+		final JMenuItem jmi = new JMenuItem();
 
 		// different text and accelerator depending on command type (build-in vs user-created)
-		if (c.toString().matches(String.format("^(?:%s|%s).*", CREATE_STR, DELETE_STR))) { //$NON-NLS-1$
-			jmic.setText(c.toString().substring(7));
-			MyMenu.setAccel(jmic, builtin_command_gen.get());
+		final String  patternString = String.format("^(%s|%s).*", CommandStrings.CREATE_STR,              //$NON-NLS-1$
+		        CommandStrings.DELETE_STR);
+		final Pattern pattern       = Pattern.compile(patternString);
+		final String  description   = command.description();
+		final Matcher matcher       = pattern.matcher(description);
+
+		if (matcher.find()) {
+			jmi.setText(description.substring(matcher.group(1).length() + 1));
+			MyMenu.setAccel(jmi, builtin_command_gen.get());
 		} else {
-			jmic.setText(c.toString());
-			MyMenu.setAccel(jmic, custom_command_gen.get());
+			jmi.setText(description);
+			MyMenu.setAccel(jmi, custom_command_gen.get());
 		}
 
-		jmic.addActionListener(e -> {
-			final Command cloned = c.clone();
+		jmi.addActionListener(e -> {
+			final Command cloned = command.clone();
 			cloned.fillRequirements(context.getFrame(), context.getActiveEditor());
 			Actions.CREATE.specify(EditorStrings.COMMAND, cloned).context(context.getActiveEditor())
 			        .execute();
 		});
 
-		m_create.add(jmic);
+		m_create.add(jmi);
 	}
 
 	private void mnemonics() {
@@ -301,56 +321,51 @@ final class MyMenu extends JMenuBar {
 
 			final String ACTIVE = Languages.getString("MyMenu.0"); //$NON-NLS-1$
 
-			final Requirements reqs = new Requirements();
-			reqs.add(ID, activeEditor.getComponents_(), ComponentRequirement.Policy.ANY);
-			reqs.add(ACTIVE, StringType.ON_OFF);
+			final Requirements         reqs = new Requirements();
+			final ComponentRequirement req  = new ComponentRequirement(CommandStrings.NAME,
+			        activeEditor.getComponents_(), Policy.INPUT_PIN);
+			req.setCaseOfNullGraphic(false, Languages.getString("MyMenu.2")); //$NON-NLS-1$
+			reqs.add(req);
+			reqs.add(ACTIVE, Arrays.asList(RequirementStrings.ON, RequirementStrings.OFF));
 			reqs.fulfillWithDialog(context.getFrame(), Languages.getString("MyMenu.34")); //$NON-NLS-1$
 
 			if (reqs.fulfilled()) {
-				final String    id = (String) reqs.getValue(ID);
-				final Component comp;
-				try {
-					comp = context.getActiveEditor().getComponent_(id);
-				} catch (final MissingComponentException e1) {
-					activeEditor.error(e1);
-					return;
-				}
+				final String id = reqs.getValue(CommandStrings.NAME, String.class);
+				// because of the ComponentRequirement this component for sure exists
+				final Component component = activeEditor.getComponentOrNull(id);
 
-				final boolean active = reqs.getValue(ACTIVE).equals(ON);
+				final boolean active = reqs.getValue(ACTIVE).equals(RequirementStrings.ON);
 				try {
-					ComponentFactory.setActive(comp, active);
+					ComponentFactory.setActive(component, active);
 				} catch (final InvalidComponentException e1) {
 					activeEditor.error(e1);
 					return;
 				}
 				activeEditor.status(Languages.getString("MyMenu.38")); //$NON-NLS-1$
-			} else {
+			} else
 				activeEditor.status(Languages.getString("MyMenu.39")); //$NON-NLS-1$
-			}
 		});
 
 		e_focus.addActionListener(e -> {
 			final Editor activeEditor = context.getActiveEditor();
 
-			final Requirements reqs = new Requirements();
-			reqs.add(ID, activeEditor.getComponents_(), ComponentRequirement.Policy.NONBRANCH);
+			final Requirements         reqs = new Requirements();
+			final ComponentRequirement req  = new ComponentRequirement(CommandStrings.NAME,
+			        activeEditor.getComponents_(), Policy.NONBRANCH);
+			req.setCaseOfNullGraphic(false, Languages.getString("MyMenu.3")); //$NON-NLS-1$
+			reqs.add(req);
 			reqs.fulfillWithDialog(context.getFrame(), Languages.getString("MyMenu.41")); //$NON-NLS-1$
 
 			if (reqs.fulfilled()) {
-				final String id = (String) reqs.getValue(ID);
-				Component    comp;
-				try {
-					comp = activeEditor.getComponent_(id);
-				} catch (final MissingComponentException e1) {
-					activeEditor.error(e1);
-					return;
-				}
-				comp.getGraphics().requestFocus();
+				final String id = reqs.getValue(CommandStrings.NAME, String.class);
+				// because of the ComponentRequirement this component for sure exists
+				final Component component = activeEditor.getComponentOrNull(id);
+
+				component.getGraphics().requestFocus();
 				activeEditor.status(Languages.getString("MyMenu.43")); //$NON-NLS-1$
 
-			} else {
+			} else
 				activeEditor.status(Languages.getString("MyMenu.44")); //$NON-NLS-1$
-			}
 		});
 	}
 
@@ -394,8 +409,8 @@ final class MyMenu extends JMenuBar {
 		MyMenu.setIcon(m_help, "help"); //$NON-NLS-1$
 	}
 
-	private static void setAccel(JMenuItem jmi, String s) {
-		jmi.setAccelerator(KeyStroke.getKeyStroke(s));
+	private static void setAccel(JMenuItem jmi, String acceleratorKeyStroke) {
+		jmi.setAccelerator(KeyStroke.getKeyStroke(acceleratorKeyStroke));
 	}
 
 	private static void setIcon(JMenuItem jmi, String desc) {

@@ -1,70 +1,66 @@
 package application.editor;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
-import java.util.Vector;
 
 /**
  * A wrapper for implementing undo and redo functionality.
  *
- * @param <T> the type of {@link Undoable} object that will be stored
+ * @param <T> the type of {@code Undoable} object that will be stored
  *
- * @author alexm
+ * @author Alex Mandelias
+ *
+ * @see Undoable
  */
-public final class UndoableHistory<T extends Undoable> {
+final class UndoableHistory<T extends Undoable> {
 
 	private final Stack<T> past, future;
 
-	/** Initialises the UndoableHistory */
+	/** Constructs an empty UndoableHistory object */
 	public UndoableHistory() {
 		past = new Stack<>();
 		future = new Stack<>();
 	}
 
 	/**
-	 * Adds the given {@code Undoable} to the history <i>without</i> executing it.
+	 * Adds an {@code Undoable} to the history without executing it.
 	 *
-	 * @param c the undoable
+	 * @param undoable the undoable
 	 */
-	public void add(T c) {
-		past.push(c);
+	public void add(T undoable) {
+		past.push(undoable);
 
 		// flush the redo history
 		if (!future.isEmpty())
 			future.clear();
 	}
 
-	/**
-	 * Undoes the last {@code Undoable}. If there are no {@code Undoables} to be
-	 * undone this method does nothing.
-	 */
+	/** Undoes the most recently executed {@code Undoable}, if one exists */
 	public void undo() {
 		if (canUndo()) {
-			T last = past.pop();
+			final T last = past.pop();
 			last.unexecute();
 			future.push(last);
 		}
 	}
 
-	/**
-	 * Re-does the last {@code Undoable}. If there are no {@code Undoables} to be
-	 * re-done this method does nothing
-	 */
+	/** Re-does the most recently undone {@code Undoable}, if one exists */
 	public void redo() {
 		if (canRedo()) {
-			T first = future.pop();
+			final T first = future.pop();
 
 			// this Undoable has executed successfully before; this statement can't throw
 			try {
 				first.execute();
-			} catch (Exception e) {
+			} catch (final Exception e) {
 				throw new RuntimeException(e);
 			}
 			past.push(first);
 		}
 	}
 
-	/** Empties the history */
+	/** Empties this UndoableHistory */
 	public void clear() {
 		past.clear();
 		future.clear();
@@ -89,26 +85,25 @@ public final class UndoableHistory<T extends Undoable> {
 	}
 
 	/**
-	 * Returns the past part of the history.
-	 * <p>
-	 * <b>Note:</b> this does <i>not</i> return a copy of the history. Any changes
-	 * to the items will be reflected in this UndoableHistory object.
+	 * Returns the past part of this history.
 	 *
 	 * @return a List with the previously executed Undoables
 	 */
-	public List<Undoable> getPast() {
-		return new Vector<>(past);
+	public List<T> getPast() {
+		return new ArrayList<>(past);
 	}
 
 	/**
-	 * Returns the future part of the history.
-	 * <p>
-	 * <b>Note:</b> this does <i>not</i> return a copy of the history. Any changes
-	 * to the items will be reflected in this UndoableHistory object.
+	 * Returns the future part of this history.
 	 *
 	 * @return a List with the previously un-executed Undoables
 	 */
-	public List<Undoable> getFuture() {
-		return new Vector<>(future);
+	public List<T> getFuture() {
+		return new ArrayList<>(future);
+	}
+
+	@Override
+	public String toString() {
+		return String.format("{%s, %s}", past, future); //$NON-NLS-1$
 	}
 }

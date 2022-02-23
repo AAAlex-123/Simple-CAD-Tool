@@ -1,21 +1,24 @@
 package requirement.requirements;
 
+import localisation.Languages;
 import requirement.graphics.AbstractRequirementGraphic;
+import requirement.graphics.NullRequirementGraphic;
 
 /**
- * A {@code general}-purpose {@code Requirement} for objects of any type. This
- * Requirement doesn't impose any restrictions on the objects that fulfil it and
- * does not have a Graphic associated with it. Instead it uses a
- * {@link requirement.graphics.NullRequirementGraphic NullGraphic}.
+ * A Requirement for objects of any type. This Requirement doesn't impose any
+ * restrictions on the objects that fulfil it and does not have a Graphic
+ * associated with it. Constructing a Graphic returns a {@code NullGraphic}.
  *
- * @author alexm
+ * @author Alex Mandelias
+ *
+ * @see NullRequirementGraphic
  */
 public final class ObjectRequirement extends AbstractRequirement {
 
 	/**
-	 * Constructs this ObjectRequirement with a {@code key}.
+	 * Constructs an ObjectRequirement.
 	 *
-	 * @param key the key
+	 * @param key the new Requirement's key
 	 */
 	public ObjectRequirement(String key) {
 		super(key);
@@ -23,8 +26,7 @@ public final class ObjectRequirement extends AbstractRequirement {
 
 	@Override
 	protected AbstractRequirementGraphic<?> constructGraphicOfSubclass() {
-		hasGraphic = false;
-		return constructNullGraphic("Graphic Not Supported");
+		return constructNullGraphic(Languages.getString("ObjectRequirement.0"), true); //$NON-NLS-1$
 	}
 
 	@Override

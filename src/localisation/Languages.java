@@ -14,6 +14,7 @@ import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.Properties;
 import java.util.ResourceBundle;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,58 +22,55 @@ import javax.swing.JOptionPane;
 
 import myUtil.OrderedProperties;
 import myUtil.Utility;
-
-import requirement.requirements.Requirements;
+import requirement.util.Requirements;
 
 /**
- * The language settings used to load the appropriate Strings according to the
- * chosen locale.
+ * Wrapper for a {@code ResourceBundle} that additionally provides a way to
+ * alter the Locale the Application uses.
+ * <p>
+ * Since all of the Strings are loaded when the Application starts, changing the
+ * Locale will take effect the next time the Application is launched.
  *
- * @author alexm
+ * @author Alex Mandelias
  */
 public class Languages {
 
-	/** The file containing information about the current language */
-	public static final String  FILE                = "program_data\\languages.properties"; //$NON-NLS-1$
-	private static final String LANGUAGES_DIRECTORY = "src\\localisation";                  //$NON-NLS-1$
+	/** The file containing information about the current Locale */
+	public static final String FILE = "program_data\\languages.properties"; //$NON-NLS-1$
+
+	private static final String LANGUAGES_DIRECTORY = "src\\localisation"; //$NON-NLS-1$
 
 	private static final Properties properties = new OrderedProperties();
 
-	private static final String  LANGUAGE_STR, COUNTRY_STR, VARIANT_STR;
-	private static final String  regex;
+	private static final String  LANGUAGE_LITERAL = "Language"; //$NON-NLS-1$
+	private static final String  COUNTRY_LITERAL  = "Country";  //$NON-NLS-1$
+	private static final String  VARIANT_LITERAL  = "Variant";  //$NON-NLS-1$
 	private static final Pattern pattern;
 
 	private static final String BUNDLE_NAME = "localisation.language"; //$NON-NLS-1$
 
-	private static String         LANGUAGE, COUNTRY, VARIANT;
-	private static ResourceBundle RESOURCE_BUNDLE;
+	private static final ResourceBundle RESOURCE_BUNDLE;
 
 	static {
-		LANGUAGE_STR = "Language"; //$NON-NLS-1$
-		COUNTRY_STR = "Country"; //$NON-NLS-1$
-		VARIANT_STR = "Variant"; //$NON-NLS-1$
-		regex = String.format(
-		        "^language(?:_(?<%s>[a-zA-Z]{2})(?:_(?<%s>[a-zA-Z]{2})(?:_(?<%s>[a-zA-Z]{2}))?)?)?", //$NON-NLS-1$
-		        LANGUAGE_STR, COUNTRY_STR, VARIANT_STR);
+		final String regex = String.format(
+		        "^language(?:_(?<%s>[a-zA-Z]{2})(?:_(?<%s>[a-zA-Z]{2})(?:_(?<%s>[a-zA-Z]{2}))?)?)", //$NON-NLS-1$
+		        Languages.LANGUAGE_LITERAL, Languages.COUNTRY_LITERAL, Languages.VARIANT_LITERAL);
 		pattern = Pattern.compile(regex);
 
-		try (BufferedReader reader = new BufferedReader(new FileReader(FILE))) {
-			properties.load(reader);
+		try (BufferedReader reader = new BufferedReader(new FileReader(Languages.FILE))) {
+			Languages.properties.load(reader);
 		} catch (final FileNotFoundException e) {
-			System.err.printf("File %s doesn't exist%n", FILE); //$NON-NLS-1$
+			System.err.printf("File %s doesn't exist%n", Languages.FILE); //$NON-NLS-1$
 			System.exit(0);
 		} catch (final IOException e) {
 			System.err.printf(
 			        "Error while reading from file %s. Inform the developer about 'Settings.static-IO'%", //$NON-NLS-1$
-			        FILE);
+			        Languages.FILE);
 			System.exit(0);
 		}
 
-		LANGUAGE = properties.getProperty(LANGUAGE_STR);
-		COUNTRY = properties.getProperty(COUNTRY_STR);
-		VARIANT = properties.getProperty(VARIANT_STR);
 		RESOURCE_BUNDLE = ResourceBundle.getBundle(Languages.BUNDLE_NAME,
-		        new Locale(LANGUAGE, COUNTRY, VARIANT));
+		        Languages.currentLocale());
 	}
 
 	/**
@@ -90,14 +88,13 @@ public class Languages {
 		}
 	}
 
-
 	/**
-	 * Displays a pop-up dialog to edit the language settings and writes them to the
-	 * file if they are altered.
+	 * Displays a pop-up dialog to select a Locale and write it to the file if it
+	 * was changed.
 	 *
 	 * @param frame the parent frame of the pop-up dialog.
 	 *
-	 * @return {@code true} if they were altered, {@code false} otherwise
+	 * @return {@code true} the Locale was changed, {@code false} otherwise
 	 *
 	 * @throws IOException if an error occurred while writing to file
 	 */
@@ -105,59 +102,71 @@ public class Languages {
 
 		final List<Locale> locales = new ArrayList<>();
 
-		File directory = new File(LANGUAGES_DIRECTORY);
+		final File directory = new File(Languages.LANGUAGES_DIRECTORY);
 		Utility.foreach(directory.listFiles(), file -> {
 
 			final String fname = file.getName();
 
-			if (isLanguageFile(fname)) {
-				Matcher m = pattern.matcher(fname);
+			if (Languages.isLanguageFile(fname)) {
+				final Matcher m = Languages.pattern.matcher(fname);
 				if (!m.find())
 					throw new RuntimeException(
-					        String.format("Invalid properties file name: %s", fname)); //$NON-NLS-1$
+					        String.format("Invalid language file name: %s", fname)); //$NON-NLS-1$
 
-				final String language = emptyStringIfNull(m.group(LANGUAGE_STR));
-				final String country  = emptyStringIfNull(m.group(COUNTRY_STR));
-				final String variant  = emptyStringIfNull(m.group(VARIANT_STR));
+				final Function<String, String> f = (s -> s == null ? "" : s); //$NON-NLS-1$
+
+				final String language = f.apply(m.group(Languages.LANGUAGE_LITERAL));
+				final String country  = f.apply(m.group(Languages.COUNTRY_LITERAL));
+				final String variant  = f.apply(m.group(Languages.VARIANT_LITERAL));
 				locales.add(new Locale(language, country, variant));
 			}
 		});
 
 		if (locales.isEmpty()) {
 			JOptionPane.showMessageDialog(frame,
-			        String.format(Languages.getString("Languages.1"), LANGUAGES_DIRECTORY), //$NON-NLS-1$
+			        String.format(Languages.getString("Languages.1"), //$NON-NLS-1$
+			                Languages.LANGUAGES_DIRECTORY),
 			        Languages.getString("Languages.2"), JOptionPane.WARNING_MESSAGE); //$NON-NLS-1$
 			return false;
 		}
 
-		Requirements reqWrapper = new Requirements();
-		reqWrapper.add(Languages.getString(LANGUAGE), locales); 		//$NON-NLS-1$
-		reqWrapper.fulfillWithDialog(frame, Languages.getString(LANGUAGE));		//$NON-NLS-1$
-		Locale chosen = (Locale) reqWrapper.getValue(Languages.getString(LANGUAGE));	//$NON-NLS-1$
+		final Requirements reqWrapper = new Requirements();
+		reqWrapper.add(Languages.getString("MyMenu.1"), locales); //$NON-NLS-1$
+		reqWrapper.fulfillWithDialog(frame, Languages.getString("Languages.3")); //$NON-NLS-1$
 
-		Locale current = new Locale(properties.getProperty(LANGUAGE_STR),
-		        properties.getProperty(COUNTRY_STR), properties.getProperty(VARIANT_STR));
+		final Locale chosen  = reqWrapper.getValue(Languages.getString("MyMenu.1"), Locale.class); //$NON-NLS-1$
+		final Locale current = Languages.currentLocale();
 
 		if ((chosen == null) || chosen.equals(current))
 			return false;
 
-		properties.setProperty(LANGUAGE_STR, chosen.getLanguage());
-		properties.setProperty(COUNTRY_STR, chosen.getCountry());
-		properties.setProperty(VARIANT_STR, chosen.getVariant());
+		Languages.set(Languages.LANGUAGE_LITERAL, chosen.getLanguage());
+		Languages.set(Languages.COUNTRY_LITERAL, chosen.getCountry());
+		Languages.set(Languages.VARIANT_LITERAL, chosen.getVariant());
 
-		try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE))) {
-			properties.store(writer, null);
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(Languages.FILE))) {
+			Languages.properties.store(writer, null);
 		}
+
 		return true;
 	}
 
-	private static String emptyStringIfNull(String s) {
-		if (s == null)
-			return ""; //$NON-NLS-1$
-		return s;
+	/* Constructs a Locale from the information found in the properties */
+	private static Locale currentLocale() {
+
+		return new Locale(Languages.get(Languages.LANGUAGE_LITERAL),
+		        Languages.get(Languages.COUNTRY_LITERAL), Languages.get(Languages.VARIANT_LITERAL));
+	}
+
+	private static String get(String propertyKey) {
+		return Languages.properties.getProperty(propertyKey);
+	}
+
+	private static void set(String propertyKey, String propertyValue) {
+		Languages.properties.setProperty(propertyKey, propertyValue);
 	}
 
 	private static boolean isLanguageFile(String filename) {
-		return filename.startsWith("language") && filename.endsWith(".properties"); //$NON-NLS-1$ //$NON-NLS-2$
+		return filename.startsWith("language_") && filename.endsWith(".properties"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 }
